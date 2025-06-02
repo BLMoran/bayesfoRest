@@ -30,3 +30,5 @@ Imports:
     purrr,
     tidybayes,
     tidyr
+URL: https://github.com/BLMoran/bayesfoRest
+BugReports: https://github.com/BLMoran/bayesfoRest/issues
