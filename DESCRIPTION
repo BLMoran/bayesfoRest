@@ -1,0 +1,32 @@
+Package: bayesfoRest
+Type: Package
+Title: Creates forest plots for Bayesian meta-analyses
+Version: 0.0.0.9000
+Authors@R: c(
+    person(
+      "Benjamin", "Moran",
+      email = "bmoran@newcastle.edu.au",
+      comment = c(ORCID = "0000-0002-6515-6722")
+      role = c("aut", "cre")
+    ),
+    person(
+      "Thomas", "Payne",
+      email = "Thomas.payne1@health.nsw.gov.au",
+      comment = c(ORCID = "0000-0002-5530-3717")
+      role = c("aut", "cre")
+  )
+Description: bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. 
+    In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter ($\tau$).
+License: use_mit_license()
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    dplyr,
+    fontawesome,
+    ggdist,
+    ggplot2,
+    gt,
+    patchwork,
+    purrr,
+    tidybayes,
+    tidyr
