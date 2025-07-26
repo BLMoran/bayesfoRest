@@ -1,0 +1,13 @@
+﻿Author,Year,Subgroup,Mean_Control,SD_Control,N_Control,Mean_Intervention,SD_Intervention,N_Intervention,D1,D2,D3,D4,D5,Overall
+Strode,1978,Control,4.2,0.9,16,4.3,2.9,16,Low,Low,High,High,Low,High
+Tasker,1994,Control,6,5.2,10,2.1,3.2,10,High,High,High,Low,High,High
+Beaubeirdre,2022,Control,5.5,0.5,16,3,0.5,16,Low,Low,Some concerns,Low,Low,Low
+Gershwitz,1988,Placebo,3.94,2.4,33,4.84,3.1,32,Low,Some concerns,Low,Low,Low,Low
+DeVoto,1991,Placebo,8,1.25,25,5,1,25,Low,Low,Low,Some concerns,Low,Low
+Drysdale,2019,Placebo,4,1.5,40,3,3.2,40,Low,Some concerns,Some concerns,Low,Low,Low
+Coleman,2003,Placebo,3.5,1,20,2,0.5,20,High,Some concerns,High,Low,Low,High
+Wilson,1985,Placebo,3.71,0.5,40,2.03,0.7,40,Low,High,Low,Some concerns,High,High
+Buckley,2014,Placebo,6.5,1.8,21,4,2,21,Low,Low,Low,Low,Some concerns,Low
+Cooper,1992,TEA,4.48,2.1,31,4.66,0.8,29,Low,Some concerns,Low,Some concerns,Low,Low
+Solley,1980,TEA,2,0.5,20,2,0.7,20,High,Some concerns,Low,Low,High,High
+Tannis,2024,TEA,4.41,0.8,50,4,1.5,50,Low,Low,Low,Low,Low,Low

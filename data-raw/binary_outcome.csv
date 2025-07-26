@@ -1,0 +1,13 @@
+﻿Author,Year,Subgroup,Control,Intervention,N_Total,N_Control,N_Intervention,Event_Control,Outcome_Control_No,Event_Intervention,Outcome_Intervention_No,D1,D2,D3,D4,D5,Overall
+Jones,1981,Colorectal,NaCl,Dexamethasone,80,40,40,18,22,9,31,Low,Low,Low,Low,Some concerns,Some concerns
+Deckard,1982,Plastics,NaCl,Ondansetron,620,310,310,34,276,19,291,Low,Low,Low,Low,Low,Low
+Kimble,1993,Vascular,Nil,Dexamethasone,140,70,70,13,57,8,62,Low,Low,Low,Low,Low,Low
+Falfa,1973,Gynaecology,NaCl,Granisitron,80,40,40,7,33,4,36,Low,Low,Some concerns,Low,Some concerns,Some concerns
+Trainer,1988,Gynaecology,Nil,Dexamethasone,90,45,45,20,25,7,38,Low,High,High,Some concerns,Low,High
+O'Meara,1997,Vascular,Nil,Dexamethasone,510,255,255,31,224,18,237,Low,Low,High,High,Low,High
+Turner,1991,Vascular,Droperidol,Ondansetron,135,67,68,11,56,10,58,Low,Low,Low,Low,Low,Low
+Ryan,1992,Plastics,Droperidol,Ondansetron,76,38,38,9,29,7,31,Low,Low,High,High,Low,High
+Marshall,1997,Colorectal,NaCl,Granisitron,84,42,42,15,27,8,34,Low,Low,High,High,Low,High
+Sabich,1990,Vascular,Droperidol,Granisitron,714,356,358,36,320,28,330,Low,Low,Low,Some concerns,Low,Low
+Walker,1988,Colorectal,NaCl,Dolasetron,155,77,78,10,67,5,73,Low,Low,High,Some concerns,Low,High
+Book,1985,Plastics,Nil,Hydrocortisone,80,39,41,15,24,6,35,Low,Low,Some concerns,Some concerns,Low,Some concerns
