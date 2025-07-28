@@ -19,7 +19,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Benjamin Moran \email{bmoran@newcastle.edu.au} (\href{https://orcid.org/0000-0002-6515-6722}{ORCID})
+\strong{Maintainer}: Benjamin Moran \email{ben.moran@newcastle.edu.au} (\href{https://orcid.org/0000-0002-6515-6722}{ORCID})
 
 Authors:
 \itemize{

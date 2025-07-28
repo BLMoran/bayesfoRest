@@ -64,7 +64,7 @@ bayes_forest(
 
 ![](man/figures/forest_plot_subgroup.png)
 
-### Add RoB Columns
+### Add Risk of Bias Columns
 
 ``` r
 bayes_forest(
@@ -79,7 +79,7 @@ bayes_forest(
 
 ![](man/figures/forest_plot_rob.png)
 
-### Add RoB Legend
+### Add Risk of Bias Legend
 
 ``` r
 bayes_forest(
@@ -164,8 +164,15 @@ bayesfoRest depends on several R packages:
 
 We welcome feedback, suggestions, issues and contributions. Please feel
 free to contact either either
-<a href="mailto:ben.moran@newcastle.edu.au">Ben</a> submit a Pull
-Request. Please note that the {bayesfoRest}
+<a href="mailto:ben.moran@newcastle.edu.au">Ben</a> or
+<a href="mailto:tompayne302@gmail.com">Tom</a> with any feedback. For
+any bugs, please file it
+[here](https://github.com/BLMoran/bayesfoRest/issues) with a minimal
+code example to reproduce the issue. Pull requests can be made
+[here](https://github.com/BLMoran/bayesfoRest/pulls). Please note that
+the bayesfoRest project is released with a [Contributor Code of
+Conduct](https://github.com/BLMoran/bayesfoRest/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
 
 ## License
 

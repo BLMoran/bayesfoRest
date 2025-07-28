@@ -34,12 +34,12 @@ navbar:
   bg: primary
   type: dark
   structure:
-    left: [intro, reference, news]
-    right: [search, github]
+    left: [intro, reference, articles, news]
+    right: [search, github, bluesky]
   components:
     intro:
       text: Get Started
-      href: vignettes/bayesfoRest.html
+      href: articles/bayesfoRest.html
     reference:
       text: Reference
       href: reference/index.html
@@ -49,19 +49,14 @@ navbar:
     github:
       icon: fab fa-github
       href: https://github.com/BLMoran/bayesfoRest
+    bluesky:
+      text: "fa-brands fa-bluesky"
+      href: https://bsky.app/profile/benmoran.bsky.social
       
 home:
   sidebar:
     structure: [links, license, community, citation, authors, dev]
     
-  links:
-    - text: View on GitHub
-      href: https://github.com/BLMoran/bayesfoRest
-      icon: fab fa-github
-    - text: Report a bug
-      href: https://github.com/BLMoran/bayesfoRest/issues
-      icon: fas fa-bug
-
 reference:
   - title: Main Functions
     desc: Core functions for creating Bayesian forest plots
@@ -74,4 +69,10 @@ reference:
     contents:
       - binary_outcome
       - cont_outcome
+      
+articles:
+  - title: Articles
+    navbar: ~
+    contents:
+      - articles/Meta_Analysis_Workflow
 
