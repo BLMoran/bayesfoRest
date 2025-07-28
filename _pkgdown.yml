@@ -50,8 +50,9 @@ navbar:
       icon: fab fa-github
       href: https://github.com/BLMoran/bayesfoRest
     bluesky:
-      text: fa-brands fa-bluesky
+      icon: fab fa-bluesky
       href: https://bsky.app/profile/benmoran.bsky.social
+      aria-label: Bluesky
       
 home:
   sidebar:
