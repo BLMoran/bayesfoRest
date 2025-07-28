@@ -163,7 +163,7 @@ bayesfoRest depends on several R packages:
 ## Feedback, Issues and Contributing
 
 We welcome feedback, suggestions, issues and contributions. Please feel
-free to contact either either
+free to contact either
 <a href="mailto:ben.moran@newcastle.edu.au">Ben</a> or
 <a href="mailto:tompayne302@gmail.com">Tom</a> with any feedback. For
 any bugs, please file it

@@ -1,4 +1,4 @@
-url: https://github.com/BLMoran/bayesfoRest
+url: https://blmoran.github.io/bayesfoRest/
 template:
   bootstrap: 5
   bslib:
@@ -50,7 +50,7 @@ navbar:
       icon: fab fa-github
       href: https://github.com/BLMoran/bayesfoRest
     bluesky:
-      text: "fa-brands fa-bluesky"
+      text: fa-brands fa-bluesky
       href: https://bsky.app/profile/benmoran.bsky.social
       
 home:
@@ -75,4 +75,3 @@ articles:
     navbar: ~
     contents:
       - articles/Meta_Analysis_Workflow
-
