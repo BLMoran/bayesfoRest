@@ -132,7 +132,7 @@ rob_plot(
 If you use bayesfoRest in your research, please cite:
 
     @Manual{,
-      title = {bayesfoRest: Forest Plots for Bayesian Meta-Analyses},
+      title = {bayesfoRest: Forest Plots for Bayesian Meta-Analyses in R},
       author = {[Benjamin Moran and Thomas Payne]},
       year = {2025},
       note = {R package version 0.0.0.9000},

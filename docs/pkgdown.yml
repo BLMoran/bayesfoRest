@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   bayesfoRest: bayesfoRest.html
   articles/Meta_Analysis_Workflow: Meta_Analysis_Workflow.html
-last_built: 2025-07-28T11:15Z
+last_built: 2025-07-28T12:44Z
 urls:
   reference: https://blmoran.github.io/bayesfoRest/reference
   article: https://blmoran.github.io/bayesfoRest/articles
