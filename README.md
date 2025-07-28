@@ -40,7 +40,7 @@ devtools::install_github("BLMoran/bayesfoRest")
 ### Binary Outcome Forest Plot (Odds Ratio)
 
 ``` r
-forest_plot_or <- bayes_forest(
+bayes_forest(
   model = model_bin,
   data = binary_outcome,
   measure = "OR",
@@ -50,132 +50,79 @@ forest_plot_or <- bayes_forest(
 
 ![](man/figures/forest_plot_binary.png)
 
-### Continuous Outcome Forest Plot (Mean Difference)
+### Add Subgroups
 
 ``` r
-# Create forest plot with ROPE
-forest_plot_md <- bayes_forest(
-  model = model_cont,
-  data = cont_outcome,
-  measure = "MD",
-  studyvar = Author,
-  year = Year,
-  c_n = N_Control,
-  i_n = N_Intervention,
-  c_mean = Mean_Control,
-  i_mean = Mean_Intervention,
-  c_sd = SD_Control,
-  i_sd = SD_Intervention,
-  xlim = c(-4,2),
-  title = "Treatment Effect on Continuous Outcome",
-  subtitle = "With ROPE ±0.5",
-  add_rope = TRUE,
-  rope_value = c(-0.5, 0.5),  # ±0.5 points considered clinically equivalent
-  shrinkage_output = "pointinterval",
-  color_study_posterior = "skyblue",
-  color_overall_posterior = "darkblue"
-)
-
-forest_plot_md
-```
-
-![](man/figures/forest_plot_continuous.png)
-
-### Subgroup Analysis
-
-``` r
-# Using binary outcome data with subgroups based on surgical type
-
-# Create subgroup forest plot
-forest_plot_subgroup <- bayes_forest(
+bayes_forest(
   model = model_bin,
   data = binary_outcome,
   measure = "OR",
   subgroup = T,
-  studyvar = Author,
-  year = Year,
-  c_n = N_Control,
-  i_n = N_Intervention,
-  c_event = Event_Control,
-  i_event = Event_Intervention,
-  title = "Treatment Effect on Binary Outcome",
-  subtitle = "By Surgical Cohort",
-  label_intervention = "Treatment",
-  label_control = "Control",
   xlim = c(0.1, 3.5)
 )
-
-forest_plot_subgroup
 ```
 
 ![](man/figures/forest_plot_subgroup.png)
 
-### Risk of Bias Integration: RoB Columns
+### Add RoB Columns
 
 ``` r
-# Create forest plot with RoB
-forest_plot_rob <- bayes_forest(
+bayes_forest(
   model = model_bin,
   data = binary_outcome,
   measure = "OR",
-  studyvar = Author,
-  year = Year,
-  c_n = N_Control,
-  i_n = N_Intervention,
-  c_event = Event_Control,
-  i_event = Event_Intervention,
-  title = "Treatment Effect on Binary Outcome",
-  subtitle = "With Risk of Bias Table",
-  add_rob = TRUE,
-  rob_tool = "rob2"
+  subgroup = T,
+  add_rob = T,
+  xlim = c(0.1, 3.5)
 )
-
-forest_plot_rob
-```
-
-![](man/figures/forest_plot_robcol.png)
-
-### Risk of Bias Integration: RoB Legend
-
-``` r
-# Create forest plot with RoB
-forest_plot_rob <- bayes_forest(
-  model = model_bin,
-  data = binary_outcome,
-  measure = "OR",
-  studyvar = Author,
-  year = Year,
-  c_n = N_Control,
-  i_n = N_Intervention,
-  c_event = Event_Control,
-  i_event = Event_Intervention,
-  title = "Treatment Effect on Binary Outcome",
-  subtitle = "With Risk of Bias Table",
-  add_rob = TRUE,
-  add_rob_legend = TRUE,
-  rob_tool = "rob2"
-)
-
-forest_plot_rob
 ```
 
 ![](man/figures/forest_plot_rob.png)
+
+### Add RoB Legend
+
+``` r
+bayes_forest(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  subgroup = T,
+  add_rob = T,
+  add_rob_legend = T,
+  rob_tool = "rob2",
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](man/figures/forest_plot_rob_legend.png)
+
+### Exclude Studies with High Risk of Bias
+
+``` r
+bayes_forest(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  subgroup = T,
+  add_rob = T,
+  add_rob_legend = T,
+  rob_tool = "rob2",
+  exclude_high_rob = T,
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](man/figures/forest_excl_high_rob.png)
 
 ### Standalone Risk of Bias Plot
 
 ``` r
 # Create standalone RoB visualization
-rob_visualization <- rob_plot(
+rob_plot(
   data = binary_outcome,
-  studyvar = Author,
-  sort_studies_by = "year",
   rob_tool = "rob2",
-  add_rob_legend = TRUE,
-  title = "Risk of Bias Assessment",
-  subtitle = "Cochrane RoB 2 Tool"
+  add_rob_legend = TRUE
 )
-
-rob_visualization
 ```
 
 ![](man/figures/rob_viz.png)
@@ -213,13 +160,16 @@ bayesfoRest depends on several R packages:
 - [fontawesome](https://rstudio.github.io/fontawesome/) for risk of bias
   icons
 
-## Contributing
+## Feedback, Issues and Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome feedback, suggestions, issues and contributions. Please feel
+free to contact either either
+<a href="mailto:ben.moran@newcastle.edu.au">Ben</a> submit a Pull
+Request. Please note that the {bayesfoRest}
 
 ## License
 
-This package is licensed under the AGPL (\>= 3) License.
+This package is licensed under the GPL-3 License.
 
 ## Acknowledgments
 
