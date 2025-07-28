@@ -6,7 +6,9 @@
 \alias{bayesfoRest-package}
 \title{bayesfoRest: Creates forest plots for Bayesian meta-analyses}
 \description{
-bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter ($\tau$).
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter.
 }
 \seealso{
 Useful links:
