@@ -216,8 +216,6 @@ forest_plot_subgroup <- bayes_forest(
 }
 \seealso{
 \code{\link[brms]{brm}} for fitting Bayesian models,
-\code{\link[metafor]{metafor}} for creating meta analysis models,
-\code{\link[gt]{gt}} for making great tables,
 \code{\link[patchwork]{patchwork}} for combining plots
 }
 \author{

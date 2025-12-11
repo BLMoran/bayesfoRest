@@ -1,8 +1,8 @@
 Package: bayesfoRest
 Type: Package
-Title: Forest Plots for Bayesian Meta Analyses in R
+Title: Creates forest plots for Bayesian meta-analyses
 Description: bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. 
-    In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter.
+    In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter ($\tau$).
 Version: 0.0.0.9000
 Imports: 
     dplyr,
@@ -21,12 +21,12 @@ Imports:
     tidyr
 Depends:
     R (>= 4.1.0)
-URL: https://github.com/BLMoran/bayesfoRest, https://blmoran.github.io/bayesfoRest/
+URL: https://github.com/BLMoran/bayesfoRest
 BugReports: https://github.com/BLMoran/bayesfoRest/issues
 Authors@R: c(
     person(
       "Benjamin", "Moran",
-      email = "ben.moran@newcastle.edu.au",
+      email = "bmoran@newcastle.edu.au",
       comment = c(ORCID = "0000-0002-6515-6722"),
       role = c("aut", "cre")),
     person(
@@ -39,8 +39,3 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
-Config/Needs/website: rmarkdown

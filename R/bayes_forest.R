@@ -191,7 +191,7 @@ bayes_forest <- function(model,
   # Get required variables for the measure
   if (measure %in% c("OR", "RR")) {
     data <- data |> 
-      dplyr::rename(
+      rename(
         Author = {{studyvar}},
         Year = {{year}},
         N_Control = {{c_n}},
@@ -202,7 +202,7 @@ bayes_forest <- function(model,
     
   } else if (measure %in% c("MD", "SMD")) {
     data <- data |> 
-      dplyr::rename(
+      rename(
         Author = {{studyvar}},
         Year = {{year}},
         N_Control = {{c_n}},
@@ -215,7 +215,7 @@ bayes_forest <- function(model,
     
   } else if (measure == "IRR") {
     data <- data |> 
-      dplyr::rename(
+      rename(
         Author = {{studyvar}},
         Year = {{year}},
         Time_Control = {{c_time}},

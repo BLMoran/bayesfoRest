@@ -255,7 +255,7 @@ study.density.plot_fn  <- function(df,
   props <- get_measure_properties(measure) 
   
   # Determine x_breaks to use: custom if provided, otherwise use measure defaults
-  breaks <- if (!is.null(x_breaks)) x_breaks else ggplot2::waiver()
+  breaks <- if (!is.null(x_breaks)) x_breaks else waiver()
   
   # Determine null line to use: custom if provided, otherwise use measure default
   null_value <- if (!is.null(null_value)) null_value else props$null_value
@@ -971,7 +971,7 @@ rob_legend_fn <- function(rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"
       style = "padding-left:2px;",
       locations = gt::cells_body(
         columns = Code, 
-        rows = gt::everything())) |> 
+        rows = everything())) |> 
     # Set column widths
     gt::cols_width(
       Code ~ gt::px(40),
