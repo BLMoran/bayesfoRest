@@ -217,7 +217,7 @@ update_model <- function(model, data, studyvar) {
   new_formula <- stats::as.formula(formula_str)
   
   # Update model
-  model <- update(
+  model <- stats::update(
     object = model,
     formula = new_formula,
     newdata = data,
@@ -257,7 +257,7 @@ forest.data_fn <- function(data,
       dplyr::group_by(Subgroup) |>
       tidyr::nest() |>
       dplyr::mutate(
-        subgroup_model = purrr::map(data, ~ update(model, newdata = .x)),
+        subgroup_model = purrr::map(data, ~ stats::update(model, newdata = .x)),
         # Calculate study count for each subgroup
         study_count = purrr::map_int(data, nrow)
       )

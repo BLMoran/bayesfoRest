@@ -271,7 +271,7 @@ bayes_forest <- function(model,
       message("Re-fitting model after excluding high risk of bias studies...")
       
       # Refit using the original formula and priors from the existing model
-      model <- update(model, newdata = data, recompile = FALSE, refresh = 0)
+      model <- stats::update(model, newdata = data, recompile = FALSE, refresh = 0)
     }
   }
   
@@ -440,7 +440,7 @@ bayes_forest <- function(model,
       current_combo <- paste(subgroup.plot.data$Subgroup[.x], subgroup.plot.data$Author[.x], sep = "_")
       
       if(!current_combo %in% seen_combos) {
-        seen_combos <<- c(seen_combos, current_combo)  # Update the seen combos
+        seen_combos <<- c(seen_combos, current_combo)
         result <- data.frame(
           Subgroup = subgroup.plot.data$Subgroup[.x],
           Author = subgroup.plot.data$Author[.x],

@@ -85,13 +85,13 @@ rob_plot <- function(data,
     # Single RoB Plot Workflow
     df <- data |> 
       dplyr::select(Author, Year, D1:Overall) |> 
-      sort.studies.fn(sort_studies_by)
+      sort_studies_fn(sort_studies_by)
     
   } else {
     # Subgroup RoB Plot Workflow
     df <- data |> 
       dplyr::select(Author, Year, Subgroup, D1:Overall) |> 
-      sort.studies.fn(sort_studies_by)
+      sort_studies_fn(sort_studies_by)
     
     # Apply subgroup ordering
     if ("Subgroup" %in% names(df)) {
