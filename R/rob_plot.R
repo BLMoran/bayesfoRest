@@ -1,3 +1,56 @@
+#' Create Risk of Bias Plot
+#'
+#' Creates a publication-ready risk of bias assessment plot using gt tables,
+#' with options for single studies or subgroup analyses.
+#'
+#' @param data A data frame containing risk of bias assessments with required columns:
+#'   Author, Year, D1, D2, D3, and Overall. For subgroup analysis, a Subgroup column is also required.
+#' @param studyvar Character string specifying the study identifier variable (currently not used).
+#' @param sort_studies_by Character string specifying how to sort studies. 
+#'   Options: "author" (default), "year", or "effect".
+#' @param subgroup Logical indicating whether to create a subgroup plot (default: FALSE).
+#' @param sort_subgroup_by Character string or vector specifying subgroup ordering.
+#'   Options: "alphabetical" (default) or a character vector of subgroup names in desired order.
+#' @param rob_tool Character string specifying the risk of bias tool used.
+#'   Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".
+#' @param add_rob_legend Logical indicating whether to add a legend explaining risk of bias symbols (default: FALSE).
+#' @param font Character string specifying the font family to use for the plot.
+#' @param title Character string for the plot title.
+#' @param title_align Character string specifying title alignment.
+#'   Options: "left" (default), "center"/"centre", or "right".
+#' @param subtitle Character string for the plot subtitle.
+#'
+#' @return A gt table object (or patchwork composition if legend is added) containing the risk of bias plot.
+#'
+#' @import dplyr
+#' @import gt
+#' @importFrom patchwork wrap_table plot_annotation
+#' @importFrom ggplot2 theme element_text margin
+#' @importFrom fontawesome fa
+#'
+#' @examples
+#' \dontrun{
+#' # Create sample data
+#' rob_data <- data.frame(
+#'   Author = c("Smith", "Jones", "Brown"),
+#'   Year = c(2020, 2021, 2022),
+#'   D1 = c("Low", "High", "Some concerns"),
+#'   D2 = c("Low", "Low", "High"),
+#'   D3 = c("Some concerns", "Low", "Low"),
+#'   Overall = c("Some concerns", "High", "High")
+#' )
+#'
+#' # Create basic risk of bias plot
+#' rob_plot(rob_data)
+#'
+#' # Create plot with legend and title
+#' rob_plot(rob_data, 
+#'          add_rob_legend = TRUE,
+#'          title = "Risk of Bias Assessment",
+#'          subtitle = "Using RoB 2 Tool")
+#' }
+#'
+#' @export
 rob_plot <- function(data,
                      studyvar = NULL,
                      sort_studies_by = "author",
@@ -118,10 +171,19 @@ rob_plot <- function(data,
 }
 
 
-
+#' Create Risk of Bias Table
+#'
+#' Internal function to create the gt table for risk of bias visualization.
+#'
+#' @param df Data frame with risk of bias data
+#' @param subgroup Logical indicating whether this is a subgroup analysis
+#' @param font Font family to use
+#'
+#' @return A gt table object
+#' @noRd
 rob.table_fn <- function(df,
-                              subgroup = FALSE,
-                              font = NULL) {
+                         subgroup = FALSE,
+                         font = NULL) {
   
   df <- df |> dplyr::mutate(
     Author = dplyr::if_else(
@@ -150,7 +212,7 @@ rob.table_fn <- function(df,
         style = gt::cell_text(indent = gt::px(10)),
         locations = gt::cells_body(columns = Author))
   }
-
+  
   # Final styling
   rob.table <- rob.table |>
     gt::cols_align(align = "left",
@@ -170,4 +232,40 @@ rob.table_fn <- function(df,
       "Some concerns" ~ fontawesome::fa(name = "circle-question", fill = "#f5ec00", height = "1.1em"))
   
   return(rob.table)
+}
+
+
+#' Create Risk of Bias Legend
+#'
+#' Internal function to create a legend for risk of bias symbols.
+#'
+#' @param rob_tool Character string specifying the risk of bias tool
+#' @param font Font family to use
+#'
+#' @return A gt table object containing the legend
+#' @noRd
+create_rob_legend <- function(rob_tool, font = NULL) {
+  # This is a placeholder - you'll need to implement the actual legend creation
+  # based on your specific requirements for each tool type
+  
+  legend_data <- data.frame(
+    Symbol = c(
+      fontawesome::fa(name = "circle-minus", fill = "#77bb41", height = "1.1em"),
+      fontawesome::fa(name = "circle-question", fill = "#f5ec00", height = "1.1em"),
+      fontawesome::fa(name = "circle-plus", fill = "#e32400", height = "1.1em")
+    ),
+    Meaning = c("Low risk", "Some concerns", "High risk")
+  )
+  
+  legend_table <- legend_data |>
+    gt::gt() |>
+    gt::tab_options(
+      column_labels.hidden = TRUE,
+      table.font.names = font,
+      table.border.top.color = "white",
+      table.border.bottom.color = "white"
+    ) |>
+    gt::opt_table_lines(extent = "none")
+  
+  return(legend_table)
 }

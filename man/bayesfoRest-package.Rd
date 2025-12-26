@@ -4,20 +4,23 @@
 \name{bayesfoRest-package}
 \alias{bayesfoRest}
 \alias{bayesfoRest-package}
-\title{bayesfoRest: Creates forest plots for Bayesian meta-analyses}
+\title{bayesfoRest: Forest Plots for Bayesian Meta Analyses in R}
 \description{
-bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter ($\tau$).
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/BLMoran/bayesfoRest}
+  \item \url{https://blmoran.github.io/bayesfoRest/}
   \item Report bugs at \url{https://github.com/BLMoran/bayesfoRest/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Benjamin Moran \email{bmoran@newcastle.edu.au} (\href{https://orcid.org/0000-0002-6515-6722}{ORCID})
+\strong{Maintainer}: Benjamin Moran \email{ben.moran@newcastle.edu.au} (\href{https://orcid.org/0000-0002-6515-6722}{ORCID})
 
 Authors:
 \itemize{

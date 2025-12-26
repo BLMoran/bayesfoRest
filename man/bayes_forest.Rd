@@ -22,6 +22,7 @@ bayes_forest(
   i_time = NULL,
   sort_studies_by = "author",
   subgroup = FALSE,
+  subgroup_var = NULL,
   sort_subgroup_by = "alphabetical",
   label_outcome = "Outcome",
   label_control = "Control",
@@ -91,6 +92,8 @@ Bayesian meta-analysis results.}
 Options: "author" (default), "year", or "effect".}
 
 \item{subgroup}{Logical indicating whether to create subgroup analysis. Default is FALSE.}
+
+\item{subgroup_var}{Character string. Name of the variable in data to use for subgroup analysis.}
 
 \item{sort_subgroup_by}{Character string or vector specifying subgroup ordering.
 Options: "alphabetical" (default), "effect", or custom character vector of subgroup names.}
@@ -216,8 +219,7 @@ forest_plot_subgroup <- bayes_forest(
 }
 \seealso{
 \code{\link[brms]{brm}} for fitting Bayesian models,
+\code{\link[metafor]{metafor}} for creating meta analysis models,
+\code{\link[gt]{gt}} for making great tables,
 \code{\link[patchwork]{patchwork}} for combining plots
-}
-\author{
-\link{Author Name}
 }

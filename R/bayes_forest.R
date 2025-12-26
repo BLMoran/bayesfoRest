@@ -26,6 +26,7 @@
 #' @param sort_studies_by Character string specifying how to sort studies. 
 #'   Options: "author" (default), "year", or "effect".
 #' @param subgroup Logical indicating whether to create subgroup analysis. Default is FALSE.
+#' @param subgroup_var Character string. Name of the variable in data to use for subgroup analysis.
 #' @param sort_subgroup_by Character string or vector specifying subgroup ordering.
 #'   Options: "alphabetical" (default), "effect", or custom character vector of subgroup names.
 #' @param label_outcome Character string for outcome label. Default is "Outcome".
@@ -119,7 +120,6 @@
 #' \code{\link[gt]{gt}} for making great tables,
 #' \code{\link[patchwork]{patchwork}} for combining plots
 #'
-#' @author [Author Name]
 #' @export
 bayes_forest <- function(model,
                          data,
@@ -138,6 +138,7 @@ bayes_forest <- function(model,
                          i_time = NULL,
                          sort_studies_by = "author",
                          subgroup = FALSE,
+                         subgroup_var = NULL,
                          sort_subgroup_by = "alphabetical",
                          label_outcome = "Outcome",
                          label_control = "Control",
@@ -169,29 +170,22 @@ bayes_forest <- function(model,
                          font = NULL) {
   
   # Input validation
-  if (!inherits(model, "brmsfit")) {
-    stop("Input must be a 'brmsfit' object")
-  }
-  
-  if (is.null(data)) {
-    stop("Data must be provided")
-  }
-  
-  if (is.null(measure)) {
-    stop("A measure must be entered: 'OR', 'HR', 'RR', 'IRR', 'MD', 'SMD'")
-  }
-  if (!measure %in% c("OR", "HR", "RR", "IRR", "MD", "SMD")) {
-    stop("measure must be one of: 'OR', 'HR', 'RR', 'IRR', 'MD', 'SMD'")
-  }
-  
-  if (!sort_studies_by %in% c("author", "year", "effect")) {
-    stop("sort_studies_by must be one of 'author', 'year', or 'effect'")
-  }
+  validate_inputs(
+    model = model,
+    data = data,
+    measure = measure,
+    studyvar = {{studyvar}},
+    year = {{year}},
+    subgroup = subgroup,
+    subgroup_var = {{subgroup_var}},
+    sort_studies_by = sort_studies_by,
+    shrinkage_output = shrinkage_output
+  )
   
   # Get required variables for the measure
   if (measure %in% c("OR", "RR")) {
     data <- data |> 
-      rename(
+      dplyr::rename(
         Author = {{studyvar}},
         Year = {{year}},
         N_Control = {{c_n}},
@@ -202,7 +196,7 @@ bayes_forest <- function(model,
     
   } else if (measure %in% c("MD", "SMD")) {
     data <- data |> 
-      rename(
+      dplyr::rename(
         Author = {{studyvar}},
         Year = {{year}},
         N_Control = {{c_n}},
@@ -215,7 +209,7 @@ bayes_forest <- function(model,
     
   } else if (measure == "IRR") {
     data <- data |> 
-      rename(
+      dplyr::rename(
         Author = {{studyvar}},
         Year = {{year}},
         Time_Control = {{c_time}},
@@ -223,6 +217,18 @@ bayes_forest <- function(model,
         Event_Control = {{c_event}},
         Event_Intervention = {{i_event}}
       )
+  }
+  
+  # Handle subgroup variable renaming
+  if (isTRUE(subgroup)) {
+    if (!rlang::quo_is_null(rlang::enquo(subgroup_var))) {
+      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroup_var))
+      # Only rename if it's not already called "Subgroup"
+      if (subgroup_var_name != "Subgroup") {
+        data <- data |> 
+          dplyr::rename(Subgroup = {{subgroup_var}})
+      }
+    }
   }
   
   # Update model
@@ -289,24 +295,11 @@ bayes_forest <- function(model,
     }
   }
   
-  # Create custom group order for subgroups if needed
-  if (subgroup && "Subgroup" %in% names(data)) {
-    if (is.character(sort_subgroup_by) && length(sort_subgroup_by) == 1) {
-      if (sort_subgroup_by == "alphabetical") {
-        subgroup_order <- c(sort(unique(data$Subgroup[!is.na(data$Subgroup)])), "Overall")
-      } else if (sort_subgroup_by == "effect") {
-        subgroup_effects <- data |>
-          dplyr::group_by(Subgroup) |>
-          dplyr::summarise(mean_effect = mean(yi, na.rm = TRUE), .groups = "drop") |>
-          dplyr::arrange(mean_effect)
-        subgroup_order <- c(subgroup_effects$Subgroup, "Overall")
-      }
-    } else if (is.character(sort_subgroup_by) && length(sort_subgroup_by) > 1) {
-      # User supplied a custom group order directly
-      subgroup_order <- c(sort_subgroup_by, "Overall")
-    } else {
-      stop("Invalid input to sort_subgroup_by. Must be 'alphabetical', 'effect', or a character vector of subgroup names.")
-    }
+  # Create subgroup order if needed
+  subgroup_order <- if (isTRUE(subgroup)) {
+    get_subgroup_order(data, sort_subgroup_by)
+  } else {
+    NULL
   }
   
   # Handle different workflows for single vs subgroup plots
@@ -352,7 +345,7 @@ bayes_forest <- function(model,
       spread_df = study.effect.draws,
       data = data,
       measure = measure,
-      sort_studies_by = "author",
+      sort_studies_by = sort_studies_by,
       subgroup = FALSE)
     
   } else {

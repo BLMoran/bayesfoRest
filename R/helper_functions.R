@@ -1,7 +1,66 @@
+#' Validate inputs for bayes_forest
+#'
+#' @noRd
+validate_inputs <- function(
+    model,
+    data,
+    measure,
+    studyvar,
+    year,
+    subgroup,
+    subgroup_var,
+    sort_studies_by,
+    shrinkage_output
+) {
+  if (!inherits(model, "brmsfit")) {
+    rlang::abort("`model` must be a brmsfit object.")
+  }
+  if (!is.data.frame(data)) {
+    rlang::abort("`data` must be a data frame.")
+  }
+  rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD"))
+  rlang::arg_match(sort_studies_by, c("author", "year", "effect"))
+  rlang::arg_match(shrinkage_output, c("density", "pointinterval"))
+  
+  if (rlang::quo_is_null(rlang::enquo(studyvar))) {
+    rlang::abort("`studyvar` must be provided (bare column name).")
+  }
+  
+  studyvar_name <- rlang::as_name(rlang::ensym(studyvar))
+  if (!studyvar_name %in% names(data)) {
+    rlang::abort(paste0("Can't find column `", studyvar_name, "` in `data`."))
+  }
+  
+  if (!rlang::quo_is_null(rlang::enquo(year))) {
+    year_name <- rlang::as_name(rlang::ensym(year))
+    if (!year_name %in% names(data)) {
+      rlang::abort(paste0("Can't find column `", year_name, "` in `data`."))
+    }
+  }
+  
+  # Validate subgroup variable if subgroup = TRUE
+  if (isTRUE(subgroup)) {
+    if (rlang::quo_is_null(rlang::enquo(subgroup_var))) {
+      # Default to "Subgroup" column
+      if (!"Subgroup" %in% names(data)) {
+        rlang::abort("`subgroup = TRUE` but no `subgroup_var` specified and no 'Subgroup' column found in data.")
+      }
+    } else {
+      # Check if specified subgroup_var exists
+      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroup_var))
+      if (!subgroup_var_name %in% names(data)) {
+        rlang::abort(paste0("Can't find subgroup column `", subgroup_var_name, "` in `data`."))
+      }
+    }
+  }
+  
+  invisible(TRUE)
+}
+
 #' Internal function to sort studies
 #'
 #' @noRd
-sort.studies.fn <- function(.data, sort_studies_by = NULL) {
+sort_studies_fn <- function(.data, sort_studies_by = NULL) {
   sort_by <- if (is.null(sort_studies_by)) "author" else sort_studies_by
   has_subgroup <- "Subgroup" %in% names(.data) &&
     !all(is.na(.data$Subgroup)) &&
@@ -32,6 +91,59 @@ sort.studies.fn <- function(.data, sort_studies_by = NULL) {
   return(full)
 }
 
+#' Get subgroup order based on sorting preference
+#'
+#' @noRd
+get_subgroup_order <- function(data, sort_subgroup_by) {
+  # Early return if no subgroup column
+  if (!"Subgroup" %in% names(data)) {
+    return(NULL)
+  }
+  
+  # Get unique non-NA subgroups
+  unique_subgroups <- unique(data$Subgroup[!is.na(data$Subgroup)])
+  
+  # Handle different sorting options
+  if (is.character(sort_subgroup_by)) {
+    if (length(sort_subgroup_by) == 1) {
+      # Single string: either "alphabetical" or "effect"
+      subgroup_order <- switch(
+        sort_subgroup_by,
+        "alphabetical" = sort(unique_subgroups),
+        "effect" = {
+          data |>
+            dplyr::group_by(Subgroup) |>
+            dplyr::summarise(mean_effect = mean(yi, na.rm = TRUE), .groups = "drop") |>
+            dplyr::arrange(mean_effect) |>
+            dplyr::pull(Subgroup)
+        },
+        rlang::abort(
+          paste0("Invalid sort_subgroup_by value: '", sort_subgroup_by, 
+                 "'. Must be 'alphabetical', 'effect', or a character vector of subgroup names.")
+        )
+      )
+    } else {
+      # Multiple strings: custom order provided by user
+      # Validate that provided subgroups exist in data
+      missing_groups <- setdiff(sort_subgroup_by, unique_subgroups)
+      if (length(missing_groups) > 0) {
+        rlang::warn(
+          paste0("These subgroups in sort_subgroup_by were not found in data: ",
+                 paste(missing_groups, collapse = ", "))
+        )
+      }
+      subgroup_order <- sort_subgroup_by
+    }
+  } else {
+    rlang::abort(
+      "sort_subgroup_by must be a character vector. ",
+      "Use 'alphabetical', 'effect', or provide a vector of subgroup names."
+    )
+  }
+  
+  # Always append "Overall" at the end
+  c(subgroup_order, "Overall")
+}
 
 #' Internal function to get certain properties dependent on measure
 #'
@@ -138,7 +250,7 @@ forest.data_fn <- function(data,
       dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
       dplyr::ungroup() |>
       dplyr::left_join(dplyr::select(data, Author, Year, yi, vi), by = "Author") |>
-      sort.studies.fn(sort_studies_by)
+      sort_studies_fn(sort_studies_by)
   } else {
     # With subgroup
     subgroup_df <- data |>
@@ -178,7 +290,7 @@ forest.data_fn <- function(data,
             dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
             dplyr::ungroup() |>
             dplyr::left_join(dplyr::select(..2, Author, Year, yi, vi), by = "Author") |>
-            sort.studies.fn(sort_studies_by)
+            sort_studies_fn(sort_studies_by)
           return(combined)
         })
       ) |>
@@ -255,7 +367,7 @@ study.density.plot_fn  <- function(df,
   props <- get_measure_properties(measure) 
   
   # Determine x_breaks to use: custom if provided, otherwise use measure defaults
-  breaks <- if (!is.null(x_breaks)) x_breaks else waiver()
+  breaks <- if (!is.null(x_breaks)) x_breaks else ggplot2::waiver()
   
   # Determine null line to use: custom if provided, otherwise use measure default
   null_value <- if (!is.null(null_value)) null_value else props$null_value
@@ -265,10 +377,10 @@ study.density.plot_fn  <- function(df,
     if (is.null(rope_value)) {
       # Use Kruschke's recommended defaults if no rope_value provided
       if (measure %in% c("OR", "HR", "RR", "IRR")) {
-        # For ratio measures: ROPE around 1.0 with ±10% range (0.9 to 1.1)
+        # For ratio measures: ROPE around 1.0 with +/-10% range (0.9 to 1.1)
         rope_range <- c(0.9, 1.1)
       } else if (measure == "SMD") {
-        # For standardized mean difference: Cohen's small effect size ±0.1
+        # For standardized mean difference: Cohen's small effect size +/-0.1
         rope_range <- c(-0.1, 0.1)
       } else if (measure == "MD") {
         # For mean difference: no universal default, require user specification
@@ -449,7 +561,7 @@ study.density.plot_fn  <- function(df,
 forest.data.summary_fn <- function(spread_df,
                                    data,
                                    measure,
-                                   sort_studies_by = sort_studies_by,
+                                   sort_studies_by = "author",
                                    subgroup = FALSE) {
   # Get effect size properties
   props <- get_measure_properties(measure)
@@ -481,7 +593,7 @@ forest.data.summary_fn <- function(spread_df,
   forest.data.summary <- forest.data |>
     dplyr::left_join(data |> dplyr::select(dplyr::any_of(join_vars), yi, vi, D1:Overall), by = "Author") |>
     dplyr::left_join(tau.summary, by = "Author", suffix = c("", "_sd")) |> 
-    sort.studies.fn(sort_studies_by)
+    sort_studies_fn(sort_studies_by)
   
   # Add formatted effect estimates
   forest.data.summary <- forest.data.summary |>
@@ -497,7 +609,7 @@ forest.data.summary_fn <- function(spread_df,
         paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
       },
       unweighted_effect = ifelse(unweighted_effect == "NA [NA, NA]",
-                                 paste0("τ = ", sprintf("%.2f", forest.data.summary$sd_Author__Intercept),
+                                 paste0("\u03c4 = ", sprintf("%.2f", forest.data.summary$sd_Author__Intercept),
                                         " [", sprintf("%.2f", forest.data.summary$.lower_sd), ", ", sprintf("%.2f", forest.data.summary$.upper_sd), "]"),
                                  unweighted_effect))
   
@@ -971,7 +1083,7 @@ rob_legend_fn <- function(rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"
       style = "padding-left:2px;",
       locations = gt::cells_body(
         columns = Code, 
-        rows = everything())) |> 
+        rows = gt::everything())) |> 
     # Set column widths
     gt::cols_width(
       Code ~ gt::px(40),

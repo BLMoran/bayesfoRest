@@ -15,9 +15,9 @@ A data frame with 12 rows and 18 variables:
 \item{N_Total}{Total number of patients in the study}
 \item{N_Control}{Number of patients in the control group}
 \item{N_Intervention}{Number of patients in the intervention group}
-\item{Outcome_Control_Yes}{Number of patients in the control group with the outcome (PONV)}
+\item{Event_Control}{Number of patients in the control group with the outcome (PONV)}
 \item{Outcome_Control_No}{Number of patients in the control group without the outcome (PONV)}
-\item{Outcome_Intervention_Yes}{Number of patients in the intervention group with the outcome (PONV)}
+\item{Event_Intervention}{Number of patients in the intervention group with the outcome (PONV)}
 \item{Outcome_Intervention_No}{Number of patients in the intervetion group without the outcome (PONV)}
 \item{D1}{Domain 1 of the Risk of Bias 2.0 tool}
 \item{D2}{Domain 2 of the Risk of Bias 2.0 tool}
