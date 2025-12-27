@@ -92,6 +92,9 @@ both single and subgroup analyses with customizable visualization options.</p>
 <span>  color_pointinterval <span class="op">=</span> <span class="st">"purple"</span>,</span>
 <span>  color_shrinkage_outline <span class="op">=</span> <span class="st">"purple"</span>,</span>
 <span>  color_shrinkage_fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  split_color_by_null <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  color_favours_control <span class="op">=</span> <span class="st">"firebrick"</span>,</span>
+<span>  color_favours_intervention <span class="op">=</span> <span class="st">"dodgerblue"</span>,</span>
 <span>  plot_width <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  add_rob <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rob2"</span>, <span class="st">"robins_i"</span>, <span class="st">"quadas2"</span>, <span class="st">"robins_e"</span><span class="op">)</span>,</span>
@@ -276,6 +279,20 @@ Options: "density" (default) or "pointinterval".</p></dd>
 <dd><p>Color for shrinkage plot fill. Default is NULL.</p></dd>
 
 
+<dt id="arg-split-color-by-null">split_color_by_null<a class="anchor" aria-label="anchor" href="#arg-split-color-by-null"></a></dt>
+<dd><p>Logical. If TRUE, posterior densities are split and
+coloured based on whether values fall above or below the null value.</p></dd>
+
+
+<dt id="arg-color-favours-control">color_favours_control<a class="anchor" aria-label="anchor" href="#arg-color-favours-control"></a></dt>
+<dd><p>Colour used for density regions favouring the control group when <code>split_color_by_null = TRUE</code>.</p></dd>
+
+
+<dt id="arg-color-favours-intervention">color_favours_intervention<a class="anchor" aria-label="anchor" href="#arg-color-favours-intervention"></a></dt>
+<dd><p>Colour used for density regions favouring the
+intervention group when <code>split_color_by_null = TRUE</code>.</p></dd>
+
+
 <dt id="arg-plot-width">plot_width<a class="anchor" aria-label="anchor" href="#arg-plot-width"></a></dt>
 <dd><p>Numeric value specifying the relative width of the plot component. Default is 4.</p></dd>
 
@@ -372,7 +389,7 @@ and the model is refitted on the filtered data.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
