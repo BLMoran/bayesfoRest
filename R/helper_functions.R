@@ -329,6 +329,9 @@ study.density.plot_fn  <- function(df,
                                    color_shrinkage_outline = "purple",
                                    color_pointinterval = "purple",
                                    color_shrinkage_fill = NA,
+                                   split_color_by_null = FALSE,
+                                   color_favours_control = "firebrick",
+                                   color_favours_intervention = "dodgerblue",
                                    label_control = "Control",
                                    label_intervention = "Intervention",
                                    shrinkage_output = "density",
@@ -460,20 +463,65 @@ study.density.plot_fn  <- function(df,
                         fill = scales::alpha(rope_color, 0.3), 
                         color = NA)
     }} +
-    ggdist::stat_slab(ggplot2::aes(xdist = xdist),
-                      slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
-                      data = study.effects, colour = color_study_posterior_outline, fill = color_study_posterior) +
-    ggdist::stat_slab(ggplot2::aes(x = x_studies, y = Author),
-                      data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled == "Pooled Effect"}
-                                                              else {Author == "Pooled Effect"}),
-                      fill = color_pooled_posterior, height = 0.9, normalize = "panels") +
+    {if (isTRUE(split_color_by_null)) {
+      list(
+        ggdist::stat_slab(
+          ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
+          slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+          data = study.effects, colour = color_study_posterior_outline))
+    } else {
+      ggdist::stat_slab(
+        ggplot2::aes(xdist = xdist),
+        slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+        data = study.effects, colour = color_study_posterior_outline,
+        fill = color_study_posterior)
+    }} +
+    {if (isTRUE(split_color_by_null)) {
+      list(
+        ggdist::stat_slab(
+          ggplot2::aes(
+            x = x_studies, y = Author, fill = ggplot2::after_stat(x > null_value)),
+            data = posterior.draws |>
+              dplyr::filter(if (isTRUE(subgroup)) {
+                Author_pooled == "Pooled Effect"
+              } else {
+                Author == "Pooled Effect"
+              }),
+            height = 0.9, normalize = "panels", colour = color_study_posterior_outline))
+    } else {
+      ggdist::stat_slab(
+        ggplot2::aes(x = x_studies, y = Author),
+        data = posterior.draws |>
+          dplyr::filter(if (isTRUE(subgroup)) {
+            Author_pooled == "Pooled Effect"
+          } else {
+            Author == "Pooled Effect"
+            }),
+        fill = color_pooled_posterior, height = 0.9, normalize = "panels")
+    }} +
     # Add overall effect slab when subgroup = TRUE
     {if (isTRUE(subgroup)) {
-      ggdist::stat_slab(ggplot2::aes(x = x_studies, y = Author),
-                        data = posterior.draws |> dplyr::filter(Author_pooled == "Overall Effect"),
-                        fill = color_overall_posterior, height = 0.9, normalize = "panels")
+      if (isTRUE(split_color_by_null)) {
+        list(
+          ggdist::stat_slab(
+            ggplot2::aes(
+              x = x_studies, y = Author, fill = ggplot2::after_stat(x > null_value)),
+            data = posterior.draws |> dplyr::filter(Author_pooled == "Overall Effect"),
+            height = 0.9, normalize = "panels", colour = color_study_posterior_outline))
+      } else {
+        ggdist::stat_slab(
+          ggplot2::aes(x = x_studies, y = Author),
+          data = posterior.draws |> dplyr::filter(Author_pooled == "Overall Effect"),
+          fill = color_overall_posterior, height = 0.9, normalize = "panels")
+      }
     }} +
-    ggplot2::guides(alpha = "none", fill = "none")+
+    {if (isTRUE(split_color_by_null)) {
+      ggplot2::scale_fill_manual(
+        values = c(
+          "FALSE" = color_favours_intervention,
+          "TRUE"  = color_favours_control),  
+        guide = "none")
+    }} +
     # Add null value
     ggplot2::geom_vline(xintercept = null_value, color = "black", linewidth = 1) +
     ggplot2::coord_cartesian(xlim= calc_xlim, clip = "off") +
@@ -493,15 +541,15 @@ study.density.plot_fn  <- function(df,
       axis.text.x.bottom = ggplot2::element_text(colour = "black", family = font)) +
     ggplot2::guides(x.sec = "axis", y.sec = "axis") +
     ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_intervention),
-      x = grid::unit(-0.01, "npc"), y = grid::unit(1.02, "npc") , just = c("left", "bottom"),
+      label = paste(" Favours\n", label_control),  
+      x = grid::unit(1, "npc"), y = grid::unit(1.02, "npc"), just = c("right", "bottom"),
       gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
-      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)+
+      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
     ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_control),
-      x = grid::unit(1, "npc"), y = grid::unit(1.02, "npc") , just = c("right", "bottom"),
+      label = paste(" Favours\n", label_intervention),
+      x = grid::unit(0, "npc"), y = grid::unit(1.02, "npc"), just = c("left", "bottom"),
       gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
-      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)+
+      xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf) +
     ggplot2::labs(x= props$x_label) +
     ggplot2::ylab(NULL) +
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
@@ -532,24 +580,15 @@ study.density.plot_fn  <- function(df,
         ggplot2::aes(x = x_studies, y = Author),
         data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect"}
                                                 else {Author != "Pooled Effect"}),
-        linewidth = 0.5,
-        scale = 0.6,
-        normalize = "panels",
-        color = color_shrinkage_outline,
-        fill = color_shrinkage_fill,
-        limits = calc_xlim
-      )
+        linewidth = 0.5, scale = 0.6, normalize = "panels",
+        color = color_shrinkage_outline, fill = color_shrinkage_fill, limits = calc_xlim)
   } else if (shrinkage_output == "pointinterval") {
     study.density.plot <- study.density.plot +
       ggdist::stat_pointinterval(
         ggplot2::aes(x = x_studies, y = Author),
         data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect"}
                                                 else {Author != "Pooled Effect"}),
-        linewidth = 1,
-        size = 1,
-        color = color_pointinterval,
-        limits = calc_xlim
-      )
+        linewidth = 1, size = 1, color = color_pointinterval, limits = calc_xlim)
   }
   
   return(study.density.plot)

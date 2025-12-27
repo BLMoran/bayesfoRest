@@ -46,6 +46,9 @@ bayes_forest(
   color_pointinterval = "purple",
   color_shrinkage_outline = "purple",
   color_shrinkage_fill = NULL,
+  split_color_by_null = FALSE,
+  color_favours_control = "firebrick",
+  color_favours_intervention = "dodgerblue",
   plot_width = 4,
   add_rob = FALSE,
   rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
@@ -143,6 +146,14 @@ Options: "density" (default) or "pointinterval".}
 \item{color_shrinkage_outline}{Color for shrinkage plot outlines. Default is "purple".}
 
 \item{color_shrinkage_fill}{Color for shrinkage plot fill. Default is NULL.}
+
+\item{split_color_by_null}{Logical. If TRUE, posterior densities are split and
+coloured based on whether values fall above or below the null value.}
+
+\item{color_favours_control}{Colour used for density regions favouring the control group when \code{split_color_by_null = TRUE}.}
+
+\item{color_favours_intervention}{Colour used for density regions favouring the
+intervention group when \code{split_color_by_null = TRUE}.}
 
 \item{plot_width}{Numeric value specifying the relative width of the plot component. Default is 4.}
 

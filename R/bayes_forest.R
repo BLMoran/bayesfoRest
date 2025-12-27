@@ -53,6 +53,11 @@
 #' @param color_pointinterval Color for point intervals. Default is "purple".
 #' @param color_shrinkage_outline Color for shrinkage plot outlines. Default is "purple".
 #' @param color_shrinkage_fill Color for shrinkage plot fill. Default is NULL.
+#' @param split_color_by_null Logical. If TRUE, posterior densities are split and 
+#' coloured based on whether values fall above or below the null value.
+#' @param color_favours_control Colour used for density regions favouring the control group when \code{split_color_by_null = TRUE}.
+#' @param color_favours_intervention Colour used for density regions favouring the 
+#' intervention group when \code{split_color_by_null = TRUE}.
 #' @param plot_width Numeric value specifying the relative width of the plot component. Default is 4.
 #' @param add_rob Logical indicating whether to add Risk of Bias assessment. Default is FALSE.
 #' @param rob_tool Character string specifying RoB tool. Options: "rob2" (default).
@@ -162,6 +167,9 @@ bayes_forest <- function(model,
                          color_pointinterval = "purple",
                          color_shrinkage_outline = "purple",
                          color_shrinkage_fill = NULL,
+                         split_color_by_null = FALSE,
+                         color_favours_control = "firebrick",
+                         color_favours_intervention = "dodgerblue",
                          plot_width = 4,
                          add_rob = FALSE,
                          rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
@@ -328,6 +336,9 @@ bayes_forest <- function(model,
       color_shrinkage_outline = color_shrinkage_outline,
       color_pointinterval = color_shrinkage_outline,
       color_shrinkage_fill = color_shrinkage_fill,
+      split_color_by_null = split_color_by_null,
+      color_favours_control = color_favours_control,
+      color_favours_intervention = color_favours_intervention,
       label_control = label_control,
       label_intervention = label_intervention,
       shrinkage_output = shrinkage_output,
@@ -471,6 +482,9 @@ bayes_forest <- function(model,
       color_shrinkage_outline = color_shrinkage_outline,
       color_pointinterval = color_pointinterval,
       color_shrinkage_fill = color_shrinkage_fill,
+      split_color_by_null = split_color_by_null,
+      color_favours_control = color_favours_control,
+      color_favours_intervention = color_favours_intervention,
       label_control = label_control,
       label_intervention = label_intervention,
       shrinkage_output = shrinkage_output,

@@ -68,6 +68,7 @@ both single and subgroup analyses with customizable visualization options.</p>
 <span>  i_time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sort_studies_by <span class="op">=</span> <span class="st">"author"</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sort_subgroup_by <span class="op">=</span> <span class="st">"alphabetical"</span>,</span>
 <span>  label_outcome <span class="op">=</span> <span class="st">"Outcome"</span>,</span>
 <span>  label_control <span class="op">=</span> <span class="st">"Control"</span>,</span>
@@ -174,6 +175,10 @@ Options: "author" (default), "year", or "effect".</p></dd>
 
 <dt id="arg-subgroup">subgroup<a class="anchor" aria-label="anchor" href="#arg-subgroup"></a></dt>
 <dd><p>Logical indicating whether to create subgroup analysis. Default is FALSE.</p></dd>
+
+
+<dt id="arg-subgroup-var">subgroup_var<a class="anchor" aria-label="anchor" href="#arg-subgroup-var"></a></dt>
+<dd><p>Character string. Name of the variable in data to use for subgroup analysis.</p></dd>
 
 
 <dt id="arg-sort-subgroup-by">sort_subgroup_by<a class="anchor" aria-label="anchor" href="#arg-sort-subgroup-by"></a></dt>
@@ -321,10 +326,6 @@ and the model is refitted on the filtered data.</p>
 <code><a href="https://wviechtb.github.io/metafor/reference/metafor-package.html" class="external-link">metafor</a></code> for creating meta analysis models,
 <code><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></code> for making great tables,
 <code><a href="https://patchwork.data-imaginist.com/reference/patchwork-package.html" class="external-link">patchwork</a></code> for combining plots</p></div>
-    </div>
-    <div class="section level2">
-    <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p>Author Name</p>
     </div>
 
     <div class="section level2">
