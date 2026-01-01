@@ -1,0 +1,79 @@
+url: https://blmoran.github.io/bayesfoRest/
+template:
+  bootstrap: 5
+  bslib:
+    # Primary colors from the hex logo
+    primary: "#6B7F4F"        # Sage green from the trees
+    secondary: "#4A5440"      # Dark olive from the clerical robes
+    success: "#8FA066"        # Lighter forest green
+    info: "#E8E2C9"          # Cream/beige from background
+    warning: "#9B8B5B"        # Muted gold/brown
+    danger: "#7D6B4A"         # Darker earth tone
+    light: "#F5F2E8"          # Light cream
+    dark: "#3C3F33"           # Very dark olive
+    
+    # Base colors
+    bg: "#FFFFFF"            # Pure white background
+    fg: "#3C3F33"            # Dark text color
+    
+    # Font settings
+    base_font:
+      google: "Open Sans"
+    heading_font:
+      google: "Montserrat"
+    code_font:
+      google: "Source Code Pro"
+      
+    # Additional customization
+    navbar-bg: "#4A5440"      # Dark olive navbar
+    navbar-light-color: "#E8E2C9"
+    navbar-light-hover-color: "#FAFAF8"
+    navbar-light-active-color: "#FAFAF8"
+    
+navbar:
+  bg: primary
+  type: dark
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github, bluesky]
+  components:
+    intro:
+      text: Get Started
+      href: articles/bayesfoRest.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/BLMoran/bayesfoRest
+    bluesky:
+      icon: fab fa-bluesky
+      href: https://bsky.app/profile/benmoran.bsky.social
+      aria-label: Bluesky
+      
+home:
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+    
+reference:
+  - title: Main Functions
+    desc: Core functions for creating Bayesian forest plots
+    contents:
+      - bayes_forest
+      - rob_plot
+      - sensitivity_plot
+      
+  - title: Example Datasets
+    desc: Example data for binary and continuous outcomes
+    contents:
+      - binary_outcome
+      - cont_outcome
+      
+articles:
+  - title: Articles
+    navbar: ~
+    contents:
+      - articles/Meta_Analysis_Workflow

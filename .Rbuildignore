@@ -1,2 +1,13 @@
+^data-raw$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^LICENSE\.md$
+^_pkgdown\.yml$
+^pkgdown$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$
+^vignettes/articles$
+^\.github$
+^docs$
+^bayesfoRest_hex\.png$
+^bayesfoRest_site\.zip$

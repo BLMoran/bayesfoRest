@@ -2,6 +2,7 @@
 
 export(bayes_forest)
 export(rob_plot)
+export(sensitivity_plot)
 import(dplyr)
 import(gt)
 importFrom(fontawesome,fa)
