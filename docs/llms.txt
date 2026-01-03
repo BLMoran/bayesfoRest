@@ -195,8 +195,12 @@ Core functions for creating Bayesian forest plots
   : Create Bayesian Forest Plot for Meta-Analysis
 - [`rob_plot()`](https://blmoran.github.io/bayesfoRest/reference/rob_plot.md)
   : Create Risk of Bias Plot
+- [`overall_plot()`](https://blmoran.github.io/bayesfoRest/reference/overall_plot.md)
+  : Create posterior plots for Bayesian meta-analysis
 - [`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)
   : Generate Sensitivity Analysis Plot for Bayesian Meta-Analysis
+- [`ecdf_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_plot.md)
+  : Create ECDF Plot for Sensitivity Analysis
 
 ## Example Datasets
 
