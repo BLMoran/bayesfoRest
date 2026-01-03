@@ -9,36 +9,36 @@
 #' @param data A data frame containing the study data used to fit the model
 #' @param priors A named list of brms prior specifications (created with \code{brms::prior()})
 #'   with names typically including "vague", "weakreg", and "informative"
-#' @param measure Character string specifying the effect measure.  One of "OR" (odds ratio),
+#' @param measure Character string specifying the effect measure.   One of "OR" (odds ratio),
 #'   "RR" (risk ratio), "HR" (hazard ratio), "IRR" (incidence rate ratio), 
 #'   "MD" (mean difference), or "SMD" (standardized mean difference)
-#' @param study_var Optional.  Name of the study identifier variable (unquoted). Required
+#' @param study_var Optional.   Name of the study identifier variable (unquoted). Required
 #'   if \code{incl_pet_peese = TRUE} or \code{incl_mixture = TRUE}
-#' @param rob_var Optional. Name of the risk of bias variable (unquoted). Should contain
+#' @param rob_var Optional.  Name of the risk of bias variable (unquoted). Should contain
 #'   values like "Low", "Some concerns", "High"
 #' @param exclude_high_rob Logical. If TRUE, performs sensitivity analysis excluding
-#'   studies with high risk of bias.  Default is FALSE
+#'   studies with high risk of bias.   Default is FALSE
 #' @param incl_pet_peese Logical. If TRUE, includes PET-PEESE bias adjustment analysis.
 #'   Default is FALSE
-#' @param pet_peese_direction Character string. Direction of expected bias for PET-PEESE.  
-#'   Either "negative" or "positive".  Default is "negative"
+#' @param pet_peese_direction Character string.  Direction of expected bias for PET-PEESE.  
+#'   Either "negative" or "positive".   Default is "negative"
 #' @param pet_peese_threshold Numeric. Threshold for choosing between PET and PEESE 
 #'   (based on proportion of studies showing effect). Default is 0.10
-#' @param incl_mixture Logical. If TRUE, includes robust mixture model analysis.
+#' @param incl_mixture Logical. If TRUE, includes robust mixture model analysis. 
 #'   Default is FALSE
-#' @param incl_bma Logical. If TRUE, includes Bayesian model averaging results.
+#' @param incl_bma Logical. If TRUE, includes Bayesian model averaging results. 
 #'   Default is FALSE
 #' @param model_bma Named list of RoBMA model fits (from \code{RoBMA_brms()}) to include
-#'   in model averaging. Names should be "vague", "weakreg", or "informative"
-#' @param prior_to_plot Character string. Which prior specification to plot in the ECDF. 
-#'   One of "vague", "weakreg", or "informative". Default is "weakreg"
+#'   in model averaging.  Names should be "vague", "weakreg", or "informative"
+#' @param prior_to_plot Character string.  Which prior specification to plot in the ECDF.  
+#'   One of "vague", "weakreg", or "informative".  Default is "weakreg"
 #' @param prob_reference Character string. What reference to use for probability calculations.
 #'   Either "null" (compare to null_value) or "null_range" (compare to null_range boundaries).
 #'   Default is "null"
-#' @param null_value Numeric. The null value for the effect measure. If NULL, uses
+#' @param null_value Numeric. The null value for the effect measure.  If NULL, uses
 #'   default based on measure (1 for ratio measures, 0 for difference measures)
-#' @param null_range Numeric vector of length 2 or single numeric value.  Defines the
-#'   range of practical equivalence around the null value. 
+#' @param null_range Numeric vector of length 2 or single numeric value.   Defines the
+#'   range of practical equivalence around the null value.  
 #' @param add_null_range Logical. If TRUE, displays the null range region on the plot.
 #'   Default is FALSE
 #' @param color_null_range Character string. Color for the null range region.
@@ -49,11 +49,11 @@
 #'   Default is "Intervention"
 #' @param title Optional character string. Main title for the plot
 #' @param subtitle Optional character string. Subtitle for the plot
-#' @param xlim Optional numeric vector of length 2.  X-axis limits for the plot
-#' @param x_breaks Optional numeric vector.  Custom x-axis break points
+#' @param xlim Optional numeric vector of length 2.   X-axis limits for the plot
+#' @param x_breaks Optional numeric vector.   Custom x-axis break points
 #' @param color_palette Optional named character vector of colors for each section.  
 #'   Names should match section labels (e.g., "All studies", "Excluding High RoB", etc.)
-#' @param show_density Logical. If TRUE, includes a density plot below the ECDF. 
+#' @param show_density Logical. If TRUE, includes a density plot below the ECDF.  
 #'   Default is TRUE
 #' @param font Optional character string. Font family to use for the plot
 #'
@@ -72,8 +72,8 @@
 #' 
 #' The \code{prob_reference} argument controls how probabilities are calculated:
 #' \itemize{
-#'   \item "null":  Probabilities are calculated relative to the null value (e.g., OR = 1)
-#'   \item "null_range":  Probabilities are calculated relative to the null range boundaries
+#'   \item "null":   Probabilities are calculated relative to the null value (e.g., OR = 1)
+#'   \item "null_range":   Probabilities are calculated relative to the null range boundaries
 #'     (left y-axis shows P(effect < lower bound), right y-axis shows P(effect > upper bound))
 #' }
 #'
@@ -113,6 +113,17 @@
 #' }
 #'
 #' @export
+#' 
+#' @importFrom rlang enquo quo_is_null %||%
+#' @importFrom dplyr filter mutate bind_rows case_when
+#' @importFrom purrr keep map_dfr imap_dfr
+#' @importFrom ggplot2 ggplot aes annotate geom_vline stat_ecdf scale_y_continuous sec_axis scale_color_manual theme_light theme element_rect element_text element_blank element_line unit margin labs guides guide_legend scale_x_log10 scale_x_continuous coord_cartesian expansion waiver annotation_custom
+#' @importFrom ggdist stat_slab
+#' @importFrom scales alpha percent_format
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom stats setNames
+#' @importFrom grid textGrob unit gpar
+#' @importFrom patchwork plot_spacer plot_layout
 #' 
 ecdf_plot <- function(model,
                       data,
@@ -280,7 +291,7 @@ ecdf_plot <- function(model,
   }
   
   draws <- dplyr::bind_rows(draws_ma, draws_bma)
-
+  
   # ---------------------------
   # 6. Filter to selected prior
   # ---------------------------
@@ -295,7 +306,7 @@ ecdf_plot <- function(model,
   # Standardize section labels - handle PET-PEESE variations
   draws_filtered <- draws_filtered |>
     dplyr::mutate(
-      section_label = dplyr::case_when(
+      section_label = dplyr:: case_when(
         grepl("^PET-PEESE", section_label) ~ "PET-PEESE",
         grepl("^PET / PEESE", section_label) ~ "PET-PEESE",
         TRUE ~ section_label
@@ -315,7 +326,7 @@ ecdf_plot <- function(model,
     dplyr::mutate(
       section_label = factor(section_label, levels = present_sections)
     )
-
+  
   # ---------------------------
   # 9. Set up colors - ensure all present sections have colors
   # ---------------------------
@@ -330,7 +341,7 @@ ecdf_plot <- function(model,
     # Ensure all present sections have a color
     missing_sections <- setdiff(present_sections, names(color_palette))
     if (length(missing_sections) > 0) {
-      warning("Some sections missing from color_palette: ", 
+      warning("Some sections missing from color_palette:  ", 
               paste(missing_sections, collapse = ", "),
               ".Using default colors for these.")
       n_missing <- length(missing_sections)
@@ -440,10 +451,10 @@ ecdf_plot <- function(model,
         expand = c(0, 0)
       ) +
       ggplot2:: coord_cartesian(xlim = calc_xlim, clip = "off") +
-      ggplot2:: labs(x = props$x_label)
+      ggplot2::labs(x = props$x_label)
   } else {
     ecdf_plot <- ecdf_plot +
-      ggplot2::scale_x_continuous(
+      ggplot2:: scale_x_continuous(
         breaks = breaks,
         expand = c(0, 0)
       ) +
@@ -540,7 +551,7 @@ ecdf_plot <- function(model,
           x = grid::unit(0.05, "npc"),
           y = grid::unit(0.6, "npc"),
           just = c("left", "bottom"),
-          gp = grid:: gpar(col = "grey30", fontsize = 9, fontface = "bold.italic", fontfamily = font)
+          gp = grid::gpar(col = "grey30", fontsize = 9, fontface = "bold.italic", fontfamily = font)
         ), xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf
       ) +
       ggplot2:: annotation_custom(
@@ -550,11 +561,11 @@ ecdf_plot <- function(model,
           y = grid::unit(0.6, "npc"),
           just = c("right", "bottom"),
           gp = grid::gpar(col = "grey30", fontsize = 9, fontface = "bold.italic", fontfamily = font)
-        ), xmin = calc_xlim[1], xmax = calc_xlim[2]- 0.01, ymin = -Inf, ymax = Inf
+        ), xmin = calc_xlim[1], xmax = calc_xlim[2] - 0.01, ymin = -Inf, ymax = Inf
       )
     
     # Combine plots using patchwork with axis alignment
-    final_plot <- (ecdf_plot /patchwork::plot_spacer()/ density_plot) +
+    final_plot <- (ecdf_plot / patchwork::plot_spacer() / density_plot) +
       patchwork::plot_layout(
         ncol = 1,
         heights = c(1, 0.0, 0.35),

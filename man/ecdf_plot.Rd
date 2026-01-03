@@ -43,24 +43,24 @@ ecdf_plot(
 \item{priors}{A named list of brms prior specifications (created with \code{brms::prior()})
 with names typically including "vague", "weakreg", and "informative"}
 
-\item{measure}{Character string specifying the effect measure.  One of "OR" (odds ratio),
+\item{measure}{Character string specifying the effect measure.   One of "OR" (odds ratio),
 "RR" (risk ratio), "HR" (hazard ratio), "IRR" (incidence rate ratio),
 "MD" (mean difference), or "SMD" (standardized mean difference)}
 
-\item{study_var}{Optional.  Name of the study identifier variable (unquoted). Required
+\item{study_var}{Optional.   Name of the study identifier variable (unquoted). Required
 if \code{incl_pet_peese = TRUE} or \code{incl_mixture = TRUE}}
 
-\item{rob_var}{Optional. Name of the risk of bias variable (unquoted). Should contain
+\item{rob_var}{Optional.  Name of the risk of bias variable (unquoted). Should contain
 values like "Low", "Some concerns", "High"}
 
 \item{exclude_high_rob}{Logical. If TRUE, performs sensitivity analysis excluding
-studies with high risk of bias.  Default is FALSE}
+studies with high risk of bias.   Default is FALSE}
 
 \item{incl_pet_peese}{Logical. If TRUE, includes PET-PEESE bias adjustment analysis.
 Default is FALSE}
 
-\item{pet_peese_direction}{Character string. Direction of expected bias for PET-PEESE.
-Either "negative" or "positive".  Default is "negative"}
+\item{pet_peese_direction}{Character string.  Direction of expected bias for PET-PEESE.
+Either "negative" or "positive".   Default is "negative"}
 
 \item{pet_peese_threshold}{Numeric. Threshold for choosing between PET and PEESE
 (based on proportion of studies showing effect). Default is 0.10}
@@ -72,16 +72,16 @@ Default is FALSE}
 Default is FALSE}
 
 \item{model_bma}{Named list of RoBMA model fits (from \code{RoBMA_brms()}) to include
-in model averaging. Names should be "vague", "weakreg", or "informative"}
+in model averaging.  Names should be "vague", "weakreg", or "informative"}
 
 \item{prob_reference}{Character string. What reference to use for probability calculations.
 Either "null" (compare to null_value) or "null_range" (compare to null_range boundaries).
 Default is "null"}
 
-\item{null_value}{Numeric. The null value for the effect measure. If NULL, uses
+\item{null_value}{Numeric. The null value for the effect measure.  If NULL, uses
 default based on measure (1 for ratio measures, 0 for difference measures)}
 
-\item{null_range}{Numeric vector of length 2 or single numeric value.  Defines the
+\item{null_range}{Numeric vector of length 2 or single numeric value.   Defines the
 range of practical equivalence around the null value.}
 
 \item{add_null_range}{Logical. If TRUE, displays the null range region on the plot.
@@ -100,9 +100,9 @@ Default is "Intervention"}
 
 \item{subtitle}{Optional character string. Subtitle for the plot}
 
-\item{xlim}{Optional numeric vector of length 2.  X-axis limits for the plot}
+\item{xlim}{Optional numeric vector of length 2.   X-axis limits for the plot}
 
-\item{x_breaks}{Optional numeric vector.  Custom x-axis break points}
+\item{x_breaks}{Optional numeric vector.   Custom x-axis break points}
 
 \item{color_palette}{Optional named character vector of colors for each section.
 Names should match section labels (e.g., "All studies", "Excluding High RoB", etc.)}
@@ -110,8 +110,8 @@ Names should match section labels (e.g., "All studies", "Excluding High RoB", et
 \item{show_density}{Logical. If TRUE, includes a density plot below the ECDF.
 Default is TRUE}
 
-\item{prior_to_plot}{Character string. Which prior specification to plot in the ECDF.
-One of "vague", "weakreg", or "informative". Default is "weakreg"}
+\item{prior_to_plot}{Character string.  Which prior specification to plot in the ECDF.
+One of "vague", "weakreg", or "informative".  Default is "weakreg"}
 
 \item{font}{Optional character string. Font family to use for the plot}
 }
@@ -136,8 +136,8 @@ includes:
 
 The \code{prob_reference} argument controls how probabilities are calculated:
 \itemize{
-\item "null":  Probabilities are calculated relative to the null value (e.g., OR = 1)
-\item "null_range":  Probabilities are calculated relative to the null range boundaries
+\item "null":   Probabilities are calculated relative to the null value (e.g., OR = 1)
+\item "null_range":   Probabilities are calculated relative to the null range boundaries
 (left y-axis shows P(effect < lower bound), right y-axis shows P(effect > upper bound))
 }
 }

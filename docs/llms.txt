@@ -90,24 +90,6 @@ bayes_forest(
 
 ![](reference/figures/forest_plot_rob_legend.png)
 
-### Exclude Studies with High Risk of Bias
-
-``` r
-bayes_forest(
-  model = model_bin,
-  data = binary_outcome,
-  measure = "OR",
-  subgroup = T,
-  add_rob = T,
-  add_rob_legend = T,
-  rob_tool = "rob2",
-  exclude_high_rob = T,
-  xlim = c(0.1, 3.5)
-)
-```
-
-![](reference/figures/forest_excl_high_rob.png)
-
 ### Standalone Risk of Bias Plot
 
 ``` r
@@ -120,6 +102,105 @@ rob_plot(
 ```
 
 ![](reference/figures/rob_viz.png)
+
+### Overall Plot
+
+``` r
+# Create overall plot with mean effect and tau
+overall_plot(
+  data = binary_outcome,
+  model = model_bin,
+  measure = "OR",
+  study_var = "Author",
+  incl_tau = T,
+  incl_mu_prior = T,
+  incl_tau_prior = T,
+  mu_xlim = c(0.1, 3.5),
+  tau_xlim = c(0, 1),
+  plot_arrangement = "vertical"
+)
+```
+
+![](reference/figures/overall_plot.png)
+
+### Sensitivity Plot
+
+``` r
+# Create sensitivity plot with various priors
+sensitivity_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  add_probs = F,
+  priors = list(
+    vague = prior(normal(0, 10), class = "Intercept"),
+    weakreg  = prior(normal(0, 1),  class = "Intercept"),
+    informative = prior(normal(0, 0.5), class = "Intercept")),
+  xlim = c(0.25, 1.5),
+  add_null_range = T
+)
+```
+
+![](reference/figures/sens_plot_no_prob.png)
+
+### Sensitivity Plot with Probabilities
+
+``` r
+# Create sensitivity plot with various priors and probabilities of benefit and harm
+sensitivity_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  add_probs = T,
+  priors = list(
+    vague = prior(normal(0, 10), class = "Intercept"),
+    weakreg  = prior(normal(0, 1),  class = "Intercept"),
+    informative = prior(normal(0, 0.5), class = "Intercept")),
+  xlim = c(0.25, 1.5),
+  add_null_range = T
+)
+```
+
+![](reference/figures/sens_plot_prob.png)
+
+### ECDF Plot
+
+``` r
+# Create ecdf plot with density plot
+ecdf_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  priors = list(
+    weakreg  = prior(normal(0, 1),  class = "Intercept")),
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  xlim = c(0.25, 1.5),
+  add_null_range = T,
+  prob_reference = "null"
+)
+```
+
+![](reference/figures/ecdf_plot.png)
 
 ## Citation
 

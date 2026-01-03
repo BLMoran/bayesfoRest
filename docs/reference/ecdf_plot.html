@@ -100,24 +100,24 @@ with names typically including "vague", "weakreg", and "informative"</p></dd>
 
 
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
-<dd><p>Character string specifying the effect measure.  One of "OR" (odds ratio),
+<dd><p>Character string specifying the effect measure.   One of "OR" (odds ratio),
 "RR" (risk ratio), "HR" (hazard ratio), "IRR" (incidence rate ratio),
 "MD" (mean difference), or "SMD" (standardized mean difference)</p></dd>
 
 
 <dt id="arg-study-var">study_var<a class="anchor" aria-label="anchor" href="#arg-study-var"></a></dt>
-<dd><p>Optional.  Name of the study identifier variable (unquoted). Required
+<dd><p>Optional.   Name of the study identifier variable (unquoted). Required
 if <code>incl_pet_peese = TRUE</code> or <code>incl_mixture = TRUE</code></p></dd>
 
 
 <dt id="arg-rob-var">rob_var<a class="anchor" aria-label="anchor" href="#arg-rob-var"></a></dt>
-<dd><p>Optional. Name of the risk of bias variable (unquoted). Should contain
+<dd><p>Optional.  Name of the risk of bias variable (unquoted). Should contain
 values like "Low", "Some concerns", "High"</p></dd>
 
 
 <dt id="arg-exclude-high-rob">exclude_high_rob<a class="anchor" aria-label="anchor" href="#arg-exclude-high-rob"></a></dt>
 <dd><p>Logical. If TRUE, performs sensitivity analysis excluding
-studies with high risk of bias.  Default is FALSE</p></dd>
+studies with high risk of bias.   Default is FALSE</p></dd>
 
 
 <dt id="arg-incl-pet-peese">incl_pet_peese<a class="anchor" aria-label="anchor" href="#arg-incl-pet-peese"></a></dt>
@@ -126,8 +126,8 @@ Default is FALSE</p></dd>
 
 
 <dt id="arg-pet-peese-direction">pet_peese_direction<a class="anchor" aria-label="anchor" href="#arg-pet-peese-direction"></a></dt>
-<dd><p>Character string. Direction of expected bias for PET-PEESE.
-Either "negative" or "positive".  Default is "negative"</p></dd>
+<dd><p>Character string.  Direction of expected bias for PET-PEESE.
+Either "negative" or "positive".   Default is "negative"</p></dd>
 
 
 <dt id="arg-pet-peese-threshold">pet_peese_threshold<a class="anchor" aria-label="anchor" href="#arg-pet-peese-threshold"></a></dt>
@@ -147,7 +147,7 @@ Default is FALSE</p></dd>
 
 <dt id="arg-model-bma">model_bma<a class="anchor" aria-label="anchor" href="#arg-model-bma"></a></dt>
 <dd><p>Named list of RoBMA model fits (from <code>RoBMA_brms()</code>) to include
-in model averaging. Names should be "vague", "weakreg", or "informative"</p></dd>
+in model averaging.  Names should be "vague", "weakreg", or "informative"</p></dd>
 
 
 <dt id="arg-prob-reference">prob_reference<a class="anchor" aria-label="anchor" href="#arg-prob-reference"></a></dt>
@@ -157,12 +157,12 @@ Default is "null"</p></dd>
 
 
 <dt id="arg-null-value">null_value<a class="anchor" aria-label="anchor" href="#arg-null-value"></a></dt>
-<dd><p>Numeric. The null value for the effect measure. If NULL, uses
+<dd><p>Numeric. The null value for the effect measure.  If NULL, uses
 default based on measure (1 for ratio measures, 0 for difference measures)</p></dd>
 
 
 <dt id="arg-null-range">null_range<a class="anchor" aria-label="anchor" href="#arg-null-range"></a></dt>
-<dd><p>Numeric vector of length 2 or single numeric value.  Defines the
+<dd><p>Numeric vector of length 2 or single numeric value.   Defines the
 range of practical equivalence around the null value.</p></dd>
 
 
@@ -195,11 +195,11 @@ Default is "Intervention"</p></dd>
 
 
 <dt id="arg-xlim">xlim<a class="anchor" aria-label="anchor" href="#arg-xlim"></a></dt>
-<dd><p>Optional numeric vector of length 2.  X-axis limits for the plot</p></dd>
+<dd><p>Optional numeric vector of length 2.   X-axis limits for the plot</p></dd>
 
 
 <dt id="arg-x-breaks">x_breaks<a class="anchor" aria-label="anchor" href="#arg-x-breaks"></a></dt>
-<dd><p>Optional numeric vector.  Custom x-axis break points</p></dd>
+<dd><p>Optional numeric vector.   Custom x-axis break points</p></dd>
 
 
 <dt id="arg-color-palette">color_palette<a class="anchor" aria-label="anchor" href="#arg-color-palette"></a></dt>
@@ -213,8 +213,8 @@ Default is TRUE</p></dd>
 
 
 <dt id="arg-prior-to-plot">prior_to_plot<a class="anchor" aria-label="anchor" href="#arg-prior-to-plot"></a></dt>
-<dd><p>Character string. Which prior specification to plot in the ECDF.
-One of "vague", "weakreg", or "informative". Default is "weakreg"</p></dd>
+<dd><p>Character string.  Which prior specification to plot in the ECDF.
+One of "vague", "weakreg", or "informative".  Default is "weakreg"</p></dd>
 
 
 <dt id="arg-font">font<a class="anchor" aria-label="anchor" href="#arg-font"></a></dt>
@@ -233,8 +233,8 @@ includes:</p><ul><li><p>Left y-axis: Probability that mean effect &lt; x</p></li
 <li><p>Right y-axis: Probability that mean effect &gt; x</p></li>
 <li><p>Optional density curves below the ECDF</p></li>
 <li><p>Optional region of practical equivalence (ROPE) shading</p></li>
-</ul><p>The <code>prob_reference</code> argument controls how probabilities are calculated:</p><ul><li><p>"null":  Probabilities are calculated relative to the null value (e.g., OR = 1)</p></li>
-<li><p>"null_range":  Probabilities are calculated relative to the null range boundaries
+</ul><p>The <code>prob_reference</code> argument controls how probabilities are calculated:</p><ul><li><p>"null":   Probabilities are calculated relative to the null value (e.g., OR = 1)</p></li>
+<li><p>"null_range":   Probabilities are calculated relative to the null range boundaries
 (left y-axis shows P(effect &lt; lower bound), right y-axis shows P(effect &gt; upper bound))</p></li>
 </ul></div>
 
