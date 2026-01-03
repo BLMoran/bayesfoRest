@@ -126,7 +126,9 @@ rob_plot(
 )
 ```
 
-![](man/figures/rob_viz.png) \### Overall Plot
+![](man/figures/rob_viz.png)
+
+### Overall Plot
 
 ``` r
 # Create overall plot

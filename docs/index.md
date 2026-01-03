@@ -90,6 +90,24 @@ bayes_forest(
 
 ![](reference/figures/forest_plot_rob_legend.png)
 
+### Exclude Studies with High Risk of Bias
+
+``` r
+bayes_forest(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  subgroup = T,
+  add_rob = T,
+  add_rob_legend = T,
+  rob_tool = "rob2",
+  exclude_high_rob = T,
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](reference/figures/forest_excl_high_rob.png)
+
 ### Standalone Risk of Bias Plot
 
 ``` r
@@ -101,12 +119,10 @@ rob_plot(
 )
 ```
 
-![](reference/figures/rob_viz.png)
-
-### Overall Plot
+![](reference/figures/rob_viz.png) \### Overall Plot
 
 ``` r
-# Create overall plot with mean effect and tau
+# Create overall plot
 overall_plot(
   data = binary_outcome,
   model = model_bin,
@@ -126,7 +142,7 @@ overall_plot(
 ### Sensitivity Plot
 
 ``` r
-# Create sensitivity plot with various priors
+# Create sensitivity plot with different priors and meta-analysis models
 sensitivity_plot(
   model = model_bin,
   data = binary_outcome,
@@ -153,7 +169,7 @@ sensitivity_plot(
 ### Sensitivity Plot with Probabilities
 
 ``` r
-# Create sensitivity plot with various priors and probabilities of benefit and harm
+# Create sensitivity plot with different priors and meta-analysis models with probabilities
 sensitivity_plot(
   model = model_bin,
   data = binary_outcome,
@@ -180,7 +196,7 @@ sensitivity_plot(
 ### ECDF Plot
 
 ``` r
-# Create ecdf plot with density plot
+# Create ECDF plot with different meta-analysis models
 ecdf_plot(
   model = model_bin,
   data = binary_outcome,

@@ -162,22 +162,35 @@
 <p><img src="reference/figures/forest_plot_rob_legend.png"></p>
 </div>
 <div class="section level3">
-<h3 id="standalone-risk-of-bias-plot">Standalone Risk of Bias Plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
+<h3 id="exclude-studies-with-high-risk-of-bias">Exclude Studies with High Risk of Bias<a class="anchor" aria-label="anchor" href="#exclude-studies-with-high-risk-of-bias"></a>
 </h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  subgroup <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  add_rob <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  add_rob_legend <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
+<span>  exclude_high_rob <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/forest_excl_high_rob.png"></p>
+</div>
+<div class="section level3">
+<h3 id="standalone-risk-of-bias-plot">Standalone Risk of Bias Plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create standalone RoB visualization</span></span>
 <span><span class="fu"><a href="reference/rob_plot.html">rob_plot</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/rob_viz.png"></p>
-</div>
-<div class="section level3">
-<h3 id="overall-plot">Overall Plot<a class="anchor" aria-label="anchor" href="#overall-plot"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create overall plot with mean effect and tau</span></span>
+<p><img src="reference/figures/rob_viz.png"> ### Overall Plot</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create overall plot</span></span>
 <span><span class="fu"><a href="reference/overall_plot.html">overall_plot</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
@@ -195,8 +208,8 @@
 <div class="section level3">
 <h3 id="sensitivity-plot">Sensitivity Plot<a class="anchor" aria-label="anchor" href="#sensitivity-plot"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create sensitivity plot with various priors</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create sensitivity plot with different priors and meta-analysis models</span></span>
 <span><span class="fu"><a href="reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
@@ -221,8 +234,8 @@
 <div class="section level3">
 <h3 id="sensitivity-plot-with-probabilities">Sensitivity Plot with Probabilities<a class="anchor" aria-label="anchor" href="#sensitivity-plot-with-probabilities"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create sensitivity plot with various priors and probabilities of benefit and harm</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create sensitivity plot with different priors and meta-analysis models with probabilities</span></span>
 <span><span class="fu"><a href="reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
@@ -247,8 +260,8 @@
 <div class="section level3">
 <h3 id="ecdf-plot">ECDF Plot<a class="anchor" aria-label="anchor" href="#ecdf-plot"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create ecdf plot with density plot</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create ECDF plot with different meta-analysis models</span></span>
 <span><span class="fu"><a href="reference/ecdf_plot.html">ecdf_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
@@ -273,13 +286,13 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use bayesfoRest in your research, please cite:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  title <span class="ot">=</span> {bayesfoRest<span class="sc">:</span> Forest Plots <span class="cf">for</span> Bayesian Meta<span class="sc">-</span>Analyses <span class="cf">in</span> R},</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  author <span class="ot">=</span> {[Benjamin Moran and Thomas Payne]},</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesfoRest},</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  title <span class="ot">=</span> {bayesfoRest<span class="sc">:</span> Forest Plots <span class="cf">for</span> Bayesian Meta<span class="sc">-</span>Analyses <span class="cf">in</span> R},</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  author <span class="ot">=</span> {[Benjamin Moran and Thomas Payne]},</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesfoRest},</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
