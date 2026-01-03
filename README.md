@@ -4,6 +4,7 @@
 # bayesfoRest: Forest Plots for Bayesian Meta Analyses in R <img src="man/figures/logo.png" align="right" height="200px" />
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 ## Overview
@@ -125,7 +126,104 @@ rob_plot(
 )
 ```
 
-![](man/figures/rob_viz.png)
+![](man/figures/rob_viz.png) \### Overall Plot
+
+``` r
+# Create overall plot
+overall_plot(
+  data = binary_outcome,
+  model = model_bin,
+  measure = "OR",
+  study_var = "Author",
+  incl_tau = T,
+  incl_mu_prior = T,
+  incl_tau_prior = T,
+  mu_xlim = c(0.1, 3.5),
+  tau_xlim = c(0, 1),
+  plot_arrangement = "vertical"
+)
+```
+
+![](man/figures/overall_plot.png)
+
+### Sensitivity Plot
+
+``` r
+# Create sensitivity plot with different priors and meta-analysis models
+sensitivity_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  add_probs = F,
+  priors = list(
+    vague = prior(normal(0, 10), class = "Intercept"),
+    weakreg  = prior(normal(0, 1),  class = "Intercept"),
+    informative = prior(normal(0, 0.5), class = "Intercept")),
+  xlim = c(0.25, 1.5),
+  add_null_range = T
+)
+```
+
+![](man/figures/sens_plot_no_prob.png)
+
+### Sensitivity Plot with Probabilities
+
+``` r
+# Create sensitivity plot with different priors and meta-analysis models with probabilities
+sensitivity_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  add_probs = T,
+  priors = list(
+    vague = prior(normal(0, 10), class = "Intercept"),
+    weakreg  = prior(normal(0, 1),  class = "Intercept"),
+    informative = prior(normal(0, 0.5), class = "Intercept")),
+  xlim = c(0.25, 1.5),
+  add_null_range = T
+)
+```
+
+![](man/figures/sens_plot_prob.png)
+
+### ECDF Plot
+
+``` r
+# Create ECDF plot with different meta-analysis models
+ecdf_plot(
+  model = model_bin,
+  data = binary_outcome,
+  measure = "OR",
+  study_var = Author,
+  rob_var = Overall,
+  priors = list(
+    weakreg  = prior(normal(0, 1),  class = "Intercept")),
+  exclude_high_rob = T,
+  incl_pet_peese = T,
+  incl_mixture = T,
+  incl_bma = T,
+  model_bma = robma_fits_bin,
+  xlim = c(0.25, 1.5),
+  add_null_range = T,
+  prob_reference = "null"
+)
+```
+
+![](man/figures/ecdf_plot.png)
 
 ## Citation
 
