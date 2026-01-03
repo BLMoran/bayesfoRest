@@ -16,6 +16,7 @@ Imports:
     gt,
     paletteer,
     patchwork,
+    posterior,
     purrr,
     rlang,
     scales,

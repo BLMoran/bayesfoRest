@@ -10,7 +10,16 @@ utils::globalVariables(c(
   "mean_effect", "null_line_to_use", "x_studies", "xdist",
   "Code", "Description", "Event_Control", "Event_Intervention",
   "N_Control", "N_Intervention", "N_Total",
-  "Outcome_Control_No", "Outcome_Intervention_No", "x"
+  "Outcome_Control_No", "Outcome_Intervention_No", "x",
+  # overall_plot
+  "mu", "tau", "category", "density", "coef",
+  
+  # sensitivity functions
+  "section_label", "prior", "prior_label", "plot_row", "level_num", "max_level",
+  "mu_prior_unicode", "tau_prior_unicode", ". last_in_group",
+  "median", "l95", "u95", "estimate", "post_prob",
+  
+  # other
+  "normal", "formula", "update", "as. formula"
 ))
-
 

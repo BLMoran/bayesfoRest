@@ -64,7 +64,9 @@ reference:
     contents:
       - bayes_forest
       - rob_plot
+      - overall_plot
       - sensitivity_plot
+      - ecdf_plot
       
   - title: Example Datasets
     desc: Example data for binary and continuous outcomes
