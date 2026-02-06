@@ -40,7 +40,8 @@ sensitivity_density_plot_fn <- function(df,
                                         null_range = NULL,
                                         add_null_range = NULL,
                                         color_null_range = "#77bb41",
-                                        font = NULL) {
+                                        font = NULL,
+                                        reverse_arms = FALSE) {
   
   props <- get_measure_properties(measure)
   null_value <- null_value %||% props$null_value
@@ -120,8 +121,8 @@ sensitivity_density_plot_fn <- function(df,
     {if (isTRUE(split_color_by_null)) {
       ggplot2::scale_fill_manual(
         values = c(
-          "FALSE" = color_favours_intervention,
-          "TRUE"  = color_favours_control
+          "FALSE" = if (reverse_arms) color_favours_control else color_favours_intervention,
+          "TRUE"  = if (reverse_arms) color_favours_intervention else color_favours_control
         ),
         guide = "none"
       )
@@ -165,7 +166,7 @@ sensitivity_density_plot_fn <- function(df,
     # Add favours labels
     ggplot2::annotation_custom(
       grid::textGrob(
-        label = paste(" Favours\n", label_control),  
+        label = paste(" Favours\n", if (reverse_arms) label_intervention else label_control),  
         x = grid::unit(0.97, "npc"), 
         y = grid::unit(1.02, "npc"), 
         just = c("right", "bottom"),
@@ -176,7 +177,7 @@ sensitivity_density_plot_fn <- function(df,
     
     ggplot2::annotation_custom(
       grid::textGrob(
-        label = paste(" Favours\n", label_intervention),
+        label = paste(" Favours\n", if (reverse_arms) label_control else label_intervention),
         x = grid::unit(0.05, "npc"), 
         y = grid::unit(1.02, "npc"), 
         just = c("left", "bottom"),
@@ -211,17 +212,35 @@ sensitivity_density_plot_fn <- function(df,
   
   # Apply appropriate scale
   if (isTRUE(props$log_scale)) {
-    p <- p + ggplot2::scale_x_log10(
-      breaks = breaks,
-      limits = calc_xlim,
-      expand = c(0, 0)
-    )
+    if (isTRUE(reverse_arms)) {
+      p <- p + ggplot2::scale_x_continuous(
+        transform = scales::compose_trans("log10", "reverse"),
+        breaks = breaks,
+        limits = calc_xlim,
+        expand = c(0, 0)
+      )
+    } else {
+      p <- p + ggplot2::scale_x_log10(
+        breaks = breaks,
+        limits = calc_xlim,
+        expand = c(0, 0)
+      )
+    }
   } else {
-    p <- p + ggplot2::scale_x_continuous(
-      breaks = breaks,
-      limits = calc_xlim,
-      expand = c(0, 0)
-    )
+    if (isTRUE(reverse_arms)) {
+      p <- p + ggplot2::scale_x_continuous(
+        transform = scales::transform_reverse(),
+        breaks = breaks,
+        limits = calc_xlim,
+        expand = c(0, 0)
+      )
+    } else {
+      p <- p + ggplot2::scale_x_continuous(
+        breaks = breaks,
+        limits = calc_xlim,
+        expand = c(0, 0)
+      )
+    }
   }
   
   p

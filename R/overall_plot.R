@@ -30,6 +30,8 @@
 #' @param tau_slab_scale Numeric, scaling factor for tau slab height relative to mu (default 0.7)
 #' @param font Font family for text elements
 #' @param plot_arrangement Character, "vertical" (stacked) or "horizontal" (side by side)
+#' @param reverse_arms Logical indicating whether to reverse the forest plot orientation.
+#'   When TRUE, the X-axis direction is reversed and label positions are swapped. Default is FALSE.
 #'
 #' @return A ggplot object (or combined plot if incl_tau = TRUE)
 #' @export
@@ -73,7 +75,8 @@ overall_plot <- function(data = NULL,
                          tau_posterior_outline = NULL,
                          tau_slab_scale = 0.7,
                          font = NULL,
-                         plot_arrangement = "vertical") {
+                         plot_arrangement = "vertical",
+                         reverse_arms = FALSE) {
   
   # Get measure properties
   props <- get_measure_properties(measure)
@@ -283,8 +286,8 @@ overall_plot <- function(data = NULL,
                         color = color_overall_posterior_outline,
                         alpha = 0.8) +
       ggplot2::scale_fill_manual(
-        values = c("TRUE" = color_favours_intervention, 
-                   "FALSE" = color_favours_control),
+        values = c("TRUE" = if (reverse_arms) color_favours_control else color_favours_intervention, 
+                   "FALSE" = if (reverse_arms) color_favours_intervention else color_favours_control),
         guide = "none"
       )
   } else {
@@ -317,10 +320,10 @@ overall_plot <- function(data = NULL,
   
   mu_plot <- mu_plot +
     ggplot2::annotate("text", x = left_x, y = label_y, 
-                      label = paste0("Favours\n", label_intervention),
+                      label = paste0("Favours\n", if (reverse_arms) label_control else label_intervention),
                       fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
     ggplot2:: annotate("text", x = right_x, y = label_y, 
-                       label = paste0("Favours\n", label_control),
+                       label = paste0("Favours\n", if (reverse_arms) label_intervention else label_control),
                        fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
     ggplot2:: annotate("segment", x = mu_xlim[1], xend = mu_xlim[2], y = Inf, yend = Inf,
                        linewidth = axis_line_size, color = "grey60"
@@ -328,19 +331,41 @@ overall_plot <- function(data = NULL,
   
   # Scale and coordinate system - minimal gap at bottom (0.03)
   if (is_log_scale) {
-    mu_plot <- mu_plot +
-      ggplot2::scale_x_log10(breaks = x_breaks, 
-                             limits = mu_xlim,
-                             labels = function(x) sprintf("%.2g", x),
-                             expand = c(0, 0)) +
-      ggplot2:: coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    if (isTRUE(reverse_arms)) {
+      mu_plot <- mu_plot +
+        ggplot2::scale_x_continuous(
+          transform = scales::compose_trans("log10", "reverse"),
+          breaks = x_breaks, 
+          limits = mu_xlim,
+          labels = function(x) sprintf("%.2g", x),
+          expand = c(0, 0)) +
+        ggplot2:: coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    } else {
+      mu_plot <- mu_plot +
+        ggplot2::scale_x_log10(breaks = x_breaks, 
+                               limits = mu_xlim,
+                               labels = function(x) sprintf("%.2g", x),
+                               expand = c(0, 0)) +
+        ggplot2:: coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    }
   } else {
-    mu_plot <- mu_plot +
-      ggplot2::scale_x_continuous(breaks = x_breaks, 
-                                  limits = mu_xlim,
-                                  labels = function(x) sprintf("%.2g", x),
-                                  expand = c(0, 0)) +
-      ggplot2::coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    if (isTRUE(reverse_arms)) {
+      mu_plot <- mu_plot +
+        ggplot2::scale_x_continuous(
+          transform = scales::transform_reverse(),
+          breaks = x_breaks, 
+          limits = mu_xlim,
+          labels = function(x) sprintf("%.2g", x),
+          expand = c(0, 0)) +
+        ggplot2::coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    } else {
+      mu_plot <- mu_plot +
+        ggplot2::scale_x_continuous(breaks = x_breaks, 
+                                    limits = mu_xlim,
+                                    labels = function(x) sprintf("%.2g", x),
+                                    expand = c(0, 0)) +
+        ggplot2::coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+    }
   }
   
   mu_plot <- mu_plot +

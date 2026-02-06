@@ -6,7 +6,8 @@ forest.table.left_fn <- function(forest.data.summary,
                                  label_control = "Control",
                                  label_intervention = "Intervention",
                                  measure = "OR",
-                                 font = NULL) {
+                                 font = NULL,
+                                 reverse_arms = FALSE) {
   
   is_continuous <- measure %in% c("MD", "SMD")
   
@@ -21,9 +22,19 @@ forest.table.left_fn <- function(forest.data.summary,
   
   # Choose correct columns for data
   if (is_continuous) {
-    selected_cols <- c("Author", "Year", "N_int", "int_mean_sd", "N_ctrl", "ctrl_mean_sd")
+    if (isTRUE(reverse_arms)) {
+      # When reversed: Intervention, Control (so Control appears on LEFT which now favors control)
+      selected_cols <- c("Author", "Year", "N_ctrl", "ctrl_mean_sd", "N_int", "int_mean_sd")
+    } else {
+      selected_cols <- c("Author", "Year", "N_int", "int_mean_sd", "N_ctrl", "ctrl_mean_sd")
+    }
   } else {
-    selected_cols <- c("Author", "Year", "int_outcome_frac", "control_outcome_frac")
+    if (isTRUE(reverse_arms)) {
+      # When reversed: Intervention, Control
+      selected_cols <- c("Author", "Year", "control_outcome_frac", "int_outcome_frac")
+    } else {
+      selected_cols <- c("Author", "Year", "int_outcome_frac", "control_outcome_frac")
+    }
   }
   if (isTRUE(subgroup)) {
     selected_cols <- c("Author", "Year", "Subgroup", selected_cols[!(selected_cols %in% c("Author", "Year"))])
@@ -79,11 +90,21 @@ forest.table.left_fn <- function(forest.data.summary,
   
   # Column label mapping
   col_labels <- if (is_continuous) {
-    c(N_int = "N", int_mean_sd = gt::md(int_label),
-      N_ctrl = "N", ctrl_mean_sd = gt::md(control_label))
+    if (isTRUE(reverse_arms)) {
+      c(N_ctrl = "N", ctrl_mean_sd = gt::md(control_label),
+        N_int = "N", int_mean_sd = gt::md(int_label))
+    } else {
+      c(N_int = "N", int_mean_sd = gt::md(int_label),
+        N_ctrl = "N", ctrl_mean_sd = gt::md(control_label))
+    }
   } else {
-    c(control_outcome_frac = gt::md(control_label),
-      int_outcome_frac = gt::md(int_label))
+    if (isTRUE(reverse_arms)) {
+      c(control_outcome_frac = gt::md(control_label),
+        int_outcome_frac = gt::md(int_label))
+    } else {
+      c(int_outcome_frac = gt::md(int_label),
+        control_outcome_frac = gt::md(control_label))
+    }
   }
   
   # Final styling

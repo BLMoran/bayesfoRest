@@ -64,6 +64,8 @@
 #'   intervention. Default is "dodgerblue"
 #' @param plot_width Numeric. Width ratio for the density plot section. Default is 4
 #' @param font Optional character string. Font family to use for the plot
+#' @param reverse_arms Logical indicating whether to reverse the forest plot orientation.
+#'   When TRUE, the X-axis direction is reversed and label positions are swapped. Default is FALSE.
 #'
 #' @return A patchwork object combining the sensitivity analysis tables and density plots
 #'
@@ -151,7 +153,8 @@ sensitivity_plot <- function(model,
                              color_favours_control = "firebrick",
                              color_favours_intervention = "dodgerblue",
                              plot_width = 4,
-                             font = NULL) {
+                             font = NULL,
+                             reverse_arms = FALSE) {
   
   # ---------------------------
   # 1. Validation
@@ -381,7 +384,8 @@ sensitivity_plot <- function(model,
     null_range = null_range,
     color_null_range = color_null_range,
     add_null_range = add_null_range,
-    font = font
+    font = font,
+    reverse_arms = reverse_arms
   )
   
   # ---------------------------

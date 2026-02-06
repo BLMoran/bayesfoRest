@@ -67,6 +67,9 @@
 #' @param font Character string specifying the font family to use throughout the plot.
 #'   Default is NULL (uses system defaults). Common options include "Arial", "Times New Roman",
 #'   "Helvetica", "Georgia", etc. The font must be available on your system.
+#' @param reverse_arms Logical indicating whether to reverse the forest plot orientation.
+#'   When TRUE, the X-axis direction is reversed, label positions are swapped, and table columns
+#'   are reordered. Default is FALSE.
 #'
 #' @return A patchwork object containing the complete forest plot with study information table,
 #'   density plots, and effect size table.
@@ -175,7 +178,8 @@ bayes_forest <- function(model,
                          rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
                          add_rob_legend = FALSE,
                          exclude_high_rob = FALSE,
-                         font = NULL) {
+                         font = NULL,
+                         reverse_arms = FALSE) {
   
   # Input validation
   validate_inputs(
@@ -348,7 +352,8 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
-      font = font
+      font = font,
+      reverse_arms = reverse_arms
     )
     
     # Step 3: Create summary data for tables
@@ -494,7 +499,8 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
-      font = font
+      font = font,
+      reverse_arms = reverse_arms
     )
   }
   
@@ -505,7 +511,8 @@ bayes_forest <- function(model,
     label_control = label_control,
     label_intervention = label_intervention,
     measure = measure,
-    font = font
+    font = font,
+    reverse_arms = reverse_arms
   )
   
   # Create right table (effect sizes and optionally RoB)

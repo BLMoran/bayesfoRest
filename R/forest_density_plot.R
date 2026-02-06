@@ -26,7 +26,8 @@ study.density.plot_fn  <- function(df,
                                    add_rope = FALSE,
                                    rope_value = NULL,
                                    rope_color = "grey50",
-                                   font = NULL){
+                                   font = NULL,
+                                   reverse_arms = FALSE){
   
   # Filter out "No Pooled Effect" rows at the beginning
   df <- df |> dplyr::filter(Author != "No Pooled Effect")
@@ -203,8 +204,8 @@ study.density.plot_fn  <- function(df,
     {if (isTRUE(split_color_by_null)) {
       ggplot2::scale_fill_manual(
         values = c(
-          "FALSE" = color_favours_intervention,
-          "TRUE"  = color_favours_control),  
+          "FALSE" = if (reverse_arms) color_favours_control else color_favours_intervention,
+          "TRUE"  = if (reverse_arms) color_favours_intervention else color_favours_control),  
         guide = "none")
     }} +
     # Add null value
@@ -226,12 +227,12 @@ study.density.plot_fn  <- function(df,
       axis.text.x.bottom = ggplot2::element_text(colour = "black", family = font)) +
     ggplot2::guides(x.sec = "axis", y.sec = "axis") +
     ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_control),  
+      label = paste(" Favours\n", if (reverse_arms) label_intervention else label_control),  
       x = grid::unit(1, "npc"), y = grid::unit(1.02, "npc"), just = c("right", "bottom"),
       gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
       xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
     ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_intervention),
+      label = paste(" Favours\n", if (reverse_arms) label_control else label_intervention),
       x = grid::unit(0, "npc"), y = grid::unit(1.02, "npc"), just = c("left", "bottom"),
       gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
       xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf) +
@@ -240,15 +241,33 @@ study.density.plot_fn  <- function(df,
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
   
   if (isTRUE(props$log_scale)){
-    study.density.plot <- study.density.plot +
-      ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim)+
-      ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 1]), color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 3:4]), color = "grey60", linetype = 2)
+    if (isTRUE(reverse_arms)) {
+      study.density.plot <- study.density.plot +
+        ggplot2::scale_x_continuous(
+          transform = scales::compose_trans("log10", "reverse"),
+          breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
+        ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 1]), color = "grey60", linewidth = 1) +
+        ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 3:4]), color = "grey60", linetype = 2)
+    } else {
+      study.density.plot <- study.density.plot +
+        ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim)+
+        ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 1]), color = "grey60", linewidth = 1) +
+        ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 3:4]), color = "grey60", linetype = 2)
+    }
   } else {
-    study.density.plot <- study.density.plot +
-      ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
-      ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 1], color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 3:4], color = "grey60", linetype = 2)
+    if (isTRUE(reverse_arms)) {
+      study.density.plot <- study.density.plot +
+        ggplot2::scale_x_continuous(
+          transform = scales::transform_reverse(),
+          breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
+        ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 1], color = "grey60", linewidth = 1) +
+        ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 3:4], color = "grey60", linetype = 2)
+    } else {
+      study.density.plot <- study.density.plot +
+        ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
+        ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 1], color = "grey60", linewidth = 1) +
+        ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 3:4], color = "grey60", linetype = 2)
+    }
   }
   
   if(isFALSE(subgroup)){
