@@ -39,11 +39,11 @@ forest.table.left_fn <- function(forest.data.summary,
     )
   )
   
-  # Replace NA values with blanks for the 'Pooled Effect' row
+  # Replace NA values with blanks for the 'Pooled Effect' and 'Prediction' rows
   if (is_continuous) {
     df <- df |> dplyr::mutate(
-      int_mean_sd = dplyr::if_else(Author == "Pooled Effect", NA_character_, int_mean_sd),
-      ctrl_mean_sd = dplyr::if_else(Author == "Pooled Effect", NA_character_, ctrl_mean_sd)
+      int_mean_sd = dplyr::if_else(Author %in% c("Pooled Effect", "Prediction"), NA_character_, int_mean_sd),
+      ctrl_mean_sd = dplyr::if_else(Author %in% c("Pooled Effect", "Prediction"), NA_character_, ctrl_mean_sd)
     )
   }
   
@@ -55,7 +55,7 @@ forest.table.left_fn <- function(forest.data.summary,
       gt::cols_align(align = "left") |>
       gt::tab_style(
         style = gt::cell_text(style = "italic", weight = "bold"),
-        locations = gt::cells_body(rows = Author == "Pooled Effect")) 
+        locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Prediction"))) 
   } else {
     forest.table.left <- df |>
       gt::gt(groupname_col = "Subgroup") |>
@@ -71,9 +71,18 @@ forest.table.left_fn <- function(forest.data.summary,
       gt::tab_style(
         style = gt::cell_text(style = "italic",  weight = "bold", color = "grey60"),
         locations = gt::cells_body(rows = Author == "Pooled Effect")) |>
+      # Subgroup-level Prediction: same style as Pooled Effect (grey, italic, bold)
+      gt::tab_style(
+        style = gt::cell_text(style = "italic", weight = "bold", color = "grey60"),
+        locations = gt::cells_body(rows = Author == "Prediction" & Subgroup != "Overall")) |>
+      # Overall Prediction: same style as Overall Effect (bold, italic, no grey)
+      gt::tab_style(
+        style = gt::cell_text(style = "italic", weight = "bold"),
+        locations = gt::cells_body(rows = Author == "Prediction" & Subgroup == "Overall")) |>
       gt::tab_style(
         style = gt::cell_text(indent = gt::px(10)),
-        locations = gt::cells_body(rows = Author != "Overall Effect",
+        locations = gt::cells_body(rows = !Author %in% c("Overall Effect") &
+                                     !(Author == "Prediction" & Subgroup == "Overall"),
                                    columns = Author))
   }
   
@@ -98,7 +107,7 @@ forest.table.left_fn <- function(forest.data.summary,
     gt::opt_table_lines(extent = "none") |> 
     gt::tab_style(
       style = gt::cell_fill(color = "grey95"),
-      locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Overall Effect"))
+      locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"))
     )
   
   if (measure %in% c("MD", "SMD")) {
@@ -128,7 +137,7 @@ forest.table.right_fn <- function(df,
             style = "italic",
             weight = "bold")),
         locations = gt::cells_body(
-          rows = Author == "Pooled Effect"))
+          rows = Author %in% c("Pooled Effect", "Prediction")))
     
   } else if (isTRUE(subgroup)) {
     forest.table.right <- df |>
@@ -147,7 +156,24 @@ forest.table.right_fn <- function(df,
             weight = "bold",
             color = "grey60")),
         locations = gt::cells_body(
-          rows = Author =="Pooled Effect"))
+          rows = Author == "Pooled Effect")) |>
+      # Subgroup-level Prediction: grey like Pooled Effect
+      gt::tab_style(
+        style = list(
+          gt::cell_text(
+            style = "italic",
+            weight = "bold",
+            color = "grey60")),
+        locations = gt::cells_body(
+          rows = Author == "Prediction" & Subgroup != "Overall")) |>
+      # Overall Prediction: bold italic, no grey
+      gt::tab_style(
+        style = list(
+          gt::cell_text(
+            style = "italic",
+            weight = "bold")),
+        locations = gt::cells_body(
+          rows = Author == "Prediction" & Subgroup == "Overall"))
   }  
   
   forest.table.right <- forest.table.right |>
@@ -162,7 +188,7 @@ forest.table.right_fn <- function(df,
     gt::tab_style(
       style = gt::cell_fill(color = "grey95"),
       locations = gt::cells_body(
-        rows = Author %in% c("Pooled Effect", "Overall Effect"),
+        rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"),
         columns = c(weighted_effect, unweighted_effect)))
   
   if (add_rob == FALSE) {
@@ -194,7 +220,7 @@ forest.table.right_fn <- function(df,
         style = "padding-right:2px;",
         locations = gt::cells_body(
           columns = unweighted_effect, 
-          rows = Author == "Pooled Effect")) |>
+          rows = Author %in% c("Pooled Effect", "Prediction"))) |>
       gt::cols_hide(columns = Author)
   }  
   

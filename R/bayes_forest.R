@@ -50,7 +50,8 @@
 #' @param color_study_posterior Color for study posterior densities. Default is "dodgerblue".
 #' @param color_study_posterior_outline Color for study posterior outlines. Default is "blue".
 #' @param color_overall_posterior Color for overall posterior. Default is "blue".
-#' @param color_pointinterval Color for point intervals. Default is "purple".
+#' @param color_shrinkage_pointinterval Color for shrinkage point intervals (used when
+#'   \code{shrinkage_output = "pointinterval"}). Default is "purple".
 #' @param color_shrinkage_outline Color for shrinkage plot outlines. Default is "purple".
 #' @param color_shrinkage_fill Color for shrinkage plot fill. Default is NULL.
 #' @param split_color_by_null Logical. If TRUE, posterior densities are split and 
@@ -61,10 +62,21 @@
 #' @param add_arm_labels Logical indicating whether to display "Favours Control" /
 #'   "Favours Intervention" labels above the density plot. Default is TRUE.
 #' @param reverse_arm_labels Logical indicating whether to swap the positions of
-#'   the "Favours Control" and "Favours Intervention" labels. When FALSE
-#'   (default), "Favours Intervention" appears on the left and "Favours Control"
-#'   on the right. Set to TRUE when negative values indicate benefit but you
-#'   prefer the conventional orientation. Default is FALSE.
+#'   the "Favours Control" and "Favours Intervention" labels. Default is FALSE.
+#' @param add_pred Logical indicating whether to add a prediction interval row
+#'   beneath the Pooled Effect. Default is FALSE.
+#' @param add_pred_subgroup Logical indicating whether to add prediction
+#'   interval rows for each subgroup when \code{subgroup = TRUE}. If
+#'   \code{FALSE} (the default), a prediction row is only added for the
+#'   overall pooled effect. Ignored when \code{subgroup = FALSE}.
+#' @param pred_output Character string specifying the visualisation for the
+#'   prediction interval row. Options: "density" (default) or "pointinterval".
+#' @param color_pred_posterior Color for the prediction interval density fill.
+#'   Default is "forestgreen".
+#' @param color_pred_outline Color for the prediction interval density outline.
+#'   Default is "darkgreen".
+#' @param color_pred_pointinterval Color for the prediction interval point
+#'   interval. Default is "forestgreen".
 #' @param plot_width Numeric value specifying the relative width of the plot component. Default is 4.
 #' @param add_rob Logical indicating whether to add Risk of Bias assessment. Default is FALSE.
 #' @param rob_tool Character string specifying RoB tool. Options: "rob2" (default).
@@ -93,6 +105,11 @@
 #' 
 #' When \code{exclude_high_rob = TRUE}, studies with "High" overall risk of bias are removed
 #' and the model is refitted on the filtered data.
+#' 
+#' When \code{add_pred = TRUE}, a "Prediction" row is added below the "Pooled Effect" row.
+#' The prediction interval is computed by simulating
+#' \code{b_Intercept + rnorm(sd_Author__Intercept)} for each posterior draw, which
+#' represents where a *new* study's true effect is expected to fall.
 #'
 #' @examples
 #' \dontrun{
@@ -109,40 +126,8 @@
 #'   i_event = intervention_events
 #' )
 #' 
-#' # Subgroup analysis with mean difference
-#' forest_plot_subgroup <- bayes_forest(
-#'   model = my_brms_model,
-#'   data = my_data,
-#'   measure = "MD",
-#'   studyvar = author,
-#'   c_n = control_n,
-#'   i_n = intervention_n,
-#'   c_mean = control_mean,
-#'   i_mean = intervention_mean,
-#'   c_sd = control_sd,
-#'   i_sd = intervention_sd,
-#'   subgroup = TRUE,
-#'   sort_subgroup_by = "effect"
-#' )
-#' 
-#' # Reverse the arm labels so "Favours Intervention" appears on the right
-#' forest_plot_reversed <- bayes_forest(
-#'   model = my_brms_model,
-#'   data = my_data,
-#'   measure = "SMD",
-#'   studyvar = author,
-#'   year = year,
-#'   c_n = control_n,
-#'   i_n = intervention_n,
-#'   c_mean = control_mean,
-#'   i_mean = intervention_mean,
-#'   c_sd = control_sd,
-#'   i_sd = intervention_sd,
-#'   reverse_arm_labels = TRUE
-#' )
-#' 
-#' # Remove arm labels entirely
-#' forest_plot_no_labels <- bayes_forest(
+#' # With shrinkage as point intervals
+#' forest_plot_pi <- bayes_forest(
 #'   model = my_brms_model,
 #'   data = my_data,
 #'   measure = "OR",
@@ -152,7 +137,23 @@
 #'   i_n = intervention_n,
 #'   c_event = control_events,
 #'   i_event = intervention_events,
-#'   add_arm_labels = FALSE
+#'   shrinkage_output = "pointinterval",
+#'   color_shrinkage_pointinterval = "orange"
+#' )
+#' 
+#' # Add prediction interval
+#' forest_plot_pred <- bayes_forest(
+#'   model = my_brms_model,
+#'   data = my_data,
+#'   measure = "OR",
+#'   studyvar = author,
+#'   year = year,
+#'   c_n = control_n,
+#'   i_n = intervention_n,
+#'   c_event = control_events,
+#'   i_event = intervention_events,
+#'   add_pred = TRUE,
+#'   pred_output = "density"
 #' )
 #' }
 #'
@@ -201,7 +202,7 @@ bayes_forest <- function(model,
                          color_study_posterior = "dodgerblue",
                          color_study_posterior_outline = "blue",
                          color_overall_posterior = "blue",
-                         color_pointinterval = "purple",
+                         color_shrinkage_pointinterval = "purple",
                          color_shrinkage_outline = "purple",
                          color_shrinkage_fill = NULL,
                          split_color_by_null = FALSE,
@@ -209,12 +210,21 @@ bayes_forest <- function(model,
                          color_favours_intervention = "dodgerblue",
                          add_arm_labels = TRUE,
                          reverse_arm_labels = FALSE,
+                         add_pred = FALSE,
+                         add_pred_subgroup = FALSE,
+                         pred_output = c("density", "pointinterval"),
+                         color_pred_posterior = "forestgreen",
+                         color_pred_outline = "darkgreen",
+                         color_pred_pointinterval = "forestgreen",
                          plot_width = 4,
                          add_rob = FALSE,
                          rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
                          add_rob_legend = FALSE,
                          exclude_high_rob = FALSE,
                          font = NULL) {
+  
+  # Match pred_output argument
+  pred_output <- match.arg(pred_output)
   
   # Input validation
   validate_inputs(
@@ -351,13 +361,14 @@ bayes_forest <- function(model,
   # Handle different workflows for single vs subgroup plots
   if (!subgroup) {
     # Single Forest Plot Workflow
-    # Step 1: Extract and organize posterior draws
     study.effect.draws <- forest.data_fn(
       data = data,
       model = model,
       subgroup = FALSE,
       sort_studies_by = sort_studies_by,
-      subgroup_order = NULL
+      subgroup_order = NULL,
+      add_pred = add_pred,
+      add_pred_subgroup = FALSE
     )
     
     # Create the density plot
@@ -372,7 +383,7 @@ bayes_forest <- function(model,
       color_study_posterior_outline = color_study_posterior_outline,
       color_overall_posterior = color_overall_posterior,
       color_shrinkage_outline = color_shrinkage_outline,
-      color_pointinterval = color_shrinkage_outline,
+      color_shrinkage_pointinterval = color_shrinkage_pointinterval,
       color_shrinkage_fill = color_shrinkage_fill,
       split_color_by_null = split_color_by_null,
       color_favours_control = color_favours_control,
@@ -388,26 +399,35 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
+      add_pred = add_pred,
+      add_pred_subgroup = add_pred_subgroup,
+      pred_output = pred_output,
+      color_pred_posterior = color_pred_posterior,
+      color_pred_outline = color_pred_outline,
+      color_pred_pointinterval = color_pred_pointinterval,
       font = font
     )
     
-    # Step 3: Create summary data for tables
+    # Create summary data for tables
     forest.data.summary <- forest.data.summary_fn(
       spread_df = study.effect.draws,
       data = data,
       measure = measure,
       sort_studies_by = sort_studies_by,
-      subgroup = FALSE)
+      subgroup = FALSE,
+      add_pred = add_pred,
+      add_pred_subgroup = add_pred_subgroup)
     
   } else {
     # Subgroup Forest Plot Workflow
-    # Extract and organize posterior draws
     subgroup.effect.draws <- forest.data_fn(
       data = data,
       model = model,
       subgroup = TRUE,
       sort_studies_by = sort_studies_by,
-      subgroup_order = subgroup_order
+      subgroup_order = subgroup_order,
+      add_pred = add_pred,
+      add_pred_subgroup = add_pred_subgroup
     )
     
     # Create subgroup summary
@@ -417,13 +437,14 @@ bayes_forest <- function(model,
       tidyr::nest() |>
       dplyr::rename(spread_df = data) |>
       dplyr::mutate(
-        # Inject Subgroup back into each spread_df before passing to summary function
         spread_df = purrr::map2(spread_df, Subgroup, ~ dplyr::mutate(.x, Subgroup = .y)),
         subgroup.forest.summary = purrr::map(spread_df, ~ forest.data.summary_fn(
           spread_df = .x,
-          data = data,  # full original data
+          data = data,
           measure = measure,
-          sort_studies_by = sort_studies_by))) |>
+          sort_studies_by = sort_studies_by,
+          add_pred = add_pred,
+          add_pred_subgroup = add_pred_subgroup))) |>
       tidyr::unnest(subgroup.forest.summary) |>
       dplyr::ungroup() |> 
       dplyr::select(-spread_df)
@@ -463,7 +484,6 @@ bayes_forest <- function(model,
     
     
     if (isTRUE(exclude_high_rob)) {
-      # If only 1 study, replace "Pooled Effect" with "No Pooled Effect"
       forest.data.summary <- forest.data.summary |>
         dplyr::left_join(subgroup_counts, by = "Subgroup") |>
         dplyr::mutate(
@@ -520,7 +540,7 @@ bayes_forest <- function(model,
       color_study_posterior_outline = color_study_posterior_outline,
       color_overall_posterior = color_overall_posterior,
       color_shrinkage_outline = color_shrinkage_outline,
-      color_pointinterval = color_pointinterval,
+      color_shrinkage_pointinterval = color_shrinkage_pointinterval,
       color_shrinkage_fill = color_shrinkage_fill,
       split_color_by_null = split_color_by_null,
       color_favours_control = color_favours_control,
@@ -536,6 +556,11 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
+      add_pred = add_pred,
+      pred_output = pred_output,
+      color_pred_posterior = color_pred_posterior,
+      color_pred_outline = color_pred_outline,
+      color_pred_pointinterval = color_pred_pointinterval,
       font = font
     )
   }
@@ -571,7 +596,6 @@ bayes_forest <- function(model,
     font = font
   )
   
-  # Combine everything using patchwork
   # Validate RoB legend parameters
   if (add_rob_legend == TRUE && add_rob == FALSE) {
     warning("Risk of Bias legend cannot be added when add_rob = FALSE. ",

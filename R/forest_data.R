@@ -5,7 +5,9 @@ forest.data_fn <- function(data,
                            model,
                            subgroup = FALSE,
                            sort_studies_by = "author",
-                           subgroup_order = NULL) {
+                           subgroup_order = NULL,
+                           add_pred = FALSE,
+                           add_pred_subgroup = FALSE) {
   
   if (subgroup == FALSE && "Subgroup" %in% names(data)) {
     data <- data |> dplyr::select(-Subgroup)
@@ -16,7 +18,30 @@ forest.data_fn <- function(data,
       dplyr::mutate(b_Intercept = r_Author + b_Intercept)
     pooled.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
       dplyr::mutate(Author = "Pooled Effect")
-    effect.draws <- dplyr::bind_rows(study.draws, pooled.draws) |>
+    
+    effect.draws <- dplyr::bind_rows(study.draws, pooled.draws)
+    
+    # Generate prediction draws if requested
+    if (isTRUE(add_pred)) {
+      nd <- data.frame(Author = "new", sei = 0)
+      pred_samples <- brms::posterior_predict(
+        object = model,
+        newdata = nd,
+        re_formula = NULL,
+        allow_new_levels = TRUE,
+        sample_new_levels = "gaussian"
+      )
+      
+      # Create prediction draws in the same structure as other draws
+      pred.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
+        dplyr::mutate(
+          Author = "Prediction",
+          b_Intercept = as.vector(pred_samples)
+        )
+      effect.draws <- dplyr::bind_rows(effect.draws, pred.draws)
+    }
+    
+    effect.draws <- effect.draws |>
       dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
       dplyr::ungroup() |>
       dplyr::left_join(dplyr::select(data, Author, Author_original, Year, yi, vi), by = "Author") |>
@@ -39,7 +64,7 @@ forest.data_fn <- function(data,
         Author_original = NA_character_,
         Subgroup = "Overall",
         r_Author = 0,           # No random effect for overall
-        Year = NA_integer_,     # No specific year
+        Year = NA_character_,   # Character to match disambiguated Year from make_authors_unique()
         yi = NA_real_,          # No individual effect size
         vi = NA_real_           # No individual variance
       )
@@ -57,7 +82,28 @@ forest.data_fn <- function(data,
           pooled <- tidybayes::spread_draws(..1, b_Intercept, sd_Author__Intercept) |>
             dplyr::mutate(Author = pooled_label)
           
-          combined <- dplyr::bind_rows(study, pooled) |>
+          combined <- dplyr::bind_rows(study, pooled)
+          
+          # Generate prediction draws for this subgroup if requested
+          if (isTRUE(add_pred) && isTRUE(add_pred_subgroup) && ..3 > 1) {
+            nd <- data.frame(Author = "new", sei = 0)
+            pred_samples <- brms::posterior_predict(
+              object = ..1,
+              newdata = nd,
+              re_formula = NULL,
+              allow_new_levels = TRUE,
+              sample_new_levels = "gaussian"
+            )
+            
+            pred <- tidybayes::spread_draws(..1, b_Intercept, sd_Author__Intercept) |>
+              dplyr::mutate(
+                Author = "Prediction",
+                b_Intercept = as.vector(pred_samples)
+              )
+            combined <- dplyr::bind_rows(combined, pred)
+          }
+          
+          combined <- combined |>
             dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
             dplyr::ungroup() |>
             dplyr::left_join(dplyr::select(..2, Author, Author_original, Year, yi, vi), by = "Author") |>
@@ -69,6 +115,31 @@ forest.data_fn <- function(data,
       dplyr::select(-data, -subgroup_model, -study_count)
     
     effect.draws <- dplyr::bind_rows(study.effect.draws, overall.effect.draws)
+    
+    # Add overall prediction draws when add_pred = TRUE
+    if (isTRUE(add_pred)) {
+      nd <- data.frame(Author = "new", sei = 0)
+      pred_samples <- brms::posterior_predict(
+        object = model,
+        newdata = nd,
+        re_formula = NULL,
+        allow_new_levels = TRUE,
+        sample_new_levels = "gaussian"
+      )
+      
+      overall.pred.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
+        dplyr::mutate(
+          Author = "Prediction",
+          Author_original = NA_character_,
+          Subgroup = "Overall",
+          r_Author = 0,
+          Year = NA_character_,
+          yi = NA_real_,
+          vi = NA_real_,
+          b_Intercept = as.vector(pred_samples)
+        )
+      effect.draws <- dplyr::bind_rows(effect.draws, overall.pred.draws)
+    }
     
     # Custom group order for Subgroup column
     if (!is.null(subgroup_order)) {
@@ -91,7 +162,9 @@ forest.data.summary_fn <- function(spread_df,
                                    data,
                                    measure,
                                    sort_studies_by = "author",
-                                   subgroup = FALSE) {
+                                   subgroup = FALSE,
+                                   add_pred = FALSE,
+                                   add_pred_subgroup = FALSE) {
   # Get effect size properties
   props <- get_measure_properties(measure)
   
@@ -142,6 +215,16 @@ forest.data.summary_fn <- function(spread_df,
                                         " [", sprintf("%.2f", forest.data.summary$.lower_sd), ", ", sprintf("%.2f", forest.data.summary$.upper_sd), "]"),
                                  unweighted_effect))
   
+  # For the Prediction row, blank out the unweighted_effect (no tau to display)
+  forest.data.summary <- forest.data.summary |>
+    dplyr::mutate(
+      unweighted_effect = dplyr::if_else(
+        as.character(Author) == "Prediction",
+        "",
+        unweighted_effect
+      )
+    )
+  
   # Add study group summary columns depending on measure type
   if (measure %in% c("MD", "SMD")) {
     forest.data.summary <- forest.data.summary |>
@@ -150,14 +233,14 @@ forest.data.summary_fn <- function(spread_df,
           Author == "Pooled Effect" ~ as.character(sum(N_Intervention, na.rm = TRUE)),
           TRUE ~ as.character(N_Intervention)),
         int_mean_sd = dplyr::case_when(
-          Author != "Pooled Effect" ~ paste0(sprintf("%.2f", Mean_Intervention), " (", sprintf("%.2f", SD_Intervention), ")"),
-          TRUE ~ NA_character_),
+          Author %in% c("Pooled Effect", "Prediction") ~ NA_character_,
+          TRUE ~ paste0(sprintf("%.2f", Mean_Intervention), " (", sprintf("%.2f", SD_Intervention), ")")),
         N_ctrl = dplyr::case_when(
           Author == "Pooled Effect" ~ as.character(sum(N_Control, na.rm = TRUE)),
           TRUE ~ as.character(N_Control)),
         ctrl_mean_sd = dplyr::case_when(
-          Author != "Pooled Effect" ~ paste0(sprintf("%.2f", Mean_Control), " (", sprintf("%.2f", SD_Control), ")"),
-          TRUE ~ NA_character_)
+          Author %in% c("Pooled Effect", "Prediction") ~ NA_character_,
+          TRUE ~ paste0(sprintf("%.2f", Mean_Control), " (", sprintf("%.2f", SD_Control), ")"))
       )
   } else {
     forest.data.summary <- forest.data.summary |>
@@ -166,11 +249,13 @@ forest.data.summary_fn <- function(spread_df,
           Author == "Pooled Effect" ~ paste0(
             sum(Event_Control[Author != "Pooled Effect"], na.rm = TRUE), "/",
             sum(N_Control[Author != "Pooled Effect"], na.rm = TRUE)),
+          Author == "Prediction" ~ "",
           TRUE ~ paste0(Event_Control, "/", N_Control)),
         int_outcome_frac = dplyr::case_when(
           Author == "Pooled Effect" ~ paste0(
             sum(Event_Intervention[Author != "Pooled Effect"], na.rm = TRUE), "/",
             sum(N_Intervention[Author != "Pooled Effect"], na.rm = TRUE)),
+          Author == "Prediction" ~ "",
           TRUE ~ paste0(Event_Intervention, "/", N_Intervention)))
   }
   
