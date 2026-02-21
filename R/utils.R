@@ -1,4 +1,37 @@
 
+#' Internal function to disambiguate duplicate Author names
+#'
+#' When multiple studies share the same Author name, this function appends a
+#' letter suffix (e.g., "Smith" -> "Smith_a", "Smith_b") to make each row
+#' unique. The original Author name is preserved in a new column
+#' `Author_original` so it can be restored for display purposes later.
+#'
+#' @param data A data frame containing at least an `Author` column.
+#' @return The data frame with unique `Author` values and a new
+#'   `Author_original` column containing the original (possibly duplicated)
+#'   names.
+#' @noRd
+make_authors_unique <- function(data) {
+  # Preserve the original name for display in tables
+  data$Author_original <- data$Author
+  
+  # Find which Author names are duplicated
+  dup_authors <- data$Author[duplicated(data$Author)]
+  
+  if (length(dup_authors) == 0) {
+    return(data)
+  }
+  
+  # For each duplicated name, append a letter suffix to every occurrence
+  for (author_name in unique(dup_authors)) {
+    idx <- which(data$Author == author_name)
+    suffixes <- letters[seq_along(idx)]
+    data$Author[idx] <- paste0(author_name, "_", suffixes)
+  }
+  
+  return(data)
+}
+
 #' Internal function to sort studies
 #'
 #' @noRd
@@ -60,7 +93,7 @@ get_subgroup_order <- function(data, sort_subgroup_by) {
             dplyr::pull(Subgroup)
         },
         rlang::abort(
-          paste0("Invalid sort_subgroup_by value: '", sort_subgroup_by, 
+          paste0("Invalid sort_subgroup_by value: '", sort_subgroup_by,
                  "'. Must be 'alphabetical', 'effect', or a character vector of subgroup names.")
         )
       )
