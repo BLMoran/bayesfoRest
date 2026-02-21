@@ -1,32 +1,61 @@
-
 #' Internal function to disambiguate duplicate Author names
 #'
 #' When multiple studies share the same Author name, this function appends a
-#' letter suffix (e.g., "Smith" -> "Smith_a", "Smith_b") to make each row
-#' unique. The original Author name is preserved in a new column
-#' `Author_original` so it can be restored for display purposes later.
+#' letter suffix to make each row unique. Two layers of disambiguation are
+#' applied:
 #'
-#' @param data A data frame containing at least an `Author` column.
-#' @return The data frame with unique `Author` values and a new
-#'   `Author_original` column containing the original (possibly duplicated)
-#'   names.
+#' 1. **Display-level (Year suffix):** When the same Author appears with the
+#'    same Year (e.g. multi-arm trials), a letter is appended to the Year
+#'    column (e.g. "1999" -> "1999a", "1999b"). This ensures the tables show
+#'    "Smith (1999a)" and "Smith (1999b)".
+#'
+#' 2. **Internal-level (Author suffix):** When the same Author name appears
+#'    more than once (regardless of Year), the Author column itself is made
+#'    unique by appending a letter (e.g. "Smith" -> "Smith_a", "Smith_b").
+#'    This is needed so that brms sees unique grouping levels and
+#'    ggplot2 maps each study to its own row on the y-axis.
+#'
+#' The original Author name is preserved in a new column `Author_original` so
+#' it can be restored for display purposes later.
+#'
+#' @param data A data frame containing at least `Author` and `Year` columns.
+#' @return The data frame with unique `Author` values, disambiguated `Year`
+#'   values where needed, and a new `Author_original` column containing the
+#'   original (possibly duplicated) names.
 #' @noRd
 make_authors_unique <- function(data) {
   # Preserve the original name for display in tables
   data$Author_original <- data$Author
   
-  # Find which Author names are duplicated
-  dup_authors <- data$Author[duplicated(data$Author)]
+  # --- Step 1: Disambiguate Year for same Author + same Year combos ---
+  # This ensures table display shows e.g. "Smith (1999a)", "Smith (1999b)"
+  # Convert Year to character so we can append letter suffixes
+  data$Year <- as.character(data$Year)
   
-  if (length(dup_authors) == 0) {
-    return(data)
+  author_year_combos <- paste(data$Author, data$Year, sep = "|||")
+  dup_combos <- author_year_combos[duplicated(author_year_combos)]
+  
+  if (length(dup_combos) > 0) {
+    for (combo in unique(dup_combos)) {
+      idx <- which(author_year_combos == combo)
+      suffixes <- letters[seq_along(idx)]
+      # Extract the original year from the combo
+      original_year <- strsplit(combo, "|||", fixed = TRUE)[[1]][2]
+      data$Year[idx] <- paste0(original_year, suffixes)
+    }
   }
   
-  # For each duplicated name, append a letter suffix to every occurrence
-  for (author_name in unique(dup_authors)) {
-    idx <- which(data$Author == author_name)
-    suffixes <- letters[seq_along(idx)]
-    data$Author[idx] <- paste0(author_name, "_", suffixes)
+  # --- Step 2: Disambiguate Author names that appear more than once ---
+  # This is needed regardless of Year, because brms and ggplot2 use Author
+  # as a grouping / factor variable and need unique levels.
+  dup_authors <- data$Author[duplicated(data$Author)]
+  
+  if (length(dup_authors) > 0) {
+    for (author_name in unique(dup_authors)) {
+      idx <- which(data$Author == author_name)
+      suffixes <- letters[seq_along(idx)]
+      data$Author[idx] <- paste0(author_name, "_", suffixes)
+    }
   }
   
   return(data)
