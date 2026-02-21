@@ -239,6 +239,14 @@ bayes_forest <- function(model,
     }
   }
   
+  # Disambiguate duplicate Author names before model update.
+  # This ensures brms sees unique grouping levels and the unique names
+  
+  # propagate consistently through all downstream functions (forest.data_fn,
+  # forest.data.summary_fn, study.density.plot_fn). The original name is
+  # preserved in Author_original for table display later.
+  data <- make_authors_unique(data)
+  
   # Update model
   model <- update_model(model, data, studyvar = Author)
   
@@ -258,7 +266,7 @@ bayes_forest <- function(model,
   }
   
   #if (!plot_output %in% c("density", "boxplot")) {
-    #stop("shrinkage_output must be either 'density' or 'boxplot'")
+  #stop("shrinkage_output must be either 'density' or 'boxplot'")
   #}
   
   if (!shrinkage_output %in% c("density", "pointinterval")) {
@@ -496,6 +504,21 @@ bayes_forest <- function(model,
       rope_color = rope_color,
       font = font
     )
+  }
+  
+  # Restore original Author names for table display.
+  # The density plot already used the unique Author values as factor levels
+  # (each study on its own row). The tables should show the human-readable
+  # names, so we swap Author_original back in before building them.
+  if ("Author_original" %in% names(forest.data.summary)) {
+    forest.data.summary <- forest.data.summary |>
+      dplyr::mutate(
+        Author = dplyr::if_else(
+          is.na(Author_original),
+          as.character(Author),
+          as.character(Author_original)
+        )
+      )
   }
   
   # Create left table (study information)

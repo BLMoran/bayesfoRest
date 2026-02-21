@@ -19,7 +19,7 @@ forest.data_fn <- function(data,
     effect.draws <- dplyr::bind_rows(study.draws, pooled.draws) |>
       dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
       dplyr::ungroup() |>
-      dplyr::left_join(dplyr::select(data, Author, Year, yi, vi), by = "Author") |>
+      dplyr::left_join(dplyr::select(data, Author, Author_original, Year, yi, vi), by = "Author") |>
       sort_studies_fn(sort_studies_by)
   } else {
     # With subgroup
@@ -36,6 +36,7 @@ forest.data_fn <- function(data,
     overall.effect.draws <- tidybayes::spread_draws(model, b_Intercept, sd_Author__Intercept) |>
       dplyr::mutate(
         Author = "Overall Effect",
+        Author_original = NA_character_,
         Subgroup = "Overall",
         r_Author = 0,           # No random effect for overall
         Year = NA_integer_,     # No specific year
@@ -59,7 +60,7 @@ forest.data_fn <- function(data,
           combined <- dplyr::bind_rows(study, pooled) |>
             dplyr::mutate(Author = stringr::str_replace_all(Author, "\\.", " ")) |> 
             dplyr::ungroup() |>
-            dplyr::left_join(dplyr::select(..2, Author, Year, yi, vi), by = "Author") |>
+            dplyr::left_join(dplyr::select(..2, Author, Author_original, Year, yi, vi), by = "Author") |>
             sort_studies_fn(sort_studies_by)
           return(combined)
         })
@@ -116,8 +117,8 @@ forest.data.summary_fn <- function(spread_df,
       tidybayes::median_qi(sd_Author__Intercept)
   }
   
-  # Select only needed join columns
-  join_vars <- unique(c("Author", "Year", props$data_cols))
+  # Select only needed join columns — include Author_original so it survives
+  join_vars <- unique(c("Author", "Author_original", "Year", props$data_cols))
   forest.data.summary <- forest.data |>
     dplyr::left_join(data |> dplyr::select(dplyr::any_of(join_vars), yi, vi, D1:Overall), by = "Author") |>
     dplyr::left_join(tau.summary, by = "Author", suffix = c("", "_sd")) |> 
