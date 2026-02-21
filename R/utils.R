@@ -70,10 +70,10 @@ sort_studies_fn <- function(.data, sort_studies_by = NULL) {
     !all(is.na(.data$Subgroup)) &&
     dplyr::n_distinct(.data$Subgroup) > 1
   
-  
-  # Separate pooled effect if present
+  # Separate rows (Pooled Effect & Prediction) from actual studies.
   pooled <- .data |> dplyr::filter(Author == "Pooled Effect")
-  studies <- .data |> dplyr::filter(Author != "Pooled Effect")
+  prediction <- .data |> dplyr::filter(Author == "Prediction")
+  studies <- .data |> dplyr::filter(!Author %in% c("Pooled Effect", "Prediction"))
   
   # Arrange studies
   studies <- switch(
@@ -84,8 +84,8 @@ sort_studies_fn <- function(.data, sort_studies_by = NULL) {
     stop("Invalid value for `sort_studies_by`. Must be one of 'author', 'year', or 'effect'.")
   )
   
-  # Recombine and set factor levels
-  full <- dplyr::bind_rows(studies, pooled)
+  # Recombine: studies, then Pooled Effect, then Prediction
+  full <- dplyr::bind_rows(studies, pooled, prediction)
   
   full <- full |>
     dplyr::mutate(

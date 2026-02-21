@@ -12,7 +12,7 @@ study.density.plot_fn  <- function(df,
                                    color_pooled_posterior = "blue",
                                    color_overall_posterior = "darkblue",
                                    color_shrinkage_outline = "purple",
-                                   color_pointinterval = "purple",
+                                   color_shrinkage_pointinterval = "purple",
                                    color_shrinkage_fill = NA,
                                    split_color_by_null = FALSE,
                                    color_favours_control = "firebrick",
@@ -28,6 +28,12 @@ study.density.plot_fn  <- function(df,
                                    add_rope = FALSE,
                                    rope_value = NULL,
                                    rope_color = "grey50",
+                                   add_pred = FALSE,
+                                   add_pred_subgroup = FALSE,
+                                   pred_output = "density",
+                                   color_pred_posterior = "forestgreen",
+                                   color_pred_outline = "darkgreen",
+                                   color_pred_pointinterval = "forestgreen",
                                    font = NULL){
   
   # Filter out "No Pooled Effect" rows at the beginning
@@ -45,7 +51,7 @@ study.density.plot_fn  <- function(df,
     color_pooled_posterior <- palette_colors[3]
     color_overall_posterior <- palette_colors[5]
     color_shrinkage_outline <- palette_colors[6]
-    color_pointinterval <- palette_colors[6]
+    color_shrinkage_pointinterval <- palette_colors[6]
     
     # If you want to use a fill color from the palette instead of NA
     if (!is.na(color_shrinkage_fill)) {
@@ -213,6 +219,78 @@ study.density.plot_fn  <- function(df,
           fill = color_overall_posterior, height = 0.9, normalize = "panels")
       }
     }} +
+    # Add prediction interval on its own "Prediction" row
+    {if (isTRUE(add_pred)) {
+      pred_data <- posterior.draws |>
+        dplyr::filter(if (isTRUE(subgroup)) {
+          Author_pooled == "Prediction"
+        } else {
+          Author == "Prediction"
+        })
+      
+      if (pred_output == "density") {
+        ggdist::stat_slab(
+          ggplot2::aes(x = x_studies, y = Author),
+          data = pred_data,
+          fill = color_pred_posterior, colour = color_pred_outline,
+          height = 0.9, normalize = "panels", alpha = 0.7)
+      } else if (pred_output == "pointinterval") {
+        # Compute intervals on the log scale (b_Intercept), then exponentiate
+        # so they match the table estimates and plot correctly on log-scale axis
+        pred_summary <- pred_data |>
+          dplyr::group_by(Author) |>
+          ggdist::median_hdi(b_Intercept, .width = c(0.66, 0.95))
+        
+        # Transform to the plotting scale
+        if (isTRUE(props$log_scale)) {
+          pred_summary <- pred_summary |>
+            dplyr::mutate(
+              pi_median = exp(b_Intercept),
+              pi_lower = exp(.lower),
+              pi_upper = exp(.upper)
+            )
+        } else {
+          pred_summary <- pred_summary |>
+            dplyr::mutate(
+              pi_median = b_Intercept,
+              pi_lower = .lower,
+              pi_upper = .upper
+            )
+        }
+        
+        # Clamp endpoints to calc_xlim so segments aren't dropped by scale limits
+        pred_summary <- pred_summary |>
+          dplyr::mutate(
+            pi_lower = pmax(pi_lower, calc_xlim[1]),
+            pi_upper = pmin(pi_upper, calc_xlim[2]),
+            pi_median = pmax(pmin(pi_median, calc_xlim[2]), calc_xlim[1])
+          )
+        
+        pred_95 <- pred_summary |> dplyr::filter(.width == 0.95)
+        pred_66 <- pred_summary |> dplyr::filter(.width == 0.66)
+        
+        list(
+          # 95% interval (thin line)
+          ggplot2::geom_segment(
+            ggplot2::aes(x = pi_lower, xend = pi_upper, y = Author, yend = Author),
+            data = pred_95,
+            color = color_pred_pointinterval, linewidth = 0.7, lineend = "round",
+            position = ggplot2::position_nudge(y = 0.4)),
+          # 66% interval (thicker line)
+          ggplot2::geom_segment(
+            ggplot2::aes(x = pi_lower, xend = pi_upper, y = Author, yend = Author),
+            data = pred_66,
+            color = color_pred_pointinterval, linewidth = 1.8, lineend = "round",
+            position = ggplot2::position_nudge(y = 0.4)),
+          # Median point
+          ggplot2::geom_point(
+            ggplot2::aes(x = pi_median, y = Author),
+            data = pred_95,
+            color = color_pred_pointinterval, size = 3,
+            position = ggplot2::position_nudge(y = 0.4))
+        )
+      }
+    }} +
     {if (isTRUE(split_color_by_null)) {
       ggplot2::scale_fill_manual(
         values = c(
@@ -281,17 +359,17 @@ study.density.plot_fn  <- function(df,
     study.density.plot <- study.density.plot +
       ggdist::stat_slab(
         ggplot2::aes(x = x_studies, y = Author),
-        data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect"}
-                                                else {Author != "Pooled Effect"}),
+        data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
+                                                else {Author != "Pooled Effect" & Author != "Prediction"}),
         linewidth = 0.5, scale = 0.6, normalize = "panels",
         color = color_shrinkage_outline, fill = color_shrinkage_fill, limits = calc_xlim)
   } else if (shrinkage_output == "pointinterval") {
     study.density.plot <- study.density.plot +
       ggdist::stat_pointinterval(
         ggplot2::aes(x = x_studies, y = Author),
-        data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect"}
-                                                else {Author != "Pooled Effect"}),
-        linewidth = 1, size = 1, color = color_pointinterval, limits = calc_xlim)
+        data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
+                                                else {Author != "Pooled Effect" & Author != "Prediction"}),
+        linewidth = 1, size = 1, color = color_shrinkage_pointinterval, limits = calc_xlim)
   }
   
   return(study.density.plot)
