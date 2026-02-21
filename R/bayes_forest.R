@@ -58,6 +58,13 @@
 #' @param color_favours_control Colour used for density regions favouring the control group when \code{split_color_by_null = TRUE}.
 #' @param color_favours_intervention Colour used for density regions favouring the 
 #' intervention group when \code{split_color_by_null = TRUE}.
+#' @param add_arm_labels Logical indicating whether to display "Favours Control" /
+#'   "Favours Intervention" labels above the density plot. Default is TRUE.
+#' @param reverse_arm_labels Logical indicating whether to swap the positions of
+#'   the "Favours Control" and "Favours Intervention" labels. When FALSE
+#'   (default), "Favours Intervention" appears on the left and "Favours Control"
+#'   on the right. Set to TRUE when negative values indicate benefit but you
+#'   prefer the conventional orientation. Default is FALSE.
 #' @param plot_width Numeric value specifying the relative width of the plot component. Default is 4.
 #' @param add_rob Logical indicating whether to add Risk of Bias assessment. Default is FALSE.
 #' @param rob_tool Character string specifying RoB tool. Options: "rob2" (default).
@@ -117,6 +124,36 @@
 #'   subgroup = TRUE,
 #'   sort_subgroup_by = "effect"
 #' )
+#' 
+#' # Reverse the arm labels so "Favours Intervention" appears on the right
+#' forest_plot_reversed <- bayes_forest(
+#'   model = my_brms_model,
+#'   data = my_data,
+#'   measure = "SMD",
+#'   studyvar = author,
+#'   year = year,
+#'   c_n = control_n,
+#'   i_n = intervention_n,
+#'   c_mean = control_mean,
+#'   i_mean = intervention_mean,
+#'   c_sd = control_sd,
+#'   i_sd = intervention_sd,
+#'   reverse_arm_labels = TRUE
+#' )
+#' 
+#' # Remove arm labels entirely
+#' forest_plot_no_labels <- bayes_forest(
+#'   model = my_brms_model,
+#'   data = my_data,
+#'   measure = "OR",
+#'   studyvar = author,
+#'   year = year,
+#'   c_n = control_n,
+#'   i_n = intervention_n,
+#'   c_event = control_events,
+#'   i_event = intervention_events,
+#'   add_arm_labels = FALSE
+#' )
 #' }
 #'
 #' @seealso
@@ -170,6 +207,8 @@ bayes_forest <- function(model,
                          split_color_by_null = FALSE,
                          color_favours_control = "firebrick",
                          color_favours_intervention = "dodgerblue",
+                         add_arm_labels = TRUE,
+                         reverse_arm_labels = FALSE,
                          plot_width = 4,
                          add_rob = FALSE,
                          rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
@@ -240,11 +279,6 @@ bayes_forest <- function(model,
   }
   
   # Disambiguate duplicate Author names before model update.
-  # This ensures brms sees unique grouping levels and the unique names
-  
-  # propagate consistently through all downstream functions (forest.data_fn,
-  # forest.data.summary_fn, study.density.plot_fn). The original name is
-  # preserved in Author_original for table display later.
   data <- make_authors_unique(data)
   
   # Update model
@@ -264,10 +298,6 @@ bayes_forest <- function(model,
       D1 = NA_character_,
       Overall = NA_character_)
   }
-  
-  #if (!plot_output %in% c("density", "boxplot")) {
-  #stop("shrinkage_output must be either 'density' or 'boxplot'")
-  #}
   
   if (!shrinkage_output %in% c("density", "pointinterval")) {
     stop("shrinkage_output must be either 'density' or 'pointinterval'")
@@ -349,6 +379,8 @@ bayes_forest <- function(model,
       color_favours_intervention = color_favours_intervention,
       label_control = label_control,
       label_intervention = label_intervention,
+      add_arm_labels = add_arm_labels,
+      reverse_arm_labels = reverse_arm_labels,
       shrinkage_output = shrinkage_output,
       xlim = xlim,
       x_breaks = x_breaks,
@@ -495,6 +527,8 @@ bayes_forest <- function(model,
       color_favours_intervention = color_favours_intervention,
       label_control = label_control,
       label_intervention = label_intervention,
+      add_arm_labels = add_arm_labels,
+      reverse_arm_labels = reverse_arm_labels,
       shrinkage_output = shrinkage_output,
       xlim = xlim,
       x_breaks = x_breaks,
@@ -507,9 +541,6 @@ bayes_forest <- function(model,
   }
   
   # Restore original Author names for table display.
-  # The density plot already used the unique Author values as factor levels
-  # (each study on its own row). The tables should show the human-readable
-  # names, so we swap Author_original back in before building them.
   if ("Author_original" %in% names(forest.data.summary)) {
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(

@@ -19,6 +19,8 @@ study.density.plot_fn  <- function(df,
                                    color_favours_intervention = "dodgerblue",
                                    label_control = "Control",
                                    label_intervention = "Intervention",
+                                   add_arm_labels = TRUE,
+                                   reverse_arm_labels = FALSE,
                                    shrinkage_output = "density",
                                    xlim = NULL,
                                    x_breaks = NULL,
@@ -138,6 +140,17 @@ study.density.plot_fn  <- function(df,
         xdist = distributional::dist_normal(mean = yi, sd = sqrt(vi)))
   }
   
+  # Determine which label goes on which side.
+  # Default: "Favours Intervention" on left, "Favours Control" on right.
+  # When reverse_arm_labels = TRUE the positions are swapped.
+  if (isTRUE(reverse_arm_labels)) {
+    label_right <- label_intervention
+    label_left  <- label_control
+  } else {
+    label_right <- label_control
+    label_left  <- label_intervention
+  }
+  
   study.density.plot <-
     ggplot2::ggplot(ggplot2::aes(y = Author), data = posterior.draws) +
     # Add ROPE shading first (so it appears behind other elements)
@@ -225,16 +238,21 @@ study.density.plot_fn  <- function(df,
       axis.ticks.x.top = ggplot2::element_blank(),
       axis.text.x.bottom = ggplot2::element_text(colour = "black", family = font)) +
     ggplot2::guides(x.sec = "axis", y.sec = "axis") +
-    ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_control),  
-      x = grid::unit(1, "npc"), y = grid::unit(1.02, "npc"), just = c("right", "bottom"),
-      gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
-      xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-    ggplot2::annotation_custom(grid::textGrob(
-      label = paste(" Favours\n", label_intervention),
-      x = grid::unit(0, "npc"), y = grid::unit(1.02, "npc"), just = c("left", "bottom"),
-      gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
-      xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf) +
+    # Arm labels: only added when add_arm_labels = TRUE
+    {if (isTRUE(add_arm_labels)) {
+      ggplot2::annotation_custom(grid::textGrob(
+        label = paste(" Favours\n", label_right),
+        x = grid::unit(1, "npc"), y = grid::unit(1.02, "npc"), just = c("right", "bottom"),
+        gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
+        xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf)
+    }} +
+    {if (isTRUE(add_arm_labels)) {
+      ggplot2::annotation_custom(grid::textGrob(
+        label = paste(" Favours\n", label_left),
+        x = grid::unit(0, "npc"), y = grid::unit(1.02, "npc"), just = c("left", "bottom"),
+        gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
+        xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf)
+    }} +
     ggplot2::labs(x= props$x_label) +
     ggplot2::ylab(NULL) +
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
