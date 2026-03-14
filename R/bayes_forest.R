@@ -276,11 +276,10 @@ bayes_forest <- function(model,
       )
   }
   
-  # Handle subgroup variable renaming
+  # Handle subgroup variable renaming & rename if not called "Subgroup"
   if (isTRUE(subgroup)) {
     if (!rlang::quo_is_null(rlang::enquo(subgroup_var))) {
       subgroup_var_name <- rlang::as_name(rlang::ensym(subgroup_var))
-      # Only rename if it's not already called "Subgroup"
       if (subgroup_var_name != "Subgroup") {
         data <- data |> 
           dplyr::rename(Subgroup = {{subgroup_var}})
@@ -302,7 +301,7 @@ bayes_forest <- function(model,
     stop("Risk of Bias columns must be provided for addition to the forest plot")
   }
   
-  # Create columns to pass to internal functions so they won't throw an error
+  # Create columns to pass to internal functions so they won't throw an error if no RoB columns
   if (length(missing_vars) > 0) {
     data <- data |> dplyr::mutate(
       D1 = NA_character_,
@@ -416,7 +415,8 @@ bayes_forest <- function(model,
       sort_studies_by = sort_studies_by,
       subgroup = FALSE,
       add_pred = add_pred,
-      add_pred_subgroup = add_pred_subgroup)
+      add_pred_subgroup = add_pred_subgroup
+    )
     
   } else {
     # Subgroup Forest Plot Workflow
@@ -481,7 +481,6 @@ bayes_forest <- function(model,
               paste0(sum(Event_Intervention, na.rm = TRUE), "/", sum(N_Intervention, na.rm = TRUE)),
             TRUE ~ int_outcome_frac))
     }
-    
     
     if (isTRUE(exclude_high_rob)) {
       forest.data.summary <- forest.data.summary |>

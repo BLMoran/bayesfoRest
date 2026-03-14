@@ -9,9 +9,12 @@ overall_plot(
   model,
   measure,
   study_var = NULL,
-  incl_tau = FALSE,
-  incl_mu_prior = FALSE,
-  incl_tau_prior = FALSE,
+  add_tau = FALSE,
+  add_mu_prior = FALSE,
+  add_tau_prior = FALSE,
+  add_pred = FALSE,
+  color_pred_posterior = "forestgreen",
+  color_pred_posterior_outline = "darkgreen",
   null_value = NULL,
   null_range = NULL,
   add_null_range = FALSE,
@@ -23,8 +26,10 @@ overall_plot(
   title_align = "left",
   mu_xlim = NULL,
   tau_xlim = NULL,
+  pred_xlim = NULL,
   x_breaks = NULL,
   tau_breaks = NULL,
+  pred_breaks = NULL,
   color_overall_posterior = "dodgerblue",
   color_overall_posterior_outline = "blue",
   split_color_by_null = FALSE,
@@ -46,11 +51,17 @@ overall_plot(
 
 \item{study_var}{Character string for the study grouping variable name (default extracts from model)}
 
-\item{incl_tau}{Logical, whether to include the heterogeneity (tau) plot}
+\item{add_tau}{Logical, whether to include the heterogeneity (tau) plot}
 
-\item{incl_mu_prior}{Logical, whether to include the prior distribution for mu}
+\item{add_mu_prior}{Logical, whether to include the prior distribution for mu}
 
-\item{incl_tau_prior}{Logical, whether to include the prior distribution for tau}
+\item{add_tau_prior}{Logical, whether to include the prior distribution for tau}
+
+\item{add_pred}{Logical, whether to include the prediction distribution plot}
+
+\item{color_pred_posterior}{Color for the prediction posterior distribution}
+
+\item{color_pred_posterior_outline}{Outline color for the prediction posterior distribution}
 
 \item{null_value}{Numeric, the null value for the effect (default from get_measure_properties)}
 
@@ -74,9 +85,13 @@ overall_plot(
 
 \item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits}
 
+\item{pred_xlim}{Numeric vector of length 2 for prediction plot x-axis limits}
+
 \item{x_breaks}{Numeric vector for x-axis breaks on mu plot}
 
 \item{tau_breaks}{Numeric vector for x-axis breaks on tau plot}
+
+\item{pred_breaks}{Numeric vector for x-axis breaks on prediction plot}
 
 \item{color_overall_posterior}{Color for the overall posterior distribution}
 
@@ -99,7 +114,7 @@ overall_plot(
 \item{plot_arrangement}{Character, "vertical" (stacked) or "horizontal" (side by side)}
 }
 \value{
-A ggplot object (or combined plot if incl_tau = TRUE)
+A ggplot object (or combined plot if add_tau = TRUE or add_pred = TRUE)
 }
 \description{
 Create posterior plots for Bayesian meta-analysis

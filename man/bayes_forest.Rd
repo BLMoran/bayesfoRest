@@ -43,12 +43,20 @@ bayes_forest(
   color_study_posterior = "dodgerblue",
   color_study_posterior_outline = "blue",
   color_overall_posterior = "blue",
-  color_pointinterval = "purple",
+  color_shrinkage_pointinterval = "purple",
   color_shrinkage_outline = "purple",
   color_shrinkage_fill = NULL,
   split_color_by_null = FALSE,
   color_favours_control = "firebrick",
   color_favours_intervention = "dodgerblue",
+  add_arm_labels = TRUE,
+  reverse_arm_labels = FALSE,
+  add_pred = FALSE,
+  add_pred_subgroup = FALSE,
+  pred_output = c("density", "pointinterval"),
+  color_pred_posterior = "forestgreen",
+  color_pred_outline = "darkgreen",
+  color_pred_pointinterval = "forestgreen",
   plot_width = 4,
   add_rob = FALSE,
   rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
@@ -141,7 +149,8 @@ Options: "density" (default) or "pointinterval".}
 
 \item{color_overall_posterior}{Color for overall posterior. Default is "blue".}
 
-\item{color_pointinterval}{Color for point intervals. Default is "purple".}
+\item{color_shrinkage_pointinterval}{Color for shrinkage point intervals (used when
+\code{shrinkage_output = "pointinterval"}). Default is "purple".}
 
 \item{color_shrinkage_outline}{Color for shrinkage plot outlines. Default is "purple".}
 
@@ -154,6 +163,32 @@ coloured based on whether values fall above or below the null value.}
 
 \item{color_favours_intervention}{Colour used for density regions favouring the
 intervention group when \code{split_color_by_null = TRUE}.}
+
+\item{add_arm_labels}{Logical indicating whether to display "Favours Control" /
+"Favours Intervention" labels above the density plot. Default is TRUE.}
+
+\item{reverse_arm_labels}{Logical indicating whether to swap the positions of
+the "Favours Control" and "Favours Intervention" labels. Default is FALSE.}
+
+\item{add_pred}{Logical indicating whether to add a prediction interval row
+beneath the Pooled Effect. Default is FALSE.}
+
+\item{add_pred_subgroup}{Logical indicating whether to add prediction
+interval rows for each subgroup when \code{subgroup = TRUE}. If
+\code{FALSE} (the default), a prediction row is only added for the
+overall pooled effect. Ignored when \code{subgroup = FALSE}.}
+
+\item{pred_output}{Character string specifying the visualisation for the
+prediction interval row. Options: "density" (default) or "pointinterval".}
+
+\item{color_pred_posterior}{Color for the prediction interval density fill.
+Default is "forestgreen".}
+
+\item{color_pred_outline}{Color for the prediction interval density outline.
+Default is "darkgreen".}
+
+\item{color_pred_pointinterval}{Color for the prediction interval point
+interval. Default is "forestgreen".}
 
 \item{plot_width}{Numeric value specifying the relative width of the plot component. Default is 4.}
 
@@ -194,6 +229,11 @@ For Risk of Bias functionality, the data must contain columns named "D1", "D2", 
 
 When \code{exclude_high_rob = TRUE}, studies with "High" overall risk of bias are removed
 and the model is refitted on the filtered data.
+
+When \code{add_pred = TRUE}, a "Prediction" row is added below the "Pooled Effect" row.
+The prediction interval is computed by simulating
+\code{b_Intercept + rnorm(sd_Author__Intercept)} for each posterior draw, which
+represents where a \emph{new} study's true effect is expected to fall.
 }
 \examples{
 \dontrun{
@@ -210,20 +250,34 @@ forest_plot <- bayes_forest(
   i_event = intervention_events
 )
 
-# Subgroup analysis with mean difference
-forest_plot_subgroup <- bayes_forest(
+# With shrinkage as point intervals
+forest_plot_pi <- bayes_forest(
   model = my_brms_model,
   data = my_data,
-  measure = "MD",
+  measure = "OR",
   studyvar = author,
+  year = year,
   c_n = control_n,
   i_n = intervention_n,
-  c_mean = control_mean,
-  i_mean = intervention_mean,
-  c_sd = control_sd,
-  i_sd = intervention_sd,
-  subgroup = TRUE,
-  sort_subgroup_by = "effect"
+  c_event = control_events,
+  i_event = intervention_events,
+  shrinkage_output = "pointinterval",
+  color_shrinkage_pointinterval = "orange"
+)
+
+# Add prediction interval
+forest_plot_pred <- bayes_forest(
+  model = my_brms_model,
+  data = my_data,
+  measure = "OR",
+  studyvar = author,
+  year = year,
+  c_n = control_n,
+  i_n = intervention_n,
+  c_event = control_events,
+  i_event = intervention_events,
+  add_pred = TRUE,
+  pred_output = "density"
 )
 }
 

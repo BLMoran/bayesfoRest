@@ -4,9 +4,12 @@
 #' @param model A brms model object from a meta-analysis
 #' @param measure Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD")
 #' @param study_var Character string for the study grouping variable name (default extracts from model)
-#' @param incl_tau Logical, whether to include the heterogeneity (tau) plot
-#' @param incl_mu_prior Logical, whether to include the prior distribution for mu
-#' @param incl_tau_prior Logical, whether to include the prior distribution for tau
+#' @param add_tau Logical, whether to include the heterogeneity (tau) plot
+#' @param add_mu_prior Logical, whether to include the prior distribution for mu
+#' @param add_tau_prior Logical, whether to include the prior distribution for tau
+#' @param add_pred Logical, whether to include the prediction distribution plot
+#' @param color_pred_posterior Color for the prediction posterior distribution
+#' @param color_pred_posterior_outline Outline color for the prediction posterior distribution
 #' @param null_value Numeric, the null value for the effect (default from get_measure_properties)
 #' @param null_range Numeric vector of length 2, range for null region (e.g., c(0.9, 1.1))
 #' @param add_null_range Logical, whether to add shaded null range region
@@ -18,8 +21,10 @@
 #' @param title_align Alignment for title ("left", "center", "right")
 #' @param mu_xlim Numeric vector of length 2 for mu plot x-axis limits
 #' @param tau_xlim Numeric vector of length 2 for tau plot x-axis limits
+#' @param pred_xlim Numeric vector of length 2 for prediction plot x-axis limits
 #' @param x_breaks Numeric vector for x-axis breaks on mu plot
 #' @param tau_breaks Numeric vector for x-axis breaks on tau plot
+#' @param pred_breaks Numeric vector for x-axis breaks on prediction plot
 #' @param color_overall_posterior Color for the overall posterior distribution
 #' @param color_overall_posterior_outline Outline color for the posterior distribution
 #' @param split_color_by_null Logical, whether to split posterior color by null value
@@ -31,7 +36,7 @@
 #' @param font Font family for text elements
 #' @param plot_arrangement Character, "vertical" (stacked) or "horizontal" (side by side)
 #'
-#' @return A ggplot object (or combined plot if incl_tau = TRUE)
+#' @return A ggplot object (or combined plot if add_tau = TRUE or add_pred = TRUE)
 #' @export
 #' 
 #' @importFrom grDevices col2rgb rgb
@@ -40,7 +45,7 @@
 #' @importFrom ggdist stat_slab stat_pointinterval scale_fill_ramp_discrete scale_thickness_shared
 #' @importFrom patchwork plot_spacer plot_layout plot_annotation
 #' @importFrom posterior as_draws_df
-#' @importFrom dplyr filter group_by summarise mutate n %>%
+#' @importFrom dplyr filter group_by summarise mutate n
 #' @importFrom tidyr complete
 #' @importFrom scales pretty_breaks
 #' 
@@ -48,9 +53,12 @@ overall_plot <- function(data = NULL,
                          model,
                          measure,
                          study_var = NULL,
-                         incl_tau = FALSE,
-                         incl_mu_prior = FALSE,
-                         incl_tau_prior = FALSE,
+                         add_tau = FALSE,
+                         add_mu_prior = FALSE,
+                         add_tau_prior = FALSE,
+                         add_pred = FALSE,
+                         color_pred_posterior = "forestgreen",
+                         color_pred_posterior_outline = "darkgreen",
                          null_value = NULL,
                          null_range = NULL,
                          add_null_range = FALSE,
@@ -62,8 +70,10 @@ overall_plot <- function(data = NULL,
                          title_align = "left",
                          mu_xlim = NULL,
                          tau_xlim = NULL,
+                         pred_xlim = NULL,
                          x_breaks = NULL,
                          tau_breaks = NULL,
+                         pred_breaks = NULL,
                          color_overall_posterior = "dodgerblue",
                          color_overall_posterior_outline = "blue",
                          split_color_by_null = FALSE,
@@ -107,7 +117,7 @@ overall_plot <- function(data = NULL,
     if (length(re_terms) > 0) {
       study_var <- re_terms[1]
     } else {
-      stop("Could not automatically detect study variable.   Please specify 'study_var'.")
+      stop("Could not automatically detect study variable. Please specify 'study_var'.")
     }
   }
   
@@ -131,7 +141,7 @@ overall_plot <- function(data = NULL,
   mu_df <- data.frame(mu = mu_transformed)
   
   # Set default x limits for mu plot with rounding
-  mu_xlim <- if (!  is.null(mu_xlim)) {
+  mu_xlim <- if (!is.null(mu_xlim)) {
     mu_xlim
   } else {
     if (is_log_scale) {
@@ -149,12 +159,12 @@ overall_plot <- function(data = NULL,
       x_breaks <- sort(unique(c(mu_xlim[1], 0.5, 1, 2, mu_xlim[2])))
     } else {
       x_breaks <- scales::pretty_breaks(n = 5)(mu_xlim)
-      if (!  mu_xlim[1] %in% x_breaks) {
+      if (!mu_xlim[1] %in% x_breaks) {
         x_breaks <- sort(unique(c(mu_xlim[1], x_breaks)))
       }
     }
   } else {
-    if (! mu_xlim[1] %in% x_breaks) {
+    if (!mu_xlim[1] %in% x_breaks) {
       x_breaks <- sort(unique(c(mu_xlim[1], x_breaks)))
     }
   }
@@ -171,18 +181,18 @@ overall_plot <- function(data = NULL,
   
   # Base theme
   base_theme <- ggplot2::theme_light() +
-    ggplot2:: theme(
+    ggplot2::theme(
       axis.text.y = ggplot2::element_blank(),
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
       panel.border = ggplot2::element_blank(),
-      panel.background = ggplot2:: element_rect(fill = "white"),
+      panel.background = ggplot2::element_rect(fill = "white"),
       axis.line.x.bottom = ggplot2::element_line(color = "black", linewidth = axis_line_size),
       axis.line.y = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_line(color = "black", linewidth = axis_line_size),
       axis.ticks.length = ggplot2::unit(0.15, "cm"),
-      plot.title = ggplot2:: element_text(hjust = title_hjust),
+      plot.title = ggplot2::element_text(hjust = title_hjust),
       plot.subtitle = ggplot2::element_text(hjust = title_hjust),
       plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5, "pt")
     )
@@ -200,9 +210,9 @@ overall_plot <- function(data = NULL,
   }
   
   # Add prior FIRST (so it renders behind posterior) if requested
-  if (incl_mu_prior) {
+  if (add_mu_prior) {
     # Extract intercept prior from model
-    intercept_prior <- model_priors %>%
+    intercept_prior <- model_priors |>
       dplyr::filter(class == "Intercept" | (class == "b" & coef == ""))
     
     if (nrow(intercept_prior) > 0) {
@@ -210,10 +220,10 @@ overall_plot <- function(data = NULL,
       mu_prior_df <- NULL
       
       # Debug: print the prior string
-      message("Mu prior string:   ", prior_str)
+      message("Mu prior string: ", prior_str)
       
       # Parse the prior string to extract distribution parameters
-      if (grepl("normal", prior_str, ignore.case = TRUE) && !  grepl("student", prior_str, ignore.case = TRUE)) {
+      if (grepl("normal", prior_str, ignore.case = TRUE) && !grepl("student", prior_str, ignore.case = TRUE)) {
         params <- as.numeric(regmatches(prior_str, 
                                         gregexpr("-?[0-9]+\\.?[0-9]*", prior_str))[[1]])
         message("Parsed normal params: ", paste(params, collapse = ", "))
@@ -238,7 +248,7 @@ overall_plot <- function(data = NULL,
         }
       } else if (grepl("student_t", prior_str, ignore.case = TRUE)) {
         params <- as.numeric(regmatches(prior_str, 
-                                        gregexpr("-?[0-9]+\\.  ?[0-9]*", prior_str))[[1]])
+                                        gregexpr("-?[0-9]+\\.?[0-9]*", prior_str))[[1]])
         message("Parsed student_t params: ", paste(params, collapse = ", "))
         
         if (length(params) >= 3) {
@@ -260,7 +270,7 @@ overall_plot <- function(data = NULL,
         }
       }
       
-      if (!  is.null(mu_prior_df)) {
+      if (!is.null(mu_prior_df)) {
         mu_plot <- mu_plot +
           ggplot2::geom_line(data = mu_prior_df,
                              ggplot2::aes(x = x, y = density),
@@ -296,9 +306,9 @@ overall_plot <- function(data = NULL,
   
   # Add point interval
   mu_plot <- mu_plot +
-    ggdist:: stat_pointinterval(.width = c(.66, .80, .95), 
-                                color = "black",
-                                point_size = 2)
+    ggdist::stat_pointinterval(.width = c(.66, .80, .95), 
+                               color = "black",
+                               point_size = 2)
   
   # Add null reference line (black, solid)
   mu_plot <- mu_plot +
@@ -319,11 +329,11 @@ overall_plot <- function(data = NULL,
     ggplot2::annotate("text", x = left_x, y = label_y, 
                       label = paste0("Favours\n", label_intervention),
                       fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
-    ggplot2:: annotate("text", x = right_x, y = label_y, 
-                       label = paste0("Favours\n", label_control),
-                       fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
-    ggplot2:: annotate("segment", x = mu_xlim[1], xend = mu_xlim[2], y = Inf, yend = Inf,
-                       linewidth = axis_line_size, color = "grey60"
+    ggplot2::annotate("text", x = right_x, y = label_y, 
+                      label = paste0("Favours\n", label_control),
+                      fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
+    ggplot2::annotate("segment", x = mu_xlim[1], xend = mu_xlim[2], y = Inf, yend = Inf,
+                      linewidth = axis_line_size, color = "grey60"
     )
   
   # Scale and coordinate system - minimal gap at bottom (0.03)
@@ -333,7 +343,7 @@ overall_plot <- function(data = NULL,
                              limits = mu_xlim,
                              labels = function(x) sprintf("%.2g", x),
                              expand = c(0, 0)) +
-      ggplot2:: coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
+      ggplot2::coord_cartesian(xlim = mu_xlim, ylim = c(0.03, 1), clip = "off")
   } else {
     mu_plot <- mu_plot +
       ggplot2::scale_x_continuous(breaks = x_breaks, 
@@ -356,9 +366,132 @@ overall_plot <- function(data = NULL,
       ggplot2::theme(text = ggplot2::element_text(family = font))
   }
   
+  # --- PREDICTION PLOT (if requested) ---
+  
+  pred_plot <- NULL
+  
+  if (isTRUE(add_pred)) {
+    # Generate prediction draws using posterior_predict
+    nd <- data.frame(Author = "new", sei = 0)
+    names(nd)[1] <- study_var
+    pred_samples <- brms::posterior_predict(
+      object = model,
+      newdata = nd,
+      re_formula = NULL,
+      allow_new_levels = TRUE,
+      sample_new_levels = "gaussian"
+    )
+    
+    pred_transformed <- transform_fn(as.vector(pred_samples))
+    pred_df <- data.frame(pred = pred_transformed)
+    
+    # Set default prediction x limits
+    pred_xlim <- if (!is.null(pred_xlim)) {
+      pred_xlim
+    } else {
+      mu_xlim  # Default to same as mu plot for consistency
+    }
+    
+    # Set default prediction breaks
+    if (is.null(pred_breaks)) {
+      pred_breaks <- x_breaks  # Default to same as mu plot
+    }
+    
+    # Build prediction plot
+    pred_plot <- ggplot2::ggplot(pred_df, ggplot2::aes(x = pred))
+    
+    # Add null range shading if requested
+    if (add_null_range && !is.null(null_range)) {
+      pred_plot <- pred_plot +
+        ggplot2::annotate("rect", 
+                          xmin = null_range[1], xmax = null_range[2],
+                          ymin = -Inf, ymax = Inf,
+                          fill = color_null_range, alpha = 0.2)
+    }
+    
+    # Add posterior distribution
+    if (split_color_by_null) {
+      pred_plot <- pred_plot +
+        ggdist::stat_slab(ggplot2::aes(fill = ggplot2::after_stat(x < null_value)),
+                          color = color_pred_posterior_outline,
+                          alpha = 0.8) +
+        ggplot2::scale_fill_manual(
+          values = c("TRUE" = color_favours_intervention, 
+                     "FALSE" = color_favours_control),
+          guide = "none"
+        )
+    } else {
+      pred_plot <- pred_plot +
+        ggdist::stat_slab(fill = color_pred_posterior,
+                          color = color_pred_posterior_outline,
+                          alpha = 0.8)
+    }
+    
+    # Add point interval
+    pred_plot <- pred_plot +
+      ggdist::stat_pointinterval(.width = c(.66, .80, .95), 
+                                 color = "black",
+                                 point_size = 2)
+    
+    # Add null reference line
+    pred_plot <- pred_plot +
+      ggplot2::geom_vline(xintercept = null_value, linetype = "solid", color = "black", linewidth = 0.8)
+    
+    # Add direction labels
+    if (is_log_scale) {
+      pred_left_x <- pred_xlim[1] * 1.4
+      pred_right_x <- pred_xlim[2] * 0.65
+    } else {
+      pred_range_width <- diff(pred_xlim)
+      pred_left_x <- pred_xlim[1] + pred_range_width * 0.12
+      pred_right_x <- pred_xlim[2] - pred_range_width * 0.12
+    }
+    
+    pred_plot <- pred_plot +
+      ggplot2::annotate("text", x = pred_left_x, y = label_y, 
+                        label = paste0("Favours\n", label_intervention),
+                        fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
+      ggplot2::annotate("text", x = pred_right_x, y = label_y, 
+                        label = paste0("Favours\n", label_control),
+                        fontface = "bold.italic", size = 3, color = "grey30", vjust = 1) +
+      ggplot2::annotate("segment", x = pred_xlim[1], xend = pred_xlim[2], y = Inf, yend = Inf,
+                        linewidth = axis_line_size, color = "grey60"
+      )
+    
+    # Scale and coordinate system
+    if (is_log_scale) {
+      pred_plot <- pred_plot +
+        ggplot2::scale_x_log10(breaks = pred_breaks, 
+                               limits = pred_xlim,
+                               labels = function(x) sprintf("%.2g", x),
+                               expand = c(0, 0)) +
+        ggplot2::coord_cartesian(xlim = pred_xlim, ylim = c(0.03, 1), clip = "off")
+    } else {
+      pred_plot <- pred_plot +
+        ggplot2::scale_x_continuous(breaks = pred_breaks, 
+                                    limits = pred_xlim,
+                                    labels = function(x) sprintf("%.2g", x),
+                                    expand = c(0, 0)) +
+        ggplot2::coord_cartesian(xlim = pred_xlim, ylim = c(0.03, 1), clip = "off")
+    }
+    
+    pred_plot <- pred_plot +
+      ggdist::scale_thickness_shared() +
+      base_theme +
+      ggplot2::labs(x = x_label, 
+                    y = NULL,
+                    title = "Prediction")
+    
+    # Apply custom font if specified
+    if (!is.null(font)) {
+      pred_plot <- pred_plot +
+        ggplot2::theme(text = ggplot2::element_text(family = font))
+    }
+  }
+  
   # --- TAU PLOT (if requested) ---
   
-  if (incl_tau) {
+  if (add_tau) {
     # Extract tau samples
     tau_samples <- post_samples[[sd_param]]
     tau_df <- data.frame(tau = tau_samples)
@@ -375,10 +508,10 @@ overall_plot <- function(data = NULL,
                            right = FALSE)
     
     # Calculate percentage in each category
-    tau_percentages <- tau_df %>%
-      dplyr::group_by(category) %>%
-      dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
-      dplyr::mutate(pct = round(n / sum(n) * 100, 1)) %>%
+    tau_percentages <- tau_df |>
+      dplyr::group_by(category) |>
+      dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
+      dplyr::mutate(pct = round(n / sum(n) * 100, 1)) |>
       tidyr::complete(category = factor(tau_labels, levels = tau_labels), 
                       fill = list(n = 0, pct = 0))
     
@@ -389,7 +522,7 @@ overall_plot <- function(data = NULL,
     pct_extreme <- tau_percentages$pct[tau_percentages$category == "Fairly extreme"]
     
     # Set default tau x limits with rounding
-    tau_xlim <- if (!  is.null(tau_xlim)) {
+    tau_xlim <- if (!is.null(tau_xlim)) {
       tau_xlim
     } else {
       r <- range(tau_df$tau, na.rm = TRUE)
@@ -416,16 +549,16 @@ overall_plot <- function(data = NULL,
       tau_breaks <- sort(unique(c(tau_xlim[1], tau_breaks, tau_xlim[2])))
     } else {
       # User provided breaks - ensure limits are included
-      if (! tau_xlim[1] %in% tau_breaks) {
+      if (!tau_xlim[1] %in% tau_breaks) {
         tau_breaks <- sort(unique(c(tau_xlim[1], tau_breaks)))
       }
-      if (! tau_xlim[2] %in% tau_breaks) {
+      if (!tau_xlim[2] %in% tau_breaks) {
         tau_breaks <- sort(unique(c(tau_breaks, tau_xlim[2])))
       }
     }
     
     # Build tau plot with scaled slab height
-    tau_plot <- ggplot2::ggplot(tau_df, ggplot2:: aes(x = tau)) +
+    tau_plot <- ggplot2::ggplot(tau_df, ggplot2::aes(x = tau)) +
       ggdist::stat_slab(
         ggplot2::aes(fill_ramp = ggplot2::after_stat(cut(x, 
                                                          breaks = c(-Inf, 0.1, 0.5, 1, Inf),
@@ -444,19 +577,19 @@ overall_plot <- function(data = NULL,
                                  point_size = 2)
     
     # Add tau prior if requested
-    if (incl_tau_prior) {
-      sd_prior <- model_priors %>%
+    if (add_tau_prior) {
+      sd_prior <- model_priors |>
         dplyr::filter(class == "sd")
       
       if (nrow(sd_prior) > 0) {
         prior_str <- sd_prior$prior[1]
         tau_prior_df <- NULL
         
-        message("Tau prior string:  ", prior_str)
+        message("Tau prior string: ", prior_str)
         
         if (grepl("cauchy|half_cauchy", prior_str, ignore.case = TRUE)) {
           params <- as.numeric(regmatches(prior_str, 
-                                          gregexpr("-? [0-9]+\\. ?[0-9]*", prior_str))[[1]])
+                                          gregexpr("-?[0-9]+\\.?[0-9]*", prior_str))[[1]])
           if (length(params) >= 2) {
             x_seq <- seq(0.001, tau_xlim[2] * 1.5, length.out = 500)
             prior_density <- stats::dcauchy(x_seq, location = params[1], scale = params[2])
@@ -476,7 +609,7 @@ overall_plot <- function(data = NULL,
           }
         } else if (grepl("normal|half_normal", prior_str, ignore.case = TRUE)) {
           params <- as.numeric(regmatches(prior_str, 
-                                          gregexpr("-?  [0-9]+\\.?  [0-9]*", prior_str))[[1]])
+                                          gregexpr("-?[0-9]+\\.?[0-9]*", prior_str))[[1]])
           if (length(params) >= 2) {
             x_seq <- seq(0.001, tau_xlim[2] * 1.5, length.out = 500)
             prior_density <- stats::dnorm(x_seq, mean = params[1], sd = params[2])
@@ -500,7 +633,7 @@ overall_plot <- function(data = NULL,
           }
         }
         
-        if (!  is.null(tau_prior_df)) {
+        if (!is.null(tau_prior_df)) {
           tau_plot <- tau_plot +
             ggplot2::geom_line(data = tau_prior_df,
                                ggplot2::aes(x = x, y = density),
@@ -515,7 +648,7 @@ overall_plot <- function(data = NULL,
     # Add heterogeneity category reference lines (dashed, grey)
     tau_plot <- tau_plot +
       ggplot2::geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey40", linewidth = 0.5) +
-      ggplot2:: geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey40", linewidth = 0.5) +
+      ggplot2::geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey40", linewidth = 0.5) +
       ggplot2::geom_vline(xintercept = 1, linetype = "dashed", color = "grey40", linewidth = 0.5)
     
     # Calculate center position for "Very High" label (between 1 and tau_xlim[2])
@@ -524,8 +657,7 @@ overall_plot <- function(data = NULL,
     # Add labels with percentages (same y-level, bold) - at top
     # Only include labels if their region falls within tau_xlim
     
-    # Low:   region is 0 to 0.1, label at 0.05
-    # Show if tau_xlim[1] < 0.1 (left boundary doesn't cut off entire region) AND tau_xlim[2] > 0 (right boundary includes start)
+    # Low: region is 0 to 0.1, label at 0.05
     if (tau_xlim[1] < 0.1 && tau_xlim[2] > 0) {
       tau_plot <- tau_plot +
         ggplot2::annotate("text", x = 0.05, y = 0.95, 
@@ -534,16 +666,14 @@ overall_plot <- function(data = NULL,
     }
     
     # Moderate: region is 0.1 to 0.5, label at 0.3
-    # Show if tau_xlim[1] < 0.5 (left boundary doesn't cut off entire region) AND tau_xlim[2] > 0.1 (right boundary includes start)
     if (tau_xlim[1] < 0.5 && tau_xlim[2] > 0.1) {
       tau_plot <- tau_plot +
-        ggplot2:: annotate("text", x = 0.3, y = 0.95, 
-                           label = paste0("Moderate\n(", pct_reasonable, "%)"), 
-                           fontface = "bold.italic", size = 2.6, vjust = 1)
+        ggplot2::annotate("text", x = 0.3, y = 0.95, 
+                          label = paste0("Moderate\n(", pct_reasonable, "%)"), 
+                          fontface = "bold.italic", size = 2.6, vjust = 1)
     }
     
     # High: region is 0.5 to 1.0, label at 0.75
-    # Show if tau_xlim[1] < 1.0 (left boundary doesn't cut off entire region) AND tau_xlim[2] > 0.5 (right boundary includes start)
     if (tau_xlim[1] < 1.0 && tau_xlim[2] > 0.5) {
       tau_plot <- tau_plot +
         ggplot2::annotate("text", x = 0.75, y = 0.95, 
@@ -552,7 +682,6 @@ overall_plot <- function(data = NULL,
     }
     
     # Very High: region is 1.0+, label at very_high_x
-    # Show if tau_xlim[2] > 1.0 (right boundary extends past 1.0)
     if (tau_xlim[2] > 1.0) {
       tau_plot <- tau_plot +
         ggplot2::annotate("text", x = very_high_x, y = 0.95, 
@@ -567,10 +696,10 @@ overall_plot <- function(data = NULL,
     
     # Scale and theme for tau plot - minimal gap at bottom
     tau_plot <- tau_plot +
-      ggplot2:: scale_x_continuous(breaks = tau_breaks, 
-                                   limits = tau_xlim,
-                                   labels = function(x) sprintf("%.2g", x),
-                                   expand = c(0, 0)) +
+      ggplot2::scale_x_continuous(breaks = tau_breaks, 
+                                  limits = tau_xlim,
+                                  labels = function(x) sprintf("%.2g", x),
+                                  expand = c(0, 0)) +
       ggplot2::coord_cartesian(xlim = tau_xlim, ylim = c(0.03, 1), clip = "off") +
       ggdist::scale_thickness_shared() +
       base_theme +
@@ -583,49 +712,71 @@ overall_plot <- function(data = NULL,
       tau_plot <- tau_plot +
         ggplot2::theme(text = ggplot2::element_text(family = font))
     }
-    
-    # Combine plots using patchwork
-    if (plot_arrangement == "horizontal") {
-      combined_plot <- mu_plot + patchwork::plot_spacer() + tau_plot +
-        patchwork::plot_layout(ncol = 3, widths = c(1, 0.05, 1))
-    } else {
-      combined_plot <- mu_plot / tau_plot +
-        patchwork::plot_layout(ncol = 1)
-    }
-    
-    # Add title and subtitle using patchwork
-    if (!  is.null(title) || ! is.null(subtitle)) {
-      annotation_theme <- ggplot2::theme(
-        plot.title = ggplot2::element_text(hjust = title_hjust, face = "bold", size = 14),
-        plot.subtitle = ggplot2::element_text(hjust = title_hjust, size = 11)
-      )
-      
-      if (! is.null(font)) {
-        annotation_theme <- annotation_theme +
-          ggplot2::theme(
-            text = ggplot2::element_text(family = font),
-            plot.title = ggplot2::element_text(hjust = title_hjust, face = "bold", size = 14, family = font),
-            plot.subtitle = ggplot2::element_text(hjust = title_hjust, size = 11, family = font)
-          )
-      }
-      
-      combined_plot <- combined_plot +
-        patchwork::plot_annotation(
-          title = title,
-          subtitle = subtitle,
-          theme = annotation_theme
-        )
-    }
-    
-    return(combined_plot)
-    
-  } else {
-    # Return just the mu plot with title/subtitle if provided
+  }
+  
+  # --- COMBINE PLOTS ---
+  
+  # Collect all plots that exist
+  plot_list <- list(mu_plot)
+  if (isTRUE(add_pred) && !is.null(pred_plot)) {
+    plot_list <- c(plot_list, list(pred_plot))
+  }
+  if (isTRUE(add_tau)) {
+    plot_list <- c(plot_list, list(tau_plot))
+  }
+  
+  # If only mu plot, return it directly
+  if (length(plot_list) == 1) {
+    final_plot <- mu_plot
     if (!is.null(title) || !is.null(subtitle)) {
-      mu_plot <- mu_plot +
+      final_plot <- final_plot +
         ggplot2::labs(title = if (!is.null(title)) title else expression(paste("Overall Effect (", mu, ")")),
                       subtitle = subtitle)
     }
-    return(mu_plot)
+    return(final_plot)
   }
+  
+  # Multiple plots — combine with patchwork
+  if (plot_arrangement == "horizontal") {
+    # Interleave spacers between plots
+    spaced_list <- list(plot_list[[1]])
+    for (i in seq_along(plot_list)[-1]) {
+      spaced_list <- c(spaced_list, list(patchwork::plot_spacer()), list(plot_list[[i]]))
+    }
+    n_plots <- length(plot_list)
+    n_spacers <- n_plots - 1
+    widths <- as.list(rep(c(1, 0.05), n_plots))
+    widths <- widths[seq_len(n_plots + n_spacers)]
+    combined_plot <- Reduce("+", spaced_list) +
+      patchwork::plot_layout(ncol = n_plots + n_spacers, widths = unlist(widths))
+  } else {
+    combined_plot <- Reduce("/", plot_list) +
+      patchwork::plot_layout(ncol = 1)
+  }
+  
+  # Add title and subtitle using patchwork
+  if (!is.null(title) || !is.null(subtitle)) {
+    annotation_theme <- ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = title_hjust, face = "bold", size = 14),
+      plot.subtitle = ggplot2::element_text(hjust = title_hjust, size = 11)
+    )
+    
+    if (!is.null(font)) {
+      annotation_theme <- annotation_theme +
+        ggplot2::theme(
+          text = ggplot2::element_text(family = font),
+          plot.title = ggplot2::element_text(hjust = title_hjust, face = "bold", size = 14, family = font),
+          plot.subtitle = ggplot2::element_text(hjust = title_hjust, size = 11, family = font)
+        )
+    }
+    
+    combined_plot <- combined_plot +
+      patchwork::plot_annotation(
+        title = title,
+        subtitle = subtitle,
+        theme = annotation_theme
+      )
+  }
+  
+  return(combined_plot)
 }

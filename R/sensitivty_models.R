@@ -217,29 +217,34 @@ mixture_model_to_sensitivity_draws <- function(model,
 #'
 #' @description
 #' Performs precision-effect test (PET) and precision-effect estimate with
-#' standard error (PEESE) for publication bias adjustment.
+#' standard error (PEESE) for publication bias adjustment. Uses standard errors
+#' (SE) as the predictor, not p-values or posterior probabilities.
 #'
 #' @param model Original brmsfit object
-#' @param data Data frame containing study data
+#' @param data Data frame containing study data (must include yi and sei columns)
 #' @param priors Named list of prior specifications
-#' @param measure Effect measure type
+#' @param measure Effect measure type (OR, RR, HR, IRR, SMD, MD)
 #' @param section_label Label for this analysis section
 #' @param prior_labels Named vector of prior labels
 #' @param study_var Study identifier variable (quoted)
 #' @param direction Direction of expected bias ("negative" or "positive")
-#' @param threshold Threshold for choosing between PET and PEESE
+#' @param threshold Threshold for choosing between PET and PEESE (default 0.10)
 #'
 #' @return A tibble with bias-adjusted posterior draws
 #'
 #' @details
 #' The function:
 #' \enumerate{
-#'   \item Calculates posterior probabilities for each study
-#'   \item Determines whether to use PET or PEESE based on threshold
-#'   \item Adds bias predictor (SE for PET, SE² for PEESE)
-#'   \item Re-fits model with bias adjustment
-#'   \item Returns corrected effect at zero bias
+#'   \item Calculates posterior probabilities for each study (to decide PET vs PEESE)
+#'   \item Determines whether to use PET (predictor = SE) or PEESE (predictor = SE²)
+#'   \item Re-fits model with standard error as bias predictor
+#'   \item Returns corrected effect at zero bias (intercept)
 #' }
+#'
+#' PET regression:  effect ~ SE
+#' PEESE regression: effect ~ SE²
+#' 
+#' The bias-corrected estimate is the intercept (effect when SE = 0).
 #'
 #' @keywords internal
 #' @noRd
@@ -253,29 +258,43 @@ pet_peese_to_sensitivity_draws <- function(model,
                                            direction = "negative",
                                            threshold = 0.10) {
   
-  # Ensure we have a valid study_var
+  # ----------------------------
+  # 1. Validation
+  # ----------------------------
   if (rlang::quo_is_null(study_var)) {
-    stop("study_var is required for PET-PEESE analysis")
+    stop("`study_var` is required for PET-PEESE analysis", call. = FALSE)
   }
   
-  # Get the study variable name
   study_var_name <- rlang::as_name(study_var)
   
-  # Verify the study variable exists in the data
   if (!study_var_name %in% names(data)) {
-    stop(paste("Study variable", study_var_name, "not found in data"))
+    stop(paste("Study variable", study_var_name, "not found in data"), call. = FALSE)
   }
   
-  # Extract study-level posteriors from the original model
+  if (!"sei" %in% names(data)) {
+    stop("Column 'sei' (standard error) must be present in data for PET-PEESE", call. = FALSE)
+  }
+  
+  if (!"yi" %in% names(data)) {
+    stop("Column 'yi' (effect size) must be present in data for PET-PEESE", call. = FALSE)
+  }
+  
+  # ----------------------------
+  # 2. Extract study-level posteriors (for PET vs PEESE decision)
+  # ----------------------------
+  # This is used ONLY to decide whether to use PET or PEESE
+  # The actual bias correction uses standard errors, not posteriors
+  
   study_posteriors <- extract_study_level_effects(model, data, study_var_name, measure)
   
-  # Calculate posterior probabilities for bias indicator
+  # Calculate null value
   null_value <- switch(
     measure,
     OR = 1, RR = 1, HR = 1, IRR = 1,
     MD = 0, SMD = 0
   )
   
+  # Calculate posterior probabilities (for decision only)
   data <- data |>
     dplyr::mutate(
       post_prob = purrr::map_dbl(
@@ -290,61 +309,110 @@ pet_peese_to_sensitivity_draws <- function(model,
       )
     )
   
-  # Determine PET or PEESE
+  # ----------------------------
+  # 3. Decide PET or PEESE (using posterior probabilities)
+  # ----------------------------
+  # If most studies show evidence of an effect, use PEESE
+  # Otherwise use PET
   use_peese <- mean(data$post_prob) > threshold
   
-  # Add bias predictor to data
+  if (!is.na(use_peese)) {
+    method_label <- ifelse(use_peese, "PEESE", "PET")
+  } else {
+    use_peese <- FALSE
+    method_label <- "PET"
+  }
+  
+  # ----------------------------
+  # 4. Add bias predictor (CORRECTED: using standard errors)
+  # ----------------------------
+  # KEY CORRECTION: Use standard errors, not posterior probabilities!
   data <- data |>
     dplyr::mutate(
-      bias_predictor = if (use_peese) post_prob^2 else post_prob
+      bias_predictor = if (use_peese) sei^2 else sei
     )
   
-  # Run sensitivity with different priors, including bias adjustment
+  # ----------------------------
+  # 5. Fit models with different priors, including bias adjustment
+  # ----------------------------
   result <- purrr::imap_dfr(priors, function(prior_obj, prior_name) {
     
     tryCatch({
-      # Add prior for bias coefficient
+      
+      # ----------------------------
+      # 5a. Extract original formula
+      # ----------------------------
+      original_formula <- formula(model)
+      
+      # ----------------------------
+      # 5b. Add bias predictor to formula
+      # ----------------------------
+      # The original formula might be:  yi | se(sei) ~ 1 + (1 | study)
+      # We need to add: + bias_predictor
+      
+      formula_bias <- update(
+        original_formula,
+        . ~ . + bias_predictor
+      )
+      
+      # ----------------------------
+      # 5c. Create prior for bias coefficient
+      # ----------------------------
+      # Prior for the bias coefficient (slope)
+      # Weakly informative: allows for positive or negative bias
       prior_bias <- brms::prior(
-        normal(0, 1),
+        "normal(0, 1)",
         class = "b",
         coef = "bias_predictor"
       )
       
+      # Combine with user-specified priors
       combined_prior <- c(prior_obj, prior_bias)
       
-      # Update formula to include bias predictor
-      formula_bias <- update(
-        formula(model),
-        . ~ . + bias_predictor
-      )
-      
-      # Fit model with bias correction
-      updated_model <- update(
+      # ----------------------------
+      # 5d. Fit model with bias correction
+      # ----------------------------
+      updated_model <- brms::update(
         model,
         formula = formula_bias,
         newdata = data,
         prior = combined_prior,
         refresh = 0,
+        silent = 2,
         recompile = FALSE
       )
       
-      # Extract corrected effect (at zero bias)
+      # ----------------------------
+      # 5e. Extract bias-corrected effect
+      # ----------------------------
+      # The intercept represents the effect when bias_predictor = 0
+      # (i.e., when SE = 0, which is the "corrected" estimate)
+      
       draws <- tidybayes::spread_draws(updated_model, b_Intercept)
       
+      # Transform if necessary (for ratio measures on log scale)
       if (measure %in% c("OR", "RR", "HR", "IRR")) {
         draws$x <- exp(draws$b_Intercept)
       } else {
         draws$x <- draws$b_Intercept
       }
       
+      # ----------------------------
+      # 5f. Return formatted results
+      # ----------------------------
       tibble::tibble(
-        section_label = paste0(section_label, " (", ifelse(use_peese, "PEESE", "PET"), ")"),
+        section_label = paste0(section_label, " (", method_label, ")"),
         prior = prior_name,
         prior_label = prior_labels[[prior_name]],
         x = draws$x
       )
+      
     }, error = function(e) {
-      warning(paste("Failed to fit PET-PEESE for prior", prior_name, ":", e$message))
+      warning(
+        sprintf("Failed to fit PET-PEESE for prior %s: %s", prior_name, e$message),
+        call. = FALSE
+      )
+      
       # Return empty tibble with correct structure
       tibble::tibble(
         section_label = character(),
@@ -355,9 +423,11 @@ pet_peese_to_sensitivity_draws <- function(model,
     })
   })
   
-  # Ensure we always return a tibble
+  # ----------------------------
+  # 6. Validation of results
+  # ----------------------------
   if (nrow(result) == 0) {
-    warning("PET-PEESE produced no results")
+    warning("PET-PEESE produced no results", call. = FALSE)
   }
   
   return(result)

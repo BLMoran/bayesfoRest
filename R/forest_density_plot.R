@@ -171,12 +171,12 @@ study.density.plot_fn  <- function(df,
       list(
         ggdist::stat_slab(
           ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
-          slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+          slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9, normalize = "groups",
           data = study.effects, colour = color_study_posterior_outline))
     } else {
       ggdist::stat_slab(
         ggplot2::aes(xdist = xdist),
-        slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+        slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9, normalize = "groups",
         data = study.effects, colour = color_study_posterior_outline,
         fill = color_study_posterior)
     }} +
@@ -191,7 +191,7 @@ study.density.plot_fn  <- function(df,
             } else {
               Author == "Pooled Effect"
             }),
-          height = 0.9, normalize = "panels", colour = color_study_posterior_outline))
+          height = 0.9, normalize = "groups", colour = color_study_posterior_outline))
     } else {
       ggdist::stat_slab(
         ggplot2::aes(x = x_studies, y = Author),
@@ -201,7 +201,7 @@ study.density.plot_fn  <- function(df,
           } else {
             Author == "Pooled Effect"
           }),
-        fill = color_pooled_posterior, height = 0.9, normalize = "panels")
+        fill = color_pooled_posterior, height = 0.9, normalize = "groups")
     }} +
     # Add overall effect slab when subgroup = TRUE
     {if (isTRUE(subgroup)) {
@@ -211,12 +211,12 @@ study.density.plot_fn  <- function(df,
             ggplot2::aes(
               x = x_studies, y = Author, fill = ggplot2::after_stat(x > null_value)),
             data = posterior.draws |> dplyr::filter(Author_pooled == "Overall Effect"),
-            height = 0.9, normalize = "panels", colour = color_study_posterior_outline))
+            height = 0.9, normalize = "groups", colour = color_study_posterior_outline))
       } else {
         ggdist::stat_slab(
           ggplot2::aes(x = x_studies, y = Author),
           data = posterior.draws |> dplyr::filter(Author_pooled == "Overall Effect"),
-          fill = color_overall_posterior, height = 0.9, normalize = "panels")
+          fill = color_overall_posterior, height = 0.9, normalize = "groups")
       }
     }} +
     # Add prediction interval on its own "Prediction" row
@@ -233,7 +233,7 @@ study.density.plot_fn  <- function(df,
           ggplot2::aes(x = x_studies, y = Author),
           data = pred_data,
           fill = color_pred_posterior, colour = color_pred_outline,
-          height = 0.9, normalize = "panels", alpha = 0.7)
+          height = 0.9, normalize = "groups", alpha = 0.7)
       } else if (pred_output == "pointinterval") {
         # Compute intervals on the log scale (b_Intercept), then exponentiate
         # so they match the table estimates and plot correctly on log-scale axis
@@ -361,7 +361,7 @@ study.density.plot_fn  <- function(df,
         ggplot2::aes(x = x_studies, y = Author),
         data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
                                                 else {Author != "Pooled Effect" & Author != "Prediction"}),
-        linewidth = 0.5, scale = 0.6, normalize = "panels",
+        linewidth = 0.5, scale = 0.6, height = 0.9, normalize = "groups",
         color = color_shrinkage_outline, fill = color_shrinkage_fill, limits = calc_xlim)
   } else if (shrinkage_output == "pointinterval") {
     study.density.plot <- study.density.plot +
@@ -371,6 +371,6 @@ study.density.plot_fn  <- function(df,
                                                 else {Author != "Pooled Effect" & Author != "Prediction"}),
         linewidth = 1, size = 1, color = color_shrinkage_pointinterval, limits = calc_xlim)
   }
-  
+
   return(study.density.plot)
 }
