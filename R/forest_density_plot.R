@@ -95,11 +95,20 @@ study.density.plot_fn  <- function(df,
     }
   }
   
+  # Ensure yi and vi columns exist before using them
+  if (!"yi" %in% names(df)) df$yi <- NA_real_
+  if (!"vi" %in% names(df)) df$vi <- NA_real_
+  
+  # Check if we have valid yi/vi for shrinkage plots
+  has_valid_yi_vi <- !all(is.na(df$yi)) && !all(is.na(df$vi))
+  
   # Optimise data structure: separate study-level data from posterior draws
   if (isTRUE(subgroup)){
-    study.effects <- df |> dplyr::distinct(Author_ordered, yi, vi) |>
+    study.effects <- df |> 
+      dplyr::distinct(Author_ordered, yi, vi) |>
+      dplyr::filter(!is.na(yi) & !is.na(vi)) |>  # Filter out NA rows
       dplyr::mutate(
-        Author_ordered = factor(Author_ordered, levels = as.character(1:max(Author_ordered, na.rm = TRUE))),
+        Author_ordered = factor(Author_ordered, levels = as.character(1:max(df$Author_ordered, na.rm = TRUE))),
         Author = forcats::fct_rev(Author_ordered))
     
     posterior.draws <- df |>
@@ -109,16 +118,31 @@ study.density.plot_fn  <- function(df,
         Author = forcats::fct_rev(Author_ordered))
     
   } else if (isFALSE(subgroup)){
-    study.effects <- df |> dplyr::distinct(Author, yi, vi)
+    study.effects <- df |> 
+      dplyr::distinct(Author, yi, vi) |>
+      dplyr::filter(!is.na(yi) & !is.na(vi))  # Filter out NA rows
     posterior.draws <- df
   }
   
-  if (isTRUE(props$log_scale)){
-    x.min <- 0.1
-    x.max <- ceiling(max(exp(df$yi + 1.96 * sqrt(df$vi)), na.rm = TRUE))
-  } else if (isFALSE(props$log_scale)){
-    x.min <- floor(min(df$yi - 1.96 * sqrt(df$vi), na.rm = TRUE))
-    x.max <- ceiling(max(df$yi + 1.96 * sqrt(df$vi), na.rm = TRUE))
+  # Calculate x limits - handle NA yi/vi gracefully
+  if (has_valid_yi_vi) {
+    valid_df <- df |> dplyr::filter(!is.na(yi) & !is.na(vi))
+    if (isTRUE(props$log_scale)){
+      x.min <- 0.1
+      x.max <- ceiling(max(exp(valid_df$yi + 1.96 * sqrt(valid_df$vi)), na.rm = TRUE))
+    } else {
+      x.min <- floor(min(valid_df$yi - 1.96 * sqrt(valid_df$vi), na.rm = TRUE))
+      x.max <- ceiling(max(valid_df$yi + 1.96 * sqrt(valid_df$vi), na.rm = TRUE))
+    }
+  } else {
+    # Fallback: use posterior draws to determine limits
+    if (isTRUE(props$log_scale)){
+      x.min <- 0.1
+      x.max <- ceiling(max(exp(df$b_Intercept), na.rm = TRUE) * 1.5)
+    } else {
+      x.min <- floor(min(df$b_Intercept, na.rm = TRUE) * 1.2)
+      x.max <- ceiling(max(df$b_Intercept, na.rm = TRUE) * 1.2)
+    }
   }
   
   # Set xlim to given value or calculated range
@@ -133,17 +157,23 @@ study.density.plot_fn  <- function(df,
       dplyr::mutate(
         x_studies = exp(b_Intercept))
     
-    study.effects <- study.effects |> 
-      dplyr::mutate(
-        xdist = exp(distributional::dist_normal(mean = yi, sd = sqrt(vi))))
+    # Only create xdist if we have valid yi/vi
+    if (has_valid_yi_vi && nrow(study.effects) > 0) {
+      study.effects <- study.effects |> 
+        dplyr::mutate(
+          xdist = exp(distributional::dist_normal(mean = yi, sd = sqrt(vi))))
+    }
   } else {
     posterior.draws <- posterior.draws |> 
       dplyr::mutate(
         x_studies = b_Intercept)
     
-    study.effects <- study.effects |> 
-      dplyr::mutate(
-        xdist = distributional::dist_normal(mean = yi, sd = sqrt(vi)))
+    # Only create xdist if we have valid yi/vi
+    if (has_valid_yi_vi && nrow(study.effects) > 0) {
+      study.effects <- study.effects |> 
+        dplyr::mutate(
+          xdist = distributional::dist_normal(mean = yi, sd = sqrt(vi)))
+    }
   }
   
   # Determine which label goes on which side.
@@ -167,18 +197,21 @@ study.density.plot_fn  <- function(df,
                         fill = scales::alpha(rope_color, 0.3), 
                         color = NA)
     }} +
-    {if (isTRUE(split_color_by_null)) {
-      list(
+    # Only add study effect distributions if we have valid yi/vi
+    {if (has_valid_yi_vi && nrow(study.effects) > 0) {
+      if (isTRUE(split_color_by_null)) {
+        list(
+          ggdist::stat_slab(
+            ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
+            slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+            data = study.effects, colour = color_study_posterior_outline))
+      } else {
         ggdist::stat_slab(
-          ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
+          ggplot2::aes(xdist = xdist),
           slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
-          data = study.effects, colour = color_study_posterior_outline))
-    } else {
-      ggdist::stat_slab(
-        ggplot2::aes(xdist = xdist),
-        slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
-        data = study.effects, colour = color_study_posterior_outline,
-        fill = color_study_posterior)
+          data = study.effects, colour = color_study_posterior_outline,
+          fill = color_study_posterior)
+      }
     }} +
     {if (isTRUE(split_color_by_null)) {
       list(
@@ -335,16 +368,19 @@ study.density.plot_fn  <- function(df,
     ggplot2::ylab(NULL) +
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
   
+  # Get pooled effect for reference lines using model-agnostic function
+  pooled_effect <- get_pooled_effect(model)
+  
   if (isTRUE(props$log_scale)){
     study.density.plot <- study.density.plot +
-      ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim)+
-      ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 1]), color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = exp(brms::fixef(model)[1, 3:4]), color = "grey60", linetype = 2)
+      ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
+      ggplot2::geom_vline(xintercept = exp(pooled_effect["estimate"]), color = "grey60", linewidth = 1) +
+      ggplot2::geom_vline(xintercept = exp(c(pooled_effect["lower"], pooled_effect["upper"])), color = "grey60", linetype = 2)
   } else {
     study.density.plot <- study.density.plot +
       ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
-      ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 1], color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = brms::fixef(model)[1, 3:4], color = "grey60", linetype = 2)
+      ggplot2::geom_vline(xintercept = pooled_effect["estimate"], color = "grey60", linewidth = 1) +
+      ggplot2::geom_vline(xintercept = c(pooled_effect["lower"], pooled_effect["upper"]), color = "grey60", linetype = 2)
   }
   
   if(isFALSE(subgroup)){
@@ -355,7 +391,8 @@ study.density.plot_fn  <- function(df,
   
   if(is.null(shrinkage_output))"density" else shrinkage_output
   
-  if (shrinkage_output == "density") {
+  # Only add shrinkage output if we have valid study effects
+  if (shrinkage_output == "density" && has_valid_yi_vi && nrow(study.effects) > 0) {
     study.density.plot <- study.density.plot +
       ggdist::stat_slab(
         ggplot2::aes(x = x_studies, y = Author),
@@ -363,7 +400,7 @@ study.density.plot_fn  <- function(df,
                                                 else {Author != "Pooled Effect" & Author != "Prediction"}),
         linewidth = 0.5, scale = 0.6, normalize = "panels",
         color = color_shrinkage_outline, fill = color_shrinkage_fill, limits = calc_xlim)
-  } else if (shrinkage_output == "pointinterval") {
+  } else if (shrinkage_output == "pointinterval" && has_valid_yi_vi && nrow(study.effects) > 0) {
     study.density.plot <- study.density.plot +
       ggdist::stat_pointinterval(
         ggplot2::aes(x = x_studies, y = Author),
