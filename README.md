@@ -314,7 +314,15 @@ diagnostics(model_bin)
 ### Sensitivity Plot
 
 Priors are written with the `bf_*()` helpers, so the same list works
-whichever backend the model was fitted with:
+whichever backend the model was fitted with. For the pooled effect use
+`bf_normal()` or `bf_student_t()`. For the heterogeneity use
+`bf_half_normal()`, `bf_half_cauchy()`, `bf_half_t()`,
+`bf_exponential()`, `bf_lognormal()` or `bf_uniform()`, or the empirical
+priors `bf_turner()` (binary outcomes) and `bf_rhodes()` (continuous
+outcomes), which are informative and especially useful when there are
+few studies. If the model’s backend cannot fit a prior exactly, you get
+an error rather than a substitute; `?bf_priors` lists which backends
+support which priors.
 
 ``` r
 priors <- list(

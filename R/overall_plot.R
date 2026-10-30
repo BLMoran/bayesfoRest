@@ -900,7 +900,10 @@ prior_line <- function(prior_df, color) {
 resolve_prior_density <- function(user_prior, model_prior, param, model) {
   if (!is.null(user_prior)) {
     if (is.function(user_prior)) return(user_prior)
-    if (inherits(user_prior, "bf_prior")) return(bf_prior_density(user_prior))
+    if (inherits(user_prior, "bf_prior")) {
+      check_bf_prior(user_prior, param)
+      return(bf_prior_density(user_prior))
+    }
     cli::cli_abort(
       "{.arg {param}_prior} must be a {.cls bf_prior} (e.g. {.fn bf_normal}) or a density function."
     )
@@ -911,23 +914,6 @@ resolve_prior_density <- function(user_prior, model_prior, param, model) {
     "i" = "Supply it with {.arg {param}_prior}, e.g. {.code {param}_prior = {if (param == 'mu') 'bf_normal(0, 1)' else 'bf_half_cauchy(0, 0.5)'}}."
   ))
   NULL
-}
-
-#' Density function for a bf_prior (half distributions are folded at 0)
-#'
-#' @keywords internal
-#' @noRd
-bf_prior_density <- function(prior) {
-  switch(
-    prior$family,
-    normal      = function(x) stats::dnorm(x, prior$mean, prior$sd),
-    half_normal = truncate_at_zero(function(x) stats::dnorm(x, prior$mean, prior$sd)),
-    half_cauchy = truncate_at_zero(function(x) stats::dcauchy(x, prior$location, prior$scale)),
-    half_t      = truncate_at_zero(function(x) stats::dt((x - prior$location) / prior$scale,
-                                             prior$df) / prior$scale),
-    exponential = function(x) stats::dexp(x, prior$rate),
-    cli::cli_abort("Unsupported prior family {.val {prior$family}}.")
-  )
 }
 
 #' Read the mu and tau priors stored in a fitted model
@@ -979,17 +965,12 @@ brms_prior_density <- function(prior_string, half = FALSE) {
     student_t   = if (length(args) == 3) function(x) stats::dt((x - args[2]) / args[3], args[1]) / args[3],
     cauchy      = if (length(args) == 2) function(x) stats::dcauchy(x, args[1], args[2]),
     exponential = if (length(args) == 1) function(x) stats::dexp(x, args[1]),
+    lognormal   = if (length(args) == 2) function(x) stats::dlnorm(x, args[1], args[2]),
+    uniform     = if (length(args) == 2) function(x) stats::dunif(x, args[1], args[2]),
     NULL
   )
-  if (is.null(f) || !half || m[2] == "exponential") return(f)
+  if (is.null(f) || !half || m[2] %in% c("exponential", "lognormal", "uniform")) {
+    return(f)
+  }
   truncate_at_zero(f)
-}
-
-#' Truncate a density at zero and renormalise it
-#'
-#' @keywords internal
-#' @noRd
-truncate_at_zero <- function(f) {
-  mass <- stats::integrate(f, 0, Inf)$value
-  function(x) ifelse(x < 0, 0, f(x) / mass)
 }

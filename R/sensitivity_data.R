@@ -93,25 +93,23 @@ update_model_prior.brmsfit <- function(model, data, new_prior, ...) {
   }
 
   prior <- new_prior
-  if (!want_re) prior <- prior[prior$class != "sd", , drop = FALSE]
+  # A common-effect refit has no sd, so drop tau priors (including a raw
+  # log-t prior written against sd_1)
+  if (!want_re) {
+    prior <- prior[prior$class != "sd" & !grepl("sd_1", prior$prior, fixed = TRUE), ,
+                   drop = FALSE]
+  }
 
-  # Structure change always needs a recompile. cmdstanr fits loaded from disk
-  # have no live executable, so never pass recompile = FALSE there -- use NULL
-  # (brms/cmdstanr rebuilds only if required).
-  structure_changed <- (want_re != has_re)
-  backend <- model$backend %||% "rstan"
-  recompile <- if (structure_changed) TRUE
-  else if (backend == "cmdstanr") NULL     # let it rebuild if needed
-  else FALSE                               # rstan can reuse
-
+  # brms writes prior values into the Stan code, so a new prior changes the
+  # model. Leave recompile = NULL so brms rebuilds whenever the code differs;
+  # recompile = FALSE would silently sample with the original prior.
   stats::update(
     model,
     formula.  = form,
     newdata   = data,
     prior     = prior,
     refresh   = 0,
-    silent    = 2,
-    recompile = recompile
+    silent    = 2
   )
 }
 
@@ -232,6 +230,14 @@ update_prior_sensitivity <- function(model,
                                      force_re = NULL) {
 
   re_flag <- if (!is.null(force_re)) isTRUE(force_re) else model_has_re(model)
+
+  # Fail before any refit if a prior can't be fitted exactly by this backend
+  purrr::walk(priors, function(prior_spec) {
+    if (inherits(prior_spec$mu_prior, "bf_prior") ||
+        inherits(prior_spec$tau_prior, "bf_prior")) {
+      translate_priors_for_backend(prior_spec, model)
+    }
+  })
 
   purrr::imap_dfr(priors, function(prior_spec, prior_name) {
 
