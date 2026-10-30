@@ -17,3 +17,4 @@ A \code{gt_tbl}.
 \description{
 Render a prior_dominance object as a single gt table
 }
+\keyword{internal}

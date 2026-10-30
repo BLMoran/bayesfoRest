@@ -24,3 +24,4 @@ Extracts study-level and pooled posterior draws from a fitted model,
 returning them in the canonical format expected by bayesfoRest plotting
 and table functions.
 }
+\keyword{internal}

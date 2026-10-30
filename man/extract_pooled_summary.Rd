@@ -20,3 +20,4 @@ A named numeric vector: \code{estimate}, \code{lower}, \code{upper}.
 Extracts the pooled (overall) effect estimate and credible interval from a
 fitted model. Values are on the model scale (log scale for ratio measures).
 }
+\keyword{internal}

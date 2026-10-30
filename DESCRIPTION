@@ -28,7 +28,6 @@ Imports:
     tibble,
     tidybayes,
     tidyr,
-    tidyselect,
     utils
 Suggests:
     bayesma,
@@ -68,4 +67,3 @@ Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 Config/roxygen2/version: 8.1.0
-RoxygenNote: 7.3.2

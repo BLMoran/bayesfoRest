@@ -48,7 +48,7 @@ bayes_forest(
   color_study_posterior = "dodgerblue",
   color_study_posterior_outline = "blue",
   color_overall_posterior = "blue",
-  color_pointinterval = "purple",
+  color_shrinkage_pointinterval = "purple",
   color_shrinkage_outline = "purple",
   color_shrinkage_fill = NULL,
   split_color_by_null = FALSE,
@@ -58,7 +58,7 @@ bayes_forest(
   reverse_arm_labels = FALSE,
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
-  pred_output = c("density", "pointinterval"),
+  pred_output = c("density", "pointinterval", "boxplot"),
   color_pred_posterior = "orange",
   color_pred_outline = "darkorange2",
   color_pred_pointinterval = "orange",
@@ -179,7 +179,7 @@ Options: "density" (default) or "pointinterval". Ignored for common-effect model
 
 \item{color_overall_posterior}{Color for overall posterior.}
 
-\item{color_pointinterval}{Color for point intervals.}
+\item{color_shrinkage_pointinterval}{Color for point intervals.}
 
 \item{color_shrinkage_outline}{Color for shrinkage plot outlines.}
 
@@ -202,7 +202,9 @@ Only applicable to random-effect models.}
 \item{add_pred_subgroup}{Logical. Whether to add prediction to each subgroup. Default is FALSE.}
 
 \item{pred_output}{Character string specifying prediction visualization.
-Options: "density" (default) or "pointinterval".}
+Options: "density" (default), "pointinterval", or "boxplot". When
+\code{plot_output = "boxplot"}, \code{pred_output} defaults to "boxplot" too unless
+explicitly set.}
 
 \item{color_pred_posterior}{Color for prediction density fill. Default is "orange".}
 

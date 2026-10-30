@@ -16,6 +16,7 @@
 #'   spans the interquartile range, the line marks the median, and the whiskers
 #'   span the 95% interval.
 #' @param shrinkage_output "density" or "pointinterval".
+#' @param pred_output "density", "pointinterval", or "boxplot".
 #' @param ... Additional colour and layout arguments.
 #'
 #' @noRd
@@ -43,6 +44,7 @@ study.density.plot_fn  <- function(df,
                                    plot_output = "density",
                                    shrinkage_output = "density",
                                    add_pred = FALSE,
+                                   add_pred_subgroup = FALSE,
                                    pred_output = "density",
                                    color_pred_posterior = "orange",
                                    color_pred_outline = "darkorange2",
@@ -54,12 +56,6 @@ study.density.plot_fn  <- function(df,
                                    add_rope = FALSE,
                                    rope_value = NULL,
                                    rope_color = "grey50",
-                                   add_pred = FALSE,
-                                   add_pred_subgroup = FALSE,
-                                   pred_output = "density",
-                                   color_pred_posterior = "forestgreen",
-                                   color_pred_outline = "darkgreen",
-                                   color_pred_pointinterval = "forestgreen",
                                    font = NULL){
 
   # Filter out "No Pooled Effect" rows at the beginning
@@ -73,7 +69,7 @@ study.density.plot_fn  <- function(df,
     color_pooled_posterior <- palette_colors[3]
     color_overall_posterior <- palette_colors[5]
     color_shrinkage_outline <- palette_colors[6]
-    color_pointinterval <- palette_colors[6]
+    color_shrinkage_pointinterval <- palette_colors[6]
     if (!is.na(color_shrinkage_fill)) {
       color_shrinkage_fill <- scales::alpha(palette_colors[6], 0.3)
     }
@@ -357,7 +353,7 @@ study.density.plot_fn  <- function(df,
           ggplot2::aes(x = x_studies, y = Author),
           data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
                                                   else {Author != "Pooled Effect" & Author != "Prediction"}),
-          linewidth = 1, size = 1, color = color_pointinterval, limits = calc_xlim)
+          linewidth = 1, size = 1, color = color_shrinkage_pointinterval, limits = calc_xlim)
     }
   }
   # For common-effects: no shrinkage layer at all (tau omitted entirely)
@@ -386,6 +382,19 @@ study.density.plot_fn  <- function(df,
             ggplot2::aes(x = x_studies, y = Author),
             data = pred_data,
             linewidth = 1, size = 1, color = color_pred_pointinterval, limits = calc_xlim)
+      } else if (pred_output == "boxplot") {
+        pred_box_df <- pred_data |>
+          box_stats_draws() |>
+          box_stats_scale(log_scale = isTRUE(props$log_scale), xlim = calc_xlim)
+
+        study.density.plot <- study.density.plot +
+          ggplot2::geom_boxplot(
+            ggplot2::aes(y = Author, xmin = xmin, xlower = xlower, xmiddle = xmiddle,
+                         xupper = xupper, xmax = xmax),
+            data = pred_box_df, stat = "identity", orientation = "y", width = 0.35,
+            position = ggplot2::position_nudge(y = 0.3), alpha = 0.7,
+            fill = color_pred_posterior, colour = color_pred_outline, linewidth = 0.5,
+            inherit.aes = FALSE)
       }
     }
   }

@@ -225,7 +225,9 @@ forest.data.summary_fn <- function(spread_df,
           as.character(Author) == "Prediction", "", unweighted_effect
         ))
   } else {
-    # Common-effects: no tau, just observed effects (or blank for pooled)
+    # Common-effects: no tau and no shrinkage, so the single effect column
+    # shows the observed effect for studies and the pooled posterior
+    # estimate (otherwise held in weighted_effect) for the pooled row(s)
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
         unweighted_effect = if (measure %in% c("MD", "SMD")) {
@@ -234,7 +236,7 @@ forest.data.summary_fn <- function(spread_df,
           paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
         },
         unweighted_effect = ifelse(
-          unweighted_effect == "NA [NA, NA]", "\u2014", unweighted_effect
+          unweighted_effect == "NA [NA, NA]", weighted_effect, unweighted_effect
         ),
         unweighted_effect = dplyr::if_else(
           as.character(Author) == "Prediction", "", unweighted_effect

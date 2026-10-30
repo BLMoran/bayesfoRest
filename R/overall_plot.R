@@ -52,6 +52,7 @@
 #' @param tau_xlim Numeric vector of length 2 for tau plot x-axis limits.
 #' @param pred_xlim Numeric vector of length 2 for prediction plot x-axis
 #'   limits.
+#' @param x_label Character string for the mu/prediction plot x-axis label.
 #' @param x_breaks Numeric vector for x-axis breaks on mu plot.
 #' @param tau_breaks Numeric vector for x-axis breaks on tau plot.
 #' @param pred_breaks Numeric vector for x-axis breaks on prediction plot.

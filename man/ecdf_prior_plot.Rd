@@ -58,15 +58,13 @@ needed only if the chosen \code{section_to_plot} requires them.}
 
 \item{label_control, label_intervention}{Arm labels for the density panel.}
 
-\item{title, subtitle, xlim, x_breaks, color_palette, show_density, font}{Display options.}
+\item{title, subtitle, x_label, xlim, x_breaks, color_palette, show_density, font}{Display options.}
 
-\item{exclude_high_rob, incl_pet_peese, incl_mixture, incl_bma}{Section toggles.
-Set the one corresponding to \code{section_to_plot} (other than
-"All studies") to TRUE so those draws are built.}
-
-\item{model_bma}{Named list of RoBMA fits (required if \code{incl_bma}).}
-
-\item{pet_peese_direction, pet_peese_threshold}{PET-PEESE options.}
+\item{...}{Additional section toggles (e.g. \code{exclude_high_rob},
+\code{incl_pet_peese}, \code{incl_selection_weight}, \code{incl_robma})
+passed on to \code{.build_ecdf_draws()}. Set the one corresponding to
+\code{section_to_plot} (other than "All studies") to TRUE so those draws
+are built.}
 }
 \value{
 A ggplot (or patchwork) object.
@@ -79,3 +77,4 @@ This is the prior-sensitivity companion to \code{\link{ecdf_model_plot}}.
 \seealso{
 \code{\link{ecdf_model_plot}} for comparing model strategies at a fixed prior.
 }
+\keyword{internal}

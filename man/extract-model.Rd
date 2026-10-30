@@ -12,3 +12,4 @@ cmdstanr, bayesma, RoBMA (brma), R2jags (JAGS).
 All methods produce output in a canonical internal format so that
 downstream plotting and table functions are backend-agnostic.
 }
+\keyword{internal}

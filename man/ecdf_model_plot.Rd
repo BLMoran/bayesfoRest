@@ -53,7 +53,9 @@ Defaults to the first prior.}
 
 \item{study_var, rob_var}{Optional unquoted column names (study id / RoB).}
 
-\item{exclude_high_rob, incl_pet_peese, incl_mixture, incl_bma}{Logical section toggles.}
+\item{exclude_high_rob, incl_common_effect, incl_random_effect, incl_pet_peese, incl_selection_weight, incl_robma}{Logical section toggles.}
+
+\item{robma_fit}{A fitted RoBMA object (required if \code{incl_robma}).}
 
 \item{pet_peese_direction, pet_peese_threshold}{PET-PEESE options.}
 
@@ -63,9 +65,7 @@ Defaults to the first prior.}
 
 \item{label_control, label_intervention}{Arm labels for the density panel.}
 
-\item{title, subtitle, xlim, x_breaks, color_palette, show_density, font}{Display options.}
-
-\item{model_bma}{Named list of RoBMA fits (required if \code{incl_bma}).}
+\item{title, subtitle, x_label, xlim, x_breaks, color_palette, show_density, font}{Display options.}
 }
 \value{
 A ggplot (or patchwork) object.
@@ -75,3 +75,4 @@ ECDF (+ optional density) comparing sensitivity model strategies -- All
 studies, Excluding High RoB, PET-PEESE, Mixture Model, BMA -- for a single
 prior. Colour represents the model strategy/section.
 }
+\keyword{internal}

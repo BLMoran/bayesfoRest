@@ -24,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Benjamin Moran \email{ben.moran@newcastle.edu.au} (\href{https://orcid.org/0000-0002-6515-6722}{ORCID})
   \item Thomas Payne \email{tompayne302@gmail.com} (\href{https://orcid.org/0000-0002-5530-3717}{ORCID}) [contributor]
 }
 

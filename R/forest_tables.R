@@ -125,6 +125,9 @@ forest.table.left_fn <- function(forest.data.summary,
 #'
 #' @param rob_cols Risk of bias columns to show (from `rob_columns()`).
 #' @param spec A `rob_spec` object (only used when `add_rob = TRUE`).
+#' @param effect_type "random_effect" (shows Shrinkage and Observed columns)
+#'   or "common_effect" (shows a single Observed/Pooled column, since there's
+#'   no shrinkage without a random effect).
 #'
 #' @noRd
 forest.table.right_fn <- function(df,
@@ -134,12 +137,14 @@ forest.table.right_fn <- function(df,
                                   rob_cols = character(),
                                   spec = NULL,
                                   effect_label = NULL,
-                                  font = NULL) {
+                                  font = NULL,
+                                  effect_type = "random_effect") {
   if (isFALSE(add_rob)) rob_cols <- character()
+  effect_cols <- if (effect_type == "common_effect") "unweighted_effect" else c("weighted_effect", "unweighted_effect")
 
   if (isFALSE(subgroup)) {
     forest.table.right <- df |>
-      dplyr::select(Author, weighted_effect, unweighted_effect, dplyr::all_of(rob_cols)) |>
+      dplyr::select(Author, dplyr::all_of(effect_cols), dplyr::all_of(rob_cols)) |>
       gt::gt() |>
       gt::tab_style(
         style = list(
@@ -151,7 +156,7 @@ forest.table.right_fn <- function(df,
 
   } else if (isTRUE(subgroup)) {
     forest.table.right <- df |>
-      dplyr::select(Author, Subgroup, weighted_effect, unweighted_effect, dplyr::all_of(rob_cols)) |>
+      dplyr::select(Author, Subgroup, dplyr::all_of(effect_cols), dplyr::all_of(rob_cols)) |>
       gt::gt(groupname_col = "Subgroup") |>
       gt::tab_style(
         gt::cell_text(color = "white"),
@@ -189,7 +194,7 @@ forest.table.right_fn <- function(df,
   forest.table.right <- forest.table.right |>
     gt::tab_options(column_labels.font.weight = "bold") |>
     gt::cols_align(align = "right") |>
-    gt::cols_label(.list = create_rob_labels(rob_cols, measure, effect_label)) |>
+    gt::cols_label(.list = create_rob_labels(rob_cols, measure, effect_label, effect_type)) |>
     gt::tab_options(
       table.border.top.color = "white",
       table.border.bottom.color = "white",
@@ -199,7 +204,7 @@ forest.table.right_fn <- function(df,
       style = gt::cell_fill(color = "grey95"),
       locations = gt::cells_body(
         rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"),
-        columns = c(weighted_effect, unweighted_effect)))
+        columns = dplyr::all_of(effect_cols)))
 
   if (length(rob_cols) > 0) {
     text_cols <- get_rob_text_columns(rob_cols)

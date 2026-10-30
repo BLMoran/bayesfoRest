@@ -26,17 +26,18 @@
 #'   the legend. Defaults to \code{names(priors)}.
 #' @param study_var,rob_var Optional unquoted column names (study id / RoB),
 #'   needed only if the chosen \code{section_to_plot} requires them.
-#' @param exclude_high_rob,incl_pet_peese,incl_mixture,incl_bma Section toggles.
-#'   Set the one corresponding to \code{section_to_plot} (other than
-#'   "All studies") to TRUE so those draws are built.
-#' @param model_bma Named list of RoBMA fits (required if \code{incl_bma}).
-#' @param pet_peese_direction,pet_peese_threshold PET-PEESE options.
 #' @param prob_reference "null" or "null_range".
 #' @param null_value,null_range,add_null_range,color_null_range Null / ROPE options.
 #' @param label_control,label_intervention Arm labels for the density panel.
-#' @param title,subtitle,xlim,x_breaks,color_palette,show_density,font Display options.
+#' @param title,subtitle,x_label,xlim,x_breaks,color_palette,show_density,font Display options.
+#' @param ... Additional section toggles (e.g. \code{exclude_high_rob},
+#'   \code{incl_pet_peese}, \code{incl_selection_weight}, \code{incl_robma})
+#'   passed on to \code{.build_ecdf_draws()}. Set the one corresponding to
+#'   \code{section_to_plot} (other than "All studies") to TRUE so those draws
+#'   are built.
 #'
 #' @return A ggplot (or patchwork) object.
+#' @keywords internal
 #' @export
 #'
 #' @seealso \code{\link{ecdf_model_plot}} for comparing model strategies at a fixed prior.

@@ -27,3 +27,4 @@ tau_median, tau_lo, tau_hi, tau_prior_pctile, conflict.
 \description{
 Continuous tau-prior scale sweep
 }
+\keyword{internal}

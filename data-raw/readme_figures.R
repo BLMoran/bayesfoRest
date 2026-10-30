@@ -5,7 +5,7 @@ devtools::load_all()
 library(metafor)
 library(brms)
 
-fig <- function(plot, file, width = 14, height = 7) {
+fig <- function(plot, file, width = 16, height = 9) {
   ggplot2::ggsave(file.path("man/figures", file), plot,
                   width = width, height = height, dpi = 300, bg = "white")
 }
@@ -31,7 +31,21 @@ model_bin <- brm(
   control = list(adapt_delta = 0.99),
   seed = 1234,
   silent = 2,
-  refresh = 0)
+  refresh = 0,
+  backend = "cmdstanr")
+
+model_bin_ce <- brm(
+  yi | se(sei) ~ 1,
+  family = gaussian(),
+  data = binary_es,
+  prior = prior(normal(0, 1), class = Intercept),
+  iter = 4000,
+  cores = 4,
+  control = list(adapt_delta = 0.99),
+  seed = 1234,
+  silent = 2,
+  refresh = 0,
+  backend = "cmdstanr")
 
 forest_args <- list(
   model = model_bin,
@@ -43,44 +57,45 @@ forest_args <- list(
   n_int = quote(N_Intervention),
   event_ctrl = quote(Event_Control),
   event_int = quote(Event_Intervention),
-  xlim = c(0.1, 3.5))
+  xlim = c(0.1, 3.5),
+  add_pred = quote(TRUE))
 
 forest <- function(...) do.call(bayes_forest, utils::modifyList(forest_args, list(...)))
 
 # Forest plots ----------------------------------------------------------------
 
 fig(forest(), "forest_plot_binary.png")
+fig(forest(model = model_bin_ce, add_pred = FALSE), "forest_plot_common_effect.png")
 fig(forest(plot_output = "boxplot"), "forest_plot_boxplot.png")
 fig(forest(subgroup = TRUE, subgroupvar = quote(Subgroup)),
-    "forest_plot_subgroup.png", height = 10)
-fig(forest(subgroup = TRUE, subgroupvar = quote(Subgroup), add_rob = TRUE),
-    "forest_plot_rob.png", width = 16, height = 10)
-fig(forest(subgroup = TRUE, subgroupvar = quote(Subgroup), add_rob = TRUE,
+    "forest_plot_subgroup.png", height = 12)
+fig(forest(add_rob = TRUE, rob_tool = "rob2"),
+    "forest_plot_rob.png")
+fig(forest(add_rob = TRUE,
            add_rob_legend = TRUE, rob_tool = "rob2"),
-    "forest_plot_rob_legend.png", width = 20, height = 10)
-fig(forest(subgroup = TRUE, subgroupvar = quote(Subgroup), add_rob = TRUE,
-           add_rob_legend = TRUE, rob_tool = "rob2", exclude_high_rob = TRUE),
-    "forest_excl_high_rob.png", width = 20, height = 8)
+    "forest_plot_rob_legend.png", width = 22, height = 12)
+fig(forest(add_rob = TRUE, rob_tool = "rob2", exclude_high_rob = TRUE),
+    "forest_excl_high_rob.png")
 
 # Risk of bias ----------------------------------------------------------------
 
 fig(rob_plot(binary_outcome, rob_tool = "rob2", add_rob_legend = TRUE),
     "rob_viz.png", width = 12, height = 6)
 
-# Overall, funnel and diagnostics ---------------------------------------------
+fig(rob_summary(binary_outcome, rob_tool = "rob2", title = "Risk of Bias Summary"),
+    "rob_summary.png", width = 10, height = 6)
+
+# Overall and funnel -----------------------------------------------------------
 
 fig(overall_plot(model_bin, binary_es, measure = "OR", add_tau = TRUE,
                  add_pred = TRUE, incl_mu_prior = TRUE, incl_tau_prior = TRUE,
-                 add_null_range = TRUE, mu_xlim = c(0.1, 3.5), tau_xlim = c(0, 1.5),
-                 plot_arrangement = "vertical"),
-    "overall_plot.png", width = 9, height = 9)
+                 add_null_range = TRUE, mu_xlim = c(0.3, 1.5), tau_xlim = c(0, 1),
+                 plot_arrangement = "vertical"), "overall_plot.png")
 
 fig(funnel_plot(model_bin, binary_es, measure = "OR",
                 studyvar = Author, yearvar = Year,
                 yi_col = "yi", sei_col = "sei", label_studies = TRUE),
-    "funnel_plot.png", width = 8, height = 6)
-
-fig(diagnostics(model_bin), "diagnostics.png", width = 14, height = 10)
+    "funnel_plot.png", width = 6, height = 5)
 
 # Sensitivity -----------------------------------------------------------------
 
@@ -99,9 +114,9 @@ sens_args <- list(model = model_bin, data = binary_es, priors = priors,
                   add_null_range = TRUE)
 
 fig(do.call(sensitivity_plot, c(sens_args, add_probs = FALSE)),
-    "sens_plot_no_prob.png", width = 14, height = 8)
+    "sens_plot_no_prob.png", width = 18, height = 10)
 fig(do.call(sensitivity_plot, c(sens_args, add_probs = TRUE)),
-    "sens_plot_prob.png", width = 18, height = 8)
+    "sens_plot_prob.png", width = 22, height = 10)
 
 fig(ecdf_model_plot(model_bin, binary_es, priors = priors["weakreg"],
                     measure = "OR", rob_var = Overall, exclude_high_rob = TRUE,

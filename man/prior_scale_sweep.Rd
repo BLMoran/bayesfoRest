@@ -31,3 +31,4 @@ A tibble: prior_sd, mu_median, mu_lo, mu_hi, pr_benefit.
 \description{
 Continuous mu-prior scale sweep
 }
+\keyword{internal}

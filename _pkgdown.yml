@@ -64,39 +64,12 @@ reference:
     contents:
       - bayes_forest
       - rob_plot
-      - rob_overall
+      - rob_summary
       - overall_plot
       - funnel_plot
-
-  - title: Sensitivity Analysis
-    desc: Compare priors and meta-analysis models
-    contents:
       - sensitivity_plot
-      - ecdf_model_plot
       - ecdf_prior_plot
-      - bf_priors
-
-  - title: Model Checking
-    desc: MCMC diagnostics and prior checks
-    contents:
-      - diagnostics
-      - prior_dominance
-      - gt_prior_dominance
-      - prior_ess
-      - prior_scale_sweep
-      - plot_prior_scale_sweep
-      - tau_scale_sweep
-      - plot_tau_scale_sweep
-
-  - title: Working with Models
-    desc: Extract draws and summaries from any supported backend
-    contents:
-      - extract-model
-      - detect_model_info
-      - extract_forest_draws
-      - extract_pooled_summary
-      - make_study_labels
-      - jags_model_file
+      - ecdf_model_plot
 
   - title: Example Datasets
     desc: Example data for binary and continuous outcomes

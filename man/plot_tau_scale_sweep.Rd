@@ -27,3 +27,4 @@ A ggplot (two stacked panels: mu and tau vs tau-prior SD).
 \description{
 Plot a tau-prior scale sweep (mu and tau vs tau-prior SD)
 }
+\keyword{internal}

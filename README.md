@@ -1,9 +1,13 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bayesfoRest: Forest Plots for Bayesian Meta Analyses in R <img src="man/figures/logo.png" align="right" height="200px" />
+# bayesfoRest: Forest Plots for Bayesian Meta Analyses in R <img src="man/figures/logo.png" align="right" height="200px"/>
 
 <!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/BLMoran/bayesfoRest/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BLMoran/bayesfoRest/actions/workflows/R-CMD-check.yaml)
 
 <!-- badges: end -->
 
@@ -17,38 +21,46 @@ measures, subgroup analyses, and risk of bias assessments.
 ## Key Features
 
 - **Bayesian Forest Plots**: Create forest plots from models fitted with
-  brms, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA
+  brms, bayesma, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, RoBMA
   or R2jags
 - **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, and SMD
 - **Density or Boxplot Output**: Show study posteriors as densities or
   horizontal boxplots
 - **Subgroup Analysis**: Built-in support for subgroup meta-analyses
-- **Few-Study Safeguard**: `re_min_k` switches to a common-effect model
-  when there are too few studies to estimate tau
 - **Risk of Bias Integration**: Incorporate risk of bias assessments
   (RoB 2, ROBINS-I, ROBINS-E, QUADAS-2, CLARITY, ROB-NMA, PROBAST)
 - **Shrinkage Visualisation**: Display shrinkage effects with density
   plots or point intervals
 - **ROPE Support**: Add a Region of Practical Equivalence (ROPE) to
   plots
-- **Model Checking**: Funnel plots, MCMC diagnostics, prior sensitivity
-  and prior dominance checks
 - **Extensive Customisation**: Colours, fonts, labels, and layout
+- **Overall Plot**: Combined visualisation of the pooled effect,
+  prediction and heterogeneity posterior distributions
+- **Sensitivity Plot**: Create visualisations of different priors and
+  model types, with probabilities of benefit/harm
+- **ECDF Model Plot**: Plot comparing posterior distributions across
+  different model strategies (e.g., random effects, comon-effect) under
+  a single prior specification.
+- **ECDF Prior Plot**: Plot comparing posterior distributions across
+  different prior specifications for a single model type.
+- **Risk of Bias Plots**: Traffic light plot or weighted bar chart of
+  judgements per domain, standalone or weighted by study
+- **Funnel Plot**: Study-level effect sizes plotted against precision.
 
 ## Installation
 
 You can install the development version of bayesfoRest from GitHub:
 
 ``` r
-# install.packages("pak")
-pak::pak("BLMoran/bayesfoRest")
+# install.packages("remotes")
+remotes::install_github("BLMoran/bayesfoRest")
 ```
 
 ## Basic Usage
 
 The examples below use the `binary_outcome` dataset that comes with the
-package. First prepare the effect sizes with metafor and fit a model
-(any supported backend works; brms is shown here):
+package. First prepare the effect sizes with metafor and fit a Bayesian
+model (bayesma, RoBMA, bayesmeta, MetaStan; brms is shown here):
 
 ``` r
 library(bayesfoRest)
@@ -75,8 +87,8 @@ model_bin <- brm(
 
 ### Binary Outcome Forest Plot (Odds Ratio)
 
-Tell `bayes_forest()` which columns hold the study name, year and
-arm-level data:
+Assign the model object, data frame, and measure, then the study-level
+arguments as unquoted column names, within `bayes_forest()`:
 
 ``` r
 bayes_forest(
@@ -93,18 +105,58 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_plot_binary.png)
+<p align="center">
+
+<img src="man/figures/forest_plot_binary.png"/>
+
+</p>
 
 For continuous outcomes, use `mean_ctrl`, `mean_int`, `sd_ctrl` and
 `sd_int` instead of the event columns. For time-to-event and rate
 outcomes, use `time_ctrl` and `time_int`.
 
-### Boxplots Instead of Densities
+### Common-Effect Meta-Analysis
 
-`plot_output = "boxplot"` draws each study as a horizontal boxplot. The
-box is the interquartile range, the line is the median and the whiskers
-are the 95% credible interval. Shrinkage estimates are shown as point
-intervals.
+For a fixed/common-effect analysis, fit a model without a study-level
+random effect (drop `(1 | Author)` in brms). `bayes_forest()`
+auto-detects the pooling type from the model, so no shrinkage or
+heterogeneity (tau) panel is drawn, and prediction intervals are
+unavailable (there’s no tau to predict a new study from).
+
+``` r
+model_bin_ce <- brm(
+  yi | se(sei) ~ 1,
+  family = gaussian(),
+  data = binary_es,
+  prior = prior(normal(0, 1), class = Intercept),
+  iter = 4000,
+  control = list(adapt_delta = 0.99))
+
+bayes_forest(
+  model = model_bin_ce,
+  model_type = "common_effect",
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  xlim = c(0.1, 3.5)
+)
+```
+
+<p align="center">
+
+<img src="man/figures/forest_plot_common_effect.png"/>
+
+</p>
+
+### Boxplot Output
+
+`plot_output = "boxplot"` draws each study as a horizontal boxplot.
+Shrinkage estimates are shown as point intervals.
 
 ``` r
 bayes_forest(
@@ -122,7 +174,11 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_plot_boxplot.png)
+<p align="center">
+
+<img src="man/figures/forest_plot_boxplot.png"/>
+
+</p>
 
 ### Add Subgroups
 
@@ -143,33 +199,11 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_plot_subgroup.png)
+<p align="center">
 
-### Few Studies: `re_min_k`
+<img src="man/figures/forest_plot_subgroup.png"/>
 
-With only a handful of studies, the between-study heterogeneity (tau) is
-poorly identified. Setting `re_min_k` makes this explicit: any analysis
-(or subgroup) with fewer than `re_min_k` studies is shown as a
-common-effect model, with a message saying so. Leave it as `NULL` (the
-default) if you would rather keep the random-effect model and use an
-informative prior on tau.
-
-``` r
-bayes_forest(
-  model = model_bin,
-  data = binary_es,
-  measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
-  n_ctrl = N_Control,
-  n_int = N_Intervention,
-  event_ctrl = Event_Control,
-  event_int = Event_Intervention,
-  subgroup = TRUE,
-  subgroupvar = Subgroup,
-  re_min_k = 5
-)
-```
+</p>
 
 ### Add Risk of Bias Columns
 
@@ -191,7 +225,11 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_plot_rob.png)
+<p align="center">
+
+<img src="man/figures/forest_plot_rob.png"/>
+
+</p>
 
 ### Add Risk of Bias Legend
 
@@ -215,7 +253,11 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_plot_rob_legend.png)
+<p align="center">
+
+<img src="man/figures/forest_plot_rob_legend.png"/>
+
+</p>
 
 ### Exclude Studies with High Risk of Bias
 
@@ -240,7 +282,11 @@ bayes_forest(
 )
 ```
 
-![](man/figures/forest_excl_high_rob.png)
+<p align="center">
+
+<img src="man/figures/forest_excl_high_rob.png"/>
+
+</p>
 
 ### Standalone Risk of Bias Plot
 
@@ -254,10 +300,34 @@ rob_plot(
 )
 ```
 
-![](man/figures/rob_viz.png)
+<p align="center">
+
+<img src="man/figures/rob_viz.png" width="469"/>
+
+</p>
 
 If your data has domain judgements but no overall column,
-`rob_overall()` derives one using the tool’s rules.
+`bayes_forest()` and `rob_plot()` derive one automatically using the
+tool’s rules.
+
+### Risk of Bias Summary Plot
+
+`rob_summary()` shows the weighted proportion of studies at each
+judgement, per domain, as a stacked bar chart.
+
+``` r
+rob_summary(
+  data = binary_outcome,
+  rob_tool = "rob2",
+  title = "Risk of Bias Summary"
+)
+```
+
+<p align="center">
+
+<img src="man/figures/rob_summary.png" width="542"/>
+
+</p>
 
 ### Overall Plot
 
@@ -277,13 +347,17 @@ overall_plot(
 )
 ```
 
-![](man/figures/overall_plot.png)
+<p align="center">
+
+<img src="man/figures/overall_plot.png" width="608"/>
+
+</p>
 
 The dashed lines are the priors, drawn on the same density scale as the
 posteriors. They are read from brms and bayesmeta models; for other
-backends, pass them with `mu_prior` and `tau_prior`
-(e.g. `mu_prior = bf_normal(0, 1)`). With `add_null_range = TRUE` the
-shaded region defaults to an odds ratio of 0.9 to 1.1; set your own with
+backends, pass them with `mu_prior` and `tau_prior` (e.g.
+`mu_prior = bf_normal(0, 1)`). With `add_null_range = TRUE` the shaded
+region defaults to an odds ratio of 0.9 to 1.1; set your own with
 `null_range`.
 
 ### Funnel Plot
@@ -301,15 +375,11 @@ funnel_plot(
 )
 ```
 
-![](man/figures/funnel_plot.png)
+<p align="center">
 
-### MCMC Diagnostics
+<img src="man/figures/funnel_plot.png" width="405"/>
 
-``` r
-diagnostics(model_bin)
-```
-
-![](man/figures/diagnostics.png)
+</p>
 
 ### Sensitivity Plot
 
@@ -354,7 +424,11 @@ sensitivity_plot(
 )
 ```
 
-![](man/figures/sens_plot_no_prob.png)
+<p align="center">
+
+<img src="man/figures/sens_plot_no_prob.png"/>
+
+</p>
 
 ### Sensitivity Plot with Probabilities
 
@@ -373,7 +447,11 @@ sensitivity_plot(
 )
 ```
 
-![](man/figures/sens_plot_prob.png)
+<p align="center">
+
+<img src="man/figures/sens_plot_prob.png"/>
+
+</p>
 
 Publication-bias-adjusted models come from a RoBMA fit: pass it with
 `robma_fit = your_robma_fit` and choose the components with
@@ -398,7 +476,11 @@ ecdf_model_plot(
 )
 ```
 
-![](man/figures/ecdf_plot.png)
+<p align="center">
+
+<img src="man/figures/ecdf_plot.png" width="585"/>
+
+</p>
 
 `ecdf_prior_plot()` compares it across prior sets for one model:
 
@@ -413,21 +495,11 @@ ecdf_prior_plot(
 )
 ```
 
-![](man/figures/ecdf_prior_plot.png)
+<p align="center">
 
-### Prior Checks
+<img src="man/figures/ecdf_prior_plot.png" width="570"/>
 
-`prior_dominance()` (shown as a table with `gt_prior_dominance()`)
-reports how much the data have updated each prior. `prior_scale_sweep()`
-and `tau_scale_sweep()` refit the model over a range of prior scales,
-and `plot_prior_scale_sweep()` and `plot_tau_scale_sweep()` plot the
-results.
-
-``` r
-prior_dominance(model_bin) |> gt_prior_dominance()
-
-tau_scale_sweep(model_bin) |> plot_tau_scale_sweep()
-```
+</p>
 
 ## Citation
 
@@ -450,7 +522,8 @@ bayesfoRest depends on several R packages:
 - [brms](https://paulbuerkner.com/brms/),
   [bayesmeta](https://cran.r-project.org/package=bayesmeta),
   [MetaStan](https://cran.r-project.org/package=MetaStan),
-  [RoBMA](https://fbartos.github.io/RoBMA/) and other backends for
+  [RoBMA](https://fbartos.github.io/RoBMA/),
+  [bayesma](https://blmoran.github.io/bayesma/) and other backends for
   Bayesian model fitting (suggested; install the ones you use)
 - [gt](https://gt.rstudio.com) for creating tables
 - [patchwork](https://patchwork.data-imaginist.com) for combining plots
@@ -467,8 +540,6 @@ bayesfoRest depends on several R packages:
   icons
 - [posterior](https://mc-stan.org/posterior/) for working with posterior
   draws
-- [S7](https://rconsortium.github.io/S7/) for risk of bias tool
-  specifications
 
 ## Feedback, Issues and Contributing
 
@@ -490,8 +561,17 @@ This package is licensed under the AGPL-3 License.
 
 ## Acknowledgments
 
+A special thanks to Matti Vuorre, whose [blog
+post](https://vuorre.com/posts/bayesian-meta-analysis/index.html) as
+well as [Doing Meta Analysis in R- Chapter 13: Bayesian
+Meta-Analysis](https://doing-meta.guide/bayesian-ma) for being the
+original inspiration for bayesfoRest.
+
 bayesfoRest builds upon the excellent work of the
 [brms](https://paulbuerkner.com/brms/),
+[bayesmeta](https://cran.r-project.org/package=bayesmeta),
+[MetaStan](https://cran.r-project.org/package=MetaStan),
+[RoBMA](https://fbartos.github.io/RoBMA/), [Stan](https://mc-stan.org),
 [metafor](https://wviechtb.github.io/metafor/index.html),
 [gt](https://gt.rstudio.com),
 [patchwork](https://patchwork.data-imaginist.com),

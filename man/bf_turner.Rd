@@ -64,3 +64,4 @@ Rhodes KM, Turner RM, Higgins JPT (2015). Predictive distributions were
 developed for the extent of heterogeneity in meta-analyses of continuous
 outcome data. \emph{Journal of Clinical Epidemiology}, 68(1), 52--60.
 }
+\keyword{internal}

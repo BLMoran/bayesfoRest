@@ -1,52 +1,95 @@
 # Introduction to Creating Forest Plots for Bayesian Meta Analyses
 
+bayesfoRest draws forest plots from a fitted Bayesian meta-analysis. You
+fit the model with whichever backend you prefer (brms, bayesmeta,
+MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA or R2jags), then
+pass it to
+[`bayes_forest()`](https://blmoran.github.io/bayesfoRest/reference/bayes_forest.md)
+together with the study-level data.
+
+## Prepare the data and fit a model
+
 ``` r
+
 library(metafor)
 library(brms)
 library(bayesfoRest)
 
-# Load data
-binary_outcome <- binary_outcome
-
-# Prepare with {metafor}
-binary_outcome <- escalc(
-  measure="OR", 
-  ai=Event_Intervention, bi=Outcome_Intervention_No,
-  ci=Event_Control, di=Outcome_Control_No,
-  n1i=N_Intervention, n2i=N_Control,  
-  data=binary_outcome) |> 
+# Compute log odds ratios with {metafor}
+binary_es <- escalc(
+  measure = "OR",
+  ai = Event_Intervention, bi = Outcome_Intervention_No,
+  ci = Event_Control, di = Outcome_Control_No,
+  n1i = N_Intervention, n2i = N_Control,
+  data = binary_outcome) |>
   dplyr::mutate(sei = sqrt(vi))
 
-# Run the brms model
-model_bin <- brms::brm(yi | se(sei) ~ 1 + (1 | Author),
-             family = gaussian(),
-             data = binary_outcome,
-             prior = brms::prior(normal(0, 1), class = Intercept) +
-                     brms::prior(cauchy(0, 0.5), class = sd),
-             iter = 4000,
-             cores = parallel::detectCores(),
-             control = list(adapt_delta = 0.99),
-             backend = "cmdstanr",
-             silent = 2)
-
-# Create forest plot
-forest_plot_or <- bayes_forest(
-  model = model_bin,
-  data = binary_outcome,
-  measure = "OR",
-  studyvar = Author,
-  year = Year,
-  c_n = N_Control,
-  i_n = N_Intervention,
-  c_event = Event_Control,
-  i_event = Event_Intervention,
-  title = "Treatment Effect on Binary Outcome",
-  subtitle = "Bayesian Random-Effects Meta-Analysis (Odds Ratio)",
-  xlim = c(0.1, 3.5)
-)
-
-# Display Plot
-forest_plot_or
+# Fit a random-effect meta-analysis with brms
+model_bin <- brm(
+  yi | se(sei) ~ 1 + (1 | Author),
+  family = gaussian(),
+  data = binary_es,
+  prior = prior(normal(0, 1), class = Intercept) +
+          prior(cauchy(0, 0.5), class = sd),
+  iter = 4000,
+  cores = parallel::detectCores(),
+  control = list(adapt_delta = 0.99),
+  silent = 2)
 ```
 
-![](reference/figures/forest_plot_binary.png)
+## Create the forest plot
+
+Name the columns that hold the study label, year and arm-level data. For
+a binary outcome these are the group sizes and event counts:
+
+``` r
+
+bayes_forest(
+  model = model_bin,
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  title = "Treatment Effect on Binary Outcome",
+  subtitle = "Bayesian Random-Effect Meta-Analysis (Odds Ratio)",
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](../reference/figures/forest_plot_binary.png)
+
+For a continuous outcome, use `mean_ctrl`, `mean_int`, `sd_ctrl` and
+`sd_int` in place of the event columns. For time-to-event and rate
+outcomes, use `time_ctrl` and `time_int`.
+
+## Common options
+
+- `model_type`: `"random_effect"` or `"common_effect"`. Detected from
+  the model when not given.
+- `plot_output = "boxplot"`: horizontal boxplots instead of densities.
+- `subgroup = TRUE, subgroupvar = Subgroup`: one panel per subgroup.
+- `re_min_k`: show a common-effect model when an analysis or subgroup
+  has fewer than this many studies, because tau is poorly identified
+  with so few.
+- `add_rob = TRUE`: add risk of bias columns. Choose the tool with
+  `rob_tool` (`"rob2"`, `"robins_i"`, `"robins_e"`, `"quadas2"`,
+  `"clarity"`, `"rob_nma"`, `"probast"` or `"probast_ai"`) and add a key
+  with `add_rob_legend = TRUE`.
+- `exclude_high_rob = TRUE`: drop studies with an overall high risk of
+  bias.
+
+See
+[`?bayes_forest`](https://blmoran.github.io/bayesfoRest/reference/bayes_forest.md)
+for the full list, and the README for examples of the other plots:
+[`rob_plot()`](https://blmoran.github.io/bayesfoRest/reference/rob_plot.md),
+[`overall_plot()`](https://blmoran.github.io/bayesfoRest/reference/overall_plot.md),
+[`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md),
+[`diagnostics()`](https://blmoran.github.io/bayesfoRest/reference/diagnostics.md),
+[`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md),
+[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
+and
+[`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md).

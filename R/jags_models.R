@@ -23,6 +23,7 @@
 #'
 #' @return The file path (invisibly), for passing to [R2jags::jags()].
 #'
+#' @keywords internal
 #' @export
 jags_model_file <- function(outcome = c("bin", "ctns", "count"),
                             model,

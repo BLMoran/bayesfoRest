@@ -120,7 +120,7 @@ sensitivity_table_right <- function(
       pr_benefit_null_range    = paste("Pr(Benefit>", "\u03B4", ")"),
       pr_no_benefit_null_range = paste("Pr(Harm>", "\u03B4", ")")
     ) |>
-    gt::cols_align(align = "center", columns = everything()) |>
+    gt::cols_align(align = "center", columns = gt::everything()) |>
     gt::tab_options(
       table.font.names                  = font,
       column_labels.font.weight         = "bold",

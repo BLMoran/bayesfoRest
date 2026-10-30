@@ -92,6 +92,7 @@
 #' )
 #' }
 #'
+#' @keywords internal
 #' @export
 sensitivity_plot <- function(model,
                              data,

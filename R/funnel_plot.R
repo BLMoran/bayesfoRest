@@ -35,7 +35,7 @@
 #' @param color_points,color_points_outline,color_pooled,color_null,color_contour
 #'   Colours.
 #' @param point_size,label_size Sizes.
-#' @param xlim,x_breaks Axis limits / breaks.
+#' @param xlim,x_breaks,x_label Axis limits / breaks / label.
 #' @param null_value,add_null_line Null-effect line.
 #' @param label_studies Logical; label points with study (year).
 #' @param title,subtitle,title_align,font Display options.

@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Open_Sans-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Source_Code_Pro-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -74,55 +74,103 @@
 
     
     
+<p>bayesfoRest draws forest plots from a fitted Bayesian meta-analysis.
+You fit the model with whichever backend you prefer (brms, bayesmeta,
+MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA or R2jags), then
+pass it to <code><a href="../reference/bayes_forest.html">bayes_forest()</a></code> together with the study-level
+data.</p>
+<div class="section level2">
+<h2 id="prepare-the-data-and-fit-a-model">Prepare the data and fit a model<a class="anchor" aria-label="anchor" href="#prepare-the-data-and-fit-a-model"></a>
+</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.metafor-project.org" class="external-link">metafor</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paul-buerkner/brms" class="external-link">brms</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/BLMoran/bayesfoRest" class="external-link">bayesfoRest</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load data</span></span>
-<span><span class="va">binary_outcome</span> <span class="op">&lt;-</span> <span class="va">binary_outcome</span></span>
-<span></span>
-<span><span class="co"># Prepare with {metafor}</span></span>
-<span><span class="va">binary_outcome</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://wviechtb.github.io/metafor/reference/escalc.html" class="external-link">escalc</a></span><span class="op">(</span></span>
-<span>  measure<span class="op">=</span><span class="st">"OR"</span>, </span>
-<span>  ai<span class="op">=</span><span class="va">Event_Intervention</span>, bi<span class="op">=</span><span class="va">Outcome_Intervention_No</span>,</span>
-<span>  ci<span class="op">=</span><span class="va">Event_Control</span>, di<span class="op">=</span><span class="va">Outcome_Control_No</span>,</span>
-<span>  n1i<span class="op">=</span><span class="va">N_Intervention</span>, n2i<span class="op">=</span><span class="va">N_Control</span>,  </span>
-<span>  data<span class="op">=</span><span class="va">binary_outcome</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span><span class="co"># Compute log odds ratios with {metafor}</span></span>
+<span><span class="va">binary_es</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://wviechtb.github.io/metafor/reference/escalc.html" class="external-link">escalc</a></span><span class="op">(</span></span>
+<span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  ai <span class="op">=</span> <span class="va">Event_Intervention</span>, bi <span class="op">=</span> <span class="va">Outcome_Intervention_No</span>,</span>
+<span>  ci <span class="op">=</span> <span class="va">Event_Control</span>, di <span class="op">=</span> <span class="va">Outcome_Control_No</span>,</span>
+<span>  n1i <span class="op">=</span> <span class="va">N_Intervention</span>, n2i <span class="op">=</span> <span class="va">N_Control</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_outcome</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sei <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">vi</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Run the brms model</span></span>
-<span><span class="va">model_bin</span> <span class="op">&lt;-</span> <span class="fu">brms</span><span class="fu">::</span><span class="fu"><a href="https://paulbuerkner.com/brms/reference/brm.html" class="external-link">brm</a></span><span class="op">(</span><span class="va">yi</span> <span class="op">|</span> <span class="fu"><a href="https://wviechtb.github.io/metafor/reference/se.html" class="external-link">se</a></span><span class="op">(</span><span class="va">sei</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">Author</span><span class="op">)</span>,</span>
-<span>             family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>             data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>             prior <span class="op">=</span> <span class="fu">brms</span><span class="fu">::</span><span class="fu"><a href="https://paulbuerkner.com/brms/reference/set_prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="fu">normal</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, class <span class="op">=</span> <span class="va">Intercept</span><span class="op">)</span> <span class="op">+</span></span>
-<span>                     <span class="fu">brms</span><span class="fu">::</span><span class="fu"><a href="https://paulbuerkner.com/brms/reference/set_prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="fu">cauchy</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>, class <span class="op">=</span> <span class="va">sd</span><span class="op">)</span>,</span>
-<span>             iter <span class="op">=</span> <span class="fl">4000</span>,</span>
-<span>             cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>             control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adapt_delta <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span>,</span>
-<span>             backend <span class="op">=</span> <span class="st">"cmdstanr"</span>,</span>
-<span>             silent <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create forest plot</span></span>
-<span><span class="va">forest_plot_or</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
+<span><span class="co"># Fit a random-effect meta-analysis with brms</span></span>
+<span><span class="va">model_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://paulbuerkner.com/brms/reference/brm.html" class="external-link">brm</a></span><span class="op">(</span></span>
+<span>  <span class="va">yi</span> <span class="op">|</span> <span class="fu"><a href="https://wviechtb.github.io/metafor/reference/se.html" class="external-link">se</a></span><span class="op">(</span><span class="va">sei</span><span class="op">)</span> <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">|</span> <span class="va">Author</span><span class="op">)</span>,</span>
+<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
+<span>  prior <span class="op">=</span> <span class="fu"><a href="https://paulbuerkner.com/brms/reference/set_prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="fu">normal</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, class <span class="op">=</span> <span class="va">Intercept</span><span class="op">)</span> <span class="op">+</span></span>
+<span>          <span class="fu"><a href="https://paulbuerkner.com/brms/reference/set_prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="fu">cauchy</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>, class <span class="op">=</span> <span class="va">sd</span><span class="op">)</span>,</span>
+<span>  iter <span class="op">=</span> <span class="fl">4000</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adapt_delta <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span>,</span>
+<span>  silent <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="create-the-forest-plot">Create the forest plot<a class="anchor" aria-label="anchor" href="#create-the-forest-plot"></a>
+</h2>
+<p>Name the columns that hold the study label, year and arm-level data.
+For a binary outcome these are the group sizes and event counts:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
 <span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  year <span class="op">=</span> <span class="va">Year</span>,</span>
-<span>  c_n <span class="op">=</span> <span class="va">N_Control</span>,</span>
-<span>  i_n <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
-<span>  c_event <span class="op">=</span> <span class="va">Event_Control</span>,</span>
-<span>  i_event <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
+<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
+<span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
+<span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
+<span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Treatment Effect on Binary Outcome"</span>,</span>
-<span>  subtitle <span class="op">=</span> <span class="st">"Bayesian Random-Effects Meta-Analysis (Odds Ratio)"</span>,</span>
+<span>  subtitle <span class="op">=</span> <span class="st">"Bayesian Random-Effect Meta-Analysis (Odds Ratio)"</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Display Plot</span></span>
-<span><span class="va">forest_plot_or</span></span></code></pre></div>
-<p><img src="reference/figures/forest_plot_binary.png"></p>
-  </main>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="../reference/figures/forest_plot_binary.png"></p>
+<p>For a continuous outcome, use <code>mean_ctrl</code>,
+<code>mean_int</code>, <code>sd_ctrl</code> and <code>sd_int</code> in
+place of the event columns. For time-to-event and rate outcomes, use
+<code>time_ctrl</code> and <code>time_int</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="common-options">Common options<a class="anchor" aria-label="anchor" href="#common-options"></a>
+</h2>
+<ul>
+<li>
+<code>model_type</code>: <code>"random_effect"</code> or
+<code>"common_effect"</code>. Detected from the model when not
+given.</li>
+<li>
+<code>plot_output = "boxplot"</code>: horizontal boxplots instead of
+densities.</li>
+<li>
+<code>subgroup = TRUE, subgroupvar = Subgroup</code>: one panel per
+subgroup.</li>
+<li>
+<code>re_min_k</code>: show a common-effect model when an analysis
+or subgroup has fewer than this many studies, because tau is poorly
+identified with so few.</li>
+<li>
+<code>add_rob = TRUE</code>: add risk of bias columns. Choose the
+tool with <code>rob_tool</code> (<code>"rob2"</code>,
+<code>"robins_i"</code>, <code>"robins_e"</code>,
+<code>"quadas2"</code>, <code>"clarity"</code>, <code>"rob_nma"</code>,
+<code>"probast"</code> or <code>"probast_ai"</code>) and add a key with
+<code>add_rob_legend = TRUE</code>.</li>
+<li>
+<code>exclude_high_rob = TRUE</code>: drop studies with an overall
+high risk of bias.</li>
+</ul>
+<p>See <code><a href="../reference/bayes_forest.html">?bayes_forest</a></code> for the full list, and the README for
+examples of the other plots: <code><a href="../reference/rob_plot.html">rob_plot()</a></code>,
+<code><a href="../reference/overall_plot.html">overall_plot()</a></code>, <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code>,
+<code><a href="../reference/diagnostics.html">diagnostics()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>,
+<code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> and <code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code>.</p>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
@@ -132,7 +180,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

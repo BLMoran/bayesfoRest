@@ -27,3 +27,4 @@ A ggplot.
 \description{
 Plot a prior-scale sweep (mu vs prior SD)
 }
+\keyword{internal}

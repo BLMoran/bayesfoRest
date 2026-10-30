@@ -33,7 +33,7 @@ extract_pooled_draws <- function(model, data, measure) {
 #' @noRd
 model_has_re <- function(model) UseMethod("model_has_re")
 
-#' @noRd
+#' @exportS3Method
 model_has_re.default <- function(model) {
   # MetaStan / meta_stan objects carry it in stanDat
   if (!is.null(model$stanDat) && !is.null(model$stanDat$re))
@@ -41,12 +41,12 @@ model_has_re.default <- function(model) {
   NA   # unknown backend
 }
 
-#' @noRd
+#' @exportS3Method
 model_has_re.brmsfit <- function(model) {
   any(grepl("^sd_", brms::variables(model)))     # a study-level SD term => random effects
 }
 
-#' @noRd
+#' @exportS3Method
 model_has_re.bayesmeta <- function(model) TRUE   # bayesmeta is always random-effects
 
 #' Update Model with New Priors (S3 Generic)
@@ -70,7 +70,7 @@ update_model_prior <- function(model, data, new_prior, ...) {
   UseMethod("update_model_prior")
 }
 
-#' @noRd
+#' @exportS3Method
 update_model_prior.default <- function(model, data, new_prior, ...) {
 
   rlang::abort(paste0(
@@ -79,7 +79,7 @@ update_model_prior.default <- function(model, data, new_prior, ...) {
   ))
 }
 
-#' @noRd
+#' @exportS3Method
 update_model_prior.brmsfit <- function(model, data, new_prior, ...) {
   dots     <- list(...)
   force_re <- dots$force_re
@@ -113,7 +113,7 @@ update_model_prior.brmsfit <- function(model, data, new_prior, ...) {
   )
 }
 
-#' @noRd
+#' @exportS3Method
 update_model_prior.bayesmeta <- function(model, data, new_prior, ...) {
   if (!requireNamespace("bayesmeta", quietly = TRUE)) {
     rlang::abort("Package 'bayesmeta' is required.")
@@ -136,7 +136,7 @@ update_model_prior.bayesmeta <- function(model, data, new_prior, ...) {
   )
 }
 
-#' @noRd
+#' @exportS3Method
 update_model_prior.meta_stan <- function(model, data, new_prior, ...) {
   if (!requireNamespace("MetaStan", quietly = TRUE)) {
     rlang::abort("Package 'MetaStan' is required.")

@@ -23,11 +23,16 @@
 #' @param labels Optional named vector mapping original parameter names to
 #'   display labels, e.g. \code{c(b_Intercept = "\u03bc", sd_Author__Intercept = "\u03c4")}.
 #'   Overrides the automatic mu / tau defaults.
+#' @param study_labels Optional named vector mapping study keys to display
+#'   labels, e.g. as built by [make_study_labels()].
+#' @param model_label Optional character string naming the model, shown in
+#'   the diagnostics page title.
 #' @param ndraws Draws used in the posterior predictive panel.
 #' @param font Font family for panel text.
 #' @param ... Unused.
 #'
 #' @return A patchwork object (the assembled diagnostic page).
+#' @keywords internal
 #' @export
 #'
 #' @importFrom posterior as_draws_array summarise_draws ndraws variables
@@ -469,6 +474,7 @@ if (!exists("%||%")) `%||%` <- function(a, b) if (is.null(a)) b else a
 #'   ideally, \code{Author_original} and \code{year}.
 #' @return A named character vector: names = Author keys (as they appear in
 #'   \code{r_Author[<key>,Intercept]}); values = "Author (year)".
+#' @keywords internal
 #' @export
 make_study_labels <- function(data) {
   key <- as.character(data$Author)

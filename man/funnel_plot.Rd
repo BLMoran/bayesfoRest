@@ -84,7 +84,7 @@ estimate from the data), or \code{"none"}.}
 
 \item{point_size, label_size}{Sizes.}
 
-\item{xlim, x_breaks}{Axis limits / breaks.}
+\item{xlim, x_breaks, x_label}{Axis limits / breaks / label.}
 
 \item{null_value, add_null_line}{Null-effect line.}
 

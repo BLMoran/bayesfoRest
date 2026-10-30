@@ -92,6 +92,7 @@
 #' }
 #'
 #' @name bf_priors
+#' @keywords internal
 NULL
 
 #' @rdname bf_priors
@@ -186,6 +187,7 @@ bf_uniform <- function(lower = 0, upper = 1) {
 #' bf_rhodes("mental health outcome", "non-pharmacological", "placebo / control")
 #' }
 #'
+#' @keywords internal
 #' @export
 bf_turner <- function(outcome = NA,
                       comparator1 = "pharmacological",
@@ -479,24 +481,24 @@ format_bf_prior <- function(prior) {
   if (is.null(prior)) return(NA_character_)
   if (!inherits(prior, "bf_prior")) return(NA_character_)
 
-  # Unicode math-script letters
-  script_N <- "\U0001D4A9"  # 𝒩
-  script_C <- "\U0001D49E"  # 𝒞
-  script_t <- "\U0001D4C9"  # 𝓉
-  script_E <- "\U2130"      # ℰ
-  script_U <- "\U0001D4B0"  # 𝒰
-  superscript_plus <- "⁺"  # ⁺
+  # Unicode math-script letters (escaped to keep this file ASCII-only)
+  script_N <- "\U0001D4A9"  # script N
+  script_C <- "\U0001D49E"  # script C
+  script_t <- "\U0001D4C9"  # script t
+  script_E <- "\U2130"      # script E
+  script_U <- "\U0001D4B0"  # script U
+  superscript_plus <- "\U207A"  # superscript plus
 
-  # Trailing thin space ( ) prevents STIX Two Math font from
+  # Trailing thin space (U+2009) prevents STIX Two Math font from
   # rendering a doubled closing parenthesis in gt tables.
-  thin <- " "
+  thin <- "\U2009"
 
   # Subscript degrees of freedom for single-digit df
   sub_df <- function(df) {
     sub_digits <- c(
-      "0" = "₀", "1" = "₁", "2" = "₂", "3" = "₃",
-      "4" = "₄", "5" = "₅", "6" = "₆", "7" = "₇",
-      "8" = "₈", "9" = "₉"
+      "0" = "\U2080", "1" = "\U2081", "2" = "\U2082", "3" = "\U2083",
+      "4" = "\U2084", "5" = "\U2085", "6" = "\U2086", "7" = "\U2087",
+      "8" = "\U2088", "9" = "\U2089"
     )
     if (grepl("^[0-9]$", df)) sub_digits[[as.character(df)]] else as.character(df)
   }

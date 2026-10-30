@@ -112,6 +112,8 @@ defaults to 0.9 to 1.1 for ratio measures and -0.1 to 0.1 for SMD.}
 
 \item{title_align}{Alignment for title ("left", "center", "right").}
 
+\item{x_label}{Character string for the mu/prediction plot x-axis label.}
+
 \item{mu_xlim}{Numeric vector of length 2 for mu plot x-axis limits.}
 
 \item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits.}

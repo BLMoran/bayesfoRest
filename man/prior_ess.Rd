@@ -30,3 +30,4 @@ studies), and the prior's share of total precision.
 \description{
 Prior effective sample size for the pooled effect (study-equivalents)
 }
+\keyword{internal}

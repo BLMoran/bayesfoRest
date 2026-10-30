@@ -305,15 +305,17 @@
 #' @param prior_to_plot Name (in \code{priors}) of the prior to display.
 #'   Defaults to the first prior.
 #' @param study_var,rob_var Optional unquoted column names (study id / RoB).
-#' @param exclude_high_rob,incl_pet_peese,incl_mixture,incl_bma Logical section toggles.
-#' @param model_bma Named list of RoBMA fits (required if \code{incl_bma}).
+#' @param exclude_high_rob,incl_common_effect,incl_random_effect,incl_pet_peese,incl_selection_weight,incl_robma
+#'   Logical section toggles.
+#' @param robma_fit A fitted RoBMA object (required if \code{incl_robma}).
 #' @param pet_peese_direction,pet_peese_threshold PET-PEESE options.
 #' @param prob_reference "null" or "null_range".
 #' @param null_value,null_range,add_null_range,color_null_range Null / ROPE options.
 #' @param label_control,label_intervention Arm labels for the density panel.
-#' @param title,subtitle,xlim,x_breaks,color_palette,show_density,font Display options.
+#' @param title,subtitle,x_label,xlim,x_breaks,color_palette,show_density,font Display options.
 #'
 #' @return A ggplot (or patchwork) object.
+#' @keywords internal
 #' @export
 #'
 #' @importFrom rlang enquo quo_is_null %||%

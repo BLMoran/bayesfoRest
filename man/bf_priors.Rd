@@ -127,3 +127,4 @@ sensitivity_plot(model, data, priors = priors, measure = "OR")
 }
 
 }
+\keyword{internal}

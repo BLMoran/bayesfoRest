@@ -68,3 +68,4 @@ scale-mixture representation.
 \item \code{jags_prior_uniform()}: Uniform prior on sigma.
 
 }}
+\keyword{internal}

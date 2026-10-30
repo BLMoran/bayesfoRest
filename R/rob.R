@@ -306,48 +306,6 @@ spec_probast <- function(name, label, participants, overall_label) {
       Applicability = c("A1", "A2", "A3", "Applicability")))
 }
 
-
-#' Derive an overall risk of bias judgement
-#'
-#' Takes the worst judgement across the selected domains, using the tool's
-#' severity ranking (e.g. ROBINS-I: Low < Low (except confounding) < Moderate <
-#' Serious < Critical). "Not applicable" and "ONM" are ignored. CLARITY has no
-#' overall judgement.
-#'
-#' Tool guidance permits reviewer judgement to override this rule (e.g. RoB 2
-#' "some concerns" in multiple domains -> High). Supply your own overall column
-#' in those cases.
-#'
-#' @param data Data frame of domain judgements.
-#' @param rob_tool Risk of bias tool: `"rob2"` (default), `"robins_i"`,
-#'   `"robins_e"`, `"quadas2"`, `"clarity"`, `"rob_nma"`, `"probast"`, or
-#'   `"probast_ai"`.
-#' @param cols <[`tidy-select`][dplyr::dplyr_tidy_select]> Domain columns to
-#'   combine. Defaults to the domains defined for `name` in the tool.
-#' @param name Name of the overall column to create.
-#'
-#' @return `data` with standardised domain judgements and the overall column.
-#'
-#' @examples
-#' rob <- tibble::tibble(D1 = c("Low", "Moderate"), D2 = c("Serious", "Low"))
-#' rob_overall(rob, "robins_i", cols = c(D1, D2))
-#'
-#' @export
-rob_overall <- function(data, rob_tool = "rob2", cols = NULL, name = "Overall") {
-  spec <- as_rob_spec(rob_tool)
-  cols <- if (rlang::quo_is_null(rlang::enquo(cols))) {
-    dplyr::intersect(spec@overall_from[[name]] %||% names(spec@domains), names(data))
-  } else {
-    names(tidyselect::eval_select(rlang::enquo(cols), data))
-  }
-  if (length(cols) == 0) cli::cli_abort("No domain columns available to derive {.field {name}}.")
-  data |>
-    dplyr::mutate(
-      dplyr::across(dplyr::all_of(cols), \(x) standardise_judgement(x, spec@synonyms)),
-      "{name}" := purrr::pmap_chr(dplyr::pick(dplyr::all_of(cols)), \(...) rob_overall_judgement(spec, c(...))))
-}
-
-
 #' Risk of bias columns present in a data frame
 #'
 #' @noRd
@@ -386,12 +344,25 @@ prepare_rob_data <- function(data, spec, derive_overall = FALSE) {
 }
 
 
+#' Internal: derive an overall judgement column from its component domains
+#'
+#' Applies rob_overall_judgement() row-wise across the given columns.
+#'
+#' @noRd
+rob_overall_column <- function(data, spec, cols, name) {
+  data |>
+    dplyr::rowwise() |>
+    dplyr::mutate("{name}" := rob_overall_judgement(spec, dplyr::c_across(dplyr::all_of(cols)))) |>
+    dplyr::ungroup()
+}
+
+
 #' Internal: derive an overall column if absent (or forced), else standardise it
 #'
 #' @noRd
 add_overall <- function(data, spec, name, derive_overall = FALSE) {
   cols <- dplyr::intersect(spec@overall_from[[name]], names(data))
-  if ((isTRUE(derive_overall) || !name %in% names(data)) && length(cols) > 0) return(rob_overall(data, spec, cols = dplyr::all_of(cols), name = name))
+  if ((isTRUE(derive_overall) || !name %in% names(data)) && length(cols) > 0) return(rob_overall_column(data, spec, cols = cols, name = name))
   if (!name %in% names(data)) return(data)
   dplyr::mutate(data, "{name}" := standardise_judgement(.data[[name]], spec@overall_synonyms))
 }
@@ -561,13 +532,14 @@ get_rob_text_columns <- function(rob_cols) {
 #' Internal function to create column labels for the right-hand forest table
 #'
 #' @noRd
-create_rob_labels <- function(rob_cols, measure, effect_label = NULL) {
+create_rob_labels <- function(rob_cols, measure, effect_label = NULL, effect_type = "random_effect") {
   effect_label <- if (is.null(effect_label)) measure else effect_label
 
   base_labels <- list(
     weighted_effect = gt::md(paste("Shrinkage", effect_label, "\n", "[95% CrI]")),
     unweighted_effect = gt::md(paste("Observed", effect_label, "\n", "[95% CrI]"))
   )
+  if (effect_type == "common_effect") base_labels$weighted_effect <- NULL
 
   text_cols <- get_rob_text_columns(rob_cols)
   rob_text <- c("Risk", "of", "Bias")[seq_along(text_cols)]

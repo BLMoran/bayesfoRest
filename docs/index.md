@@ -9,15 +9,19 @@ measures, subgroup analyses, and risk of bias assessments.
 
 ## Key Features
 
-- **Bayesian Forest Plots**: Create forest plots from brms models with
-  customizable aesthetics
+- **Bayesian Forest Plots**: Create forest plots from models fitted with
+  brms, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA
+  or R2jags
 - **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, and SMD
+- **Density or Boxplot Output**: Show study posteriors as densities or
+  horizontal boxplots
 - **Subgroup Analysis**: Built-in support for subgroup meta-analyses
-- **Risk of Bias Integration**: Seamlessly incorporate risk of bias
-  assessments (RoB2, ROBINS-I, ROBINS-E, QUADAS-2)
+- **Risk of Bias Integration**: Incorporate risk of bias assessments
+  (RoB 2, ROBINS-I, ROBINS-E, QUADAS-2, CLARITY, ROB-NMA, PROBAST)
 - **Shrinkage Visualisation**: Display shrinkage effects with density
   plots or point intervals
-- **ROPE Support**: Add Region of Practical Equivalence (ROPE) to plots
+- **ROPE Support**: Add a Region of Practical Equivalence (ROPE) to
+  plots
 - **Extensive Customisation**: Colours, fonts, labels, and layout
 
 ## Installation
@@ -25,33 +29,111 @@ measures, subgroup analyses, and risk of bias assessments.
 You can install the development version of bayesfoRest from GitHub:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("BLMoran/bayesfoRest")
+
+# install.packages("remotes")
+remotes::install_github("BLMoran/bayesfoRest")
 ```
 
 ## Basic Usage
 
-### Binary Outcome Forest Plot (Odds Ratio)
+The examples below use the `binary_outcome` dataset that comes with the
+package. First prepare the effect sizes with metafor and fit a model
+(any supported backend works; brms is shown here):
 
 ``` r
+
+library(bayesfoRest)
+library(metafor)
+library(brms)
+
+binary_es <- escalc(
+  measure = "OR",
+  ai = Event_Intervention, bi = Outcome_Intervention_No,
+  ci = Event_Control, di = Outcome_Control_No,
+  n1i = N_Intervention, n2i = N_Control,
+  data = binary_outcome) |>
+  dplyr::mutate(sei = sqrt(vi))
+
+model_bin <- brm(
+  yi | se(sei) ~ 1 + (1 | Author),
+  family = gaussian(),
+  data = binary_es,
+  prior = prior(normal(0, 1), class = Intercept) +
+          prior(cauchy(0, 0.5), class = sd),
+  iter = 4000,
+  control = list(adapt_delta = 0.99))
+```
+
+### Binary Outcome Forest Plot (Odds Ratio)
+
+Tell
+[`bayes_forest()`](https://blmoran.github.io/bayesfoRest/reference/bayes_forest.md)
+which columns hold the study name, year and arm-level data:
+
+``` r
+
 bayes_forest(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
   measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
   xlim = c(0.1, 3.5)
 )
 ```
 
 ![](reference/figures/forest_plot_binary.png)
 
+For continuous outcomes, use `mean_ctrl`, `mean_int`, `sd_ctrl` and
+`sd_int` instead of the event columns. For time-to-event and rate
+outcomes, use `time_ctrl` and `time_int`.
+
+### Boxplots Instead of Densities
+
+`plot_output = "boxplot"` draws each study as a horizontal boxplot. The
+box is the interquartile range, the line is the median and the whiskers
+are the 95% credible interval. Shrinkage estimates are shown as point
+intervals.
+
+``` r
+
+bayes_forest(
+  model = model_bin,
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  plot_output = "boxplot",
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](reference/figures/forest_plot_boxplot.png)
+
 ### Add Subgroups
 
 ``` r
+
 bayes_forest(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
   measure = "OR",
-  subgroup = T,
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  subgroup = TRUE,
+  subgroupvar = Subgroup,
   xlim = c(0.1, 3.5)
 )
 ```
@@ -61,12 +143,18 @@ bayes_forest(
 ### Add Risk of Bias Columns
 
 ``` r
+
 bayes_forest(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
   measure = "OR",
-  subgroup = T,
-  add_rob = T,
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  add_rob = TRUE,
   xlim = c(0.1, 3.5)
 )
 ```
@@ -76,13 +164,19 @@ bayes_forest(
 ### Add Risk of Bias Legend
 
 ``` r
+
 bayes_forest(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
   measure = "OR",
-  subgroup = T,
-  add_rob = T,
-  add_rob_legend = T,
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  add_rob = TRUE,
+  add_rob_legend = TRUE,
   rob_tool = "rob2",
   xlim = c(0.1, 3.5)
 )
@@ -93,15 +187,23 @@ bayes_forest(
 ### Exclude Studies with High Risk of Bias
 
 ``` r
+
 bayes_forest(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
   measure = "OR",
-  subgroup = T,
-  add_rob = T,
-  add_rob_legend = T,
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  subgroup = TRUE,
+  subgroupvar = Subgroup,
+  add_rob = TRUE,
+  add_rob_legend = TRUE,
   rob_tool = "rob2",
-  exclude_high_rob = T,
+  exclude_high_rob = TRUE,
   xlim = c(0.1, 3.5)
 )
 ```
@@ -111,9 +213,11 @@ bayes_forest(
 ### Standalone Risk of Bias Plot
 
 ``` r
-# Create standalone RoB visualization
+
 rob_plot(
   data = binary_outcome,
+  studyvar = Author,
+  yearvar = Year,
   rob_tool = "rob2",
   add_rob_legend = TRUE
 )
@@ -121,48 +225,109 @@ rob_plot(
 
 ![](reference/figures/rob_viz.png)
 
+If your data has domain judgements but no overall column,
+[`rob_overall()`](https://blmoran.github.io/bayesfoRest/reference/rob_overall.md)
+derives one using the tool’s rules.
+
 ### Overall Plot
 
 ``` r
-# Create overall plot
+
 overall_plot(
-  data = binary_outcome,
   model = model_bin,
+  data = binary_es,
   measure = "OR",
-  study_var = "Author",
-  incl_tau = T,
-  incl_mu_prior = T,
-  incl_tau_prior = T,
+  add_tau = TRUE,
+  add_pred = TRUE,
+  incl_mu_prior = TRUE,
+  incl_tau_prior = TRUE,
+  add_null_range = TRUE,
   mu_xlim = c(0.1, 3.5),
-  tau_xlim = c(0, 1),
+  tau_xlim = c(0, 1.5),
   plot_arrangement = "vertical"
 )
 ```
 
 ![](reference/figures/overall_plot.png)
 
-### Sensitivity Plot
+The dashed lines are the priors, drawn on the same density scale as the
+posteriors. They are read from brms and bayesmeta models; for other
+backends, pass them with `mu_prior` and `tau_prior`
+(e.g. `mu_prior = bf_normal(0, 1)`). With `add_null_range = TRUE` the
+shaded region defaults to an odds ratio of 0.9 to 1.1; set your own with
+`null_range`.
+
+### Funnel Plot
 
 ``` r
-# Create sensitivity plot with different priors and meta-analysis models
+
+funnel_plot(
+  model = model_bin,
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  yi_col = "yi",
+  sei_col = "sei",
+  label_studies = TRUE
+)
+```
+
+![](reference/figures/funnel_plot.png)
+
+### Sensitivity Plot
+
+Priors are written with the `bf_*()` helpers, so the same list works
+whichever backend the model was fitted with. For the pooled effect use
+[`bf_normal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+or
+[`bf_student_t()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md).
+For the heterogeneity use
+[`bf_half_normal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md),
+[`bf_half_cauchy()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md),
+[`bf_half_t()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md),
+[`bf_exponential()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md),
+[`bf_lognormal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+or
+[`bf_uniform()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md),
+or the empirical priors
+[`bf_turner()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)
+(binary outcomes) and
+[`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)
+(continuous outcomes), which are informative and especially useful when
+there are few studies. If the model’s backend cannot fit a prior
+exactly, you get an error rather than a substitute;
+[`?bf_priors`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+lists which backends support which priors.
+
+``` r
+
+priors <- list(
+  vague = list(
+    name = "Vague",
+    mu_prior = bf_normal(0, 10),
+    tau_prior = bf_half_cauchy(0, 1)),
+  weakreg = list(
+    name = "Weakly Regularising",
+    mu_prior = bf_normal(0, 1),
+    tau_prior = bf_half_cauchy(0, 0.5)),
+  informative = list(
+    name = "Informative",
+    mu_prior = bf_normal(0, 0.5),
+    tau_prior = bf_half_cauchy(0, 0.3))
+)
+
 sensitivity_plot(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
+  priors = priors,
   measure = "OR",
-  study_var = Author,
   rob_var = Overall,
-  exclude_high_rob = T,
-  incl_pet_peese = T,
-  incl_mixture = T,
-  incl_bma = T,
-  model_bma = robma_fits_bin,
-  add_probs = F,
-  priors = list(
-    vague = prior(normal(0, 10), class = "Intercept"),
-    weakreg  = prior(normal(0, 1),  class = "Intercept"),
-    informative = prior(normal(0, 0.5), class = "Intercept")),
+  exclude_high_rob = TRUE,
+  incl_common_effect = TRUE,
+  add_probs = FALSE,
   xlim = c(0.25, 1.5),
-  add_null_range = T
+  add_null_range = TRUE
 )
 ```
 
@@ -171,54 +336,66 @@ sensitivity_plot(
 ### Sensitivity Plot with Probabilities
 
 ``` r
-# Create sensitivity plot with different priors and meta-analysis models with probabilities
+
 sensitivity_plot(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
+  priors = priors,
   measure = "OR",
-  study_var = Author,
   rob_var = Overall,
-  exclude_high_rob = T,
-  incl_pet_peese = T,
-  incl_mixture = T,
-  incl_bma = T,
-  model_bma = robma_fits_bin,
-  add_probs = T,
-  priors = list(
-    vague = prior(normal(0, 10), class = "Intercept"),
-    weakreg  = prior(normal(0, 1),  class = "Intercept"),
-    informative = prior(normal(0, 0.5), class = "Intercept")),
+  exclude_high_rob = TRUE,
+  incl_common_effect = TRUE,
+  add_probs = TRUE,
   xlim = c(0.25, 1.5),
-  add_null_range = T
+  add_null_range = TRUE
 )
 ```
 
 ![](reference/figures/sens_plot_prob.png)
 
-### ECDF Plot
+Publication-bias-adjusted models come from a RoBMA fit: pass it with
+`robma_fit = your_robma_fit` and choose the components with
+`incl_robma`, `incl_pet_peese` and `incl_selection_weight`.
+
+### ECDF Plots
+
+[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
+compares the posterior of the pooled effect across models for one prior
+set:
 
 ``` r
-# Create ECDF plot with different meta-analysis models
-ecdf_plot(
+
+ecdf_model_plot(
   model = model_bin,
-  data = binary_outcome,
+  data = binary_es,
+  priors = priors["weakreg"],
   measure = "OR",
-  study_var = Author,
   rob_var = Overall,
-  priors = list(
-    weakreg  = prior(normal(0, 1),  class = "Intercept")),
-  exclude_high_rob = T,
-  incl_pet_peese = T,
-  incl_mixture = T,
-  incl_bma = T,
-  model_bma = robma_fits_bin,
+  exclude_high_rob = TRUE,
+  incl_common_effect = TRUE,
   xlim = c(0.25, 1.5),
-  add_null_range = T,
-  prob_reference = "null"
+  add_null_range = TRUE
 )
 ```
 
 ![](reference/figures/ecdf_plot.png)
+
+[`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
+compares it across prior sets for one model:
+
+``` r
+
+ecdf_prior_plot(
+  model = model_bin,
+  data = binary_es,
+  priors = priors,
+  measure = "OR",
+  xlim = c(0.25, 1.5),
+  add_null_range = TRUE
+)
+```
+
+![](reference/figures/ecdf_prior_plot.png)
 
 ## Citation
 
@@ -238,9 +415,13 @@ If you use bayesfoRest in your research, please cite:
 
 bayesfoRest depends on several R packages:
 
-- [brms](https://paulbuerkner.com/brms/) for Bayesian model fitting
 - [metafor](https://wviechtb.github.io/metafor/index.html) for
-  meta-analysis preparation
+  meta-analysis preparation (suggested)
+- [brms](https://paulbuerkner.com/brms/),
+  [bayesmeta](https://cran.r-project.org/package=bayesmeta),
+  [MetaStan](https://cran.r-project.org/package=MetaStan),
+  [RoBMA](https://fbartos.github.io/RoBMA/) and other backends for
+  Bayesian model fitting (suggested; install the ones you use)
 - [gt](https://gt.rstudio.com) for creating tables
 - [patchwork](https://patchwork.data-imaginist.com) for combining plots
 - [ggplot2](https://ggplot2.tidyverse.org) for plotting
@@ -254,6 +435,10 @@ bayesfoRest depends on several R packages:
   palettes
 - [fontawesome](https://rstudio.github.io/fontawesome/) for risk of bias
   icons
+- [posterior](https://mc-stan.org/posterior/) for working with posterior
+  draws
+- [S7](https://rconsortium.github.io/S7/) for risk of bias tool
+  specifications
 
 ## Feedback, Issues and Contributing
 
@@ -269,12 +454,12 @@ By contributing to this project, you agree to abide by its terms.
 
 ## License
 
-This package is licensed under the GPL-3 License.
+This package is licensed under the AGPL-3 License.
 
 ## Acknowledgments
 
 bayesfoRest builds upon the excellent work of the
-[brms](https://paulbuerkner.com/brms/) ,
+[brms](https://paulbuerkner.com/brms/),
 [metafor](https://wviechtb.github.io/metafor/index.html),
 [gt](https://gt.rstudio.com),
 [patchwork](https://patchwork.data-imaginist.com),

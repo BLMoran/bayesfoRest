@@ -10,6 +10,7 @@
 #' downstream plotting and table functions are backend-agnostic.
 #'
 #' @name extract-model
+#' @keywords internal
 NULL
 
 
@@ -46,6 +47,7 @@ NULL
 #'     \item{pooling}{Character string: "random_effect" or "common_effect".}
 #'   }
 #'
+#' @keywords internal
 #' @export
 detect_model_info <- function(model, ...) {
   UseMethod("detect_model_info")
@@ -128,6 +130,7 @@ detect_model_info.CmdStanMCMC <- function(model, tau_par = "tau", ...) {
 #'
 #' @return A named numeric vector: \code{estimate}, \code{lower}, \code{upper}.
 #'
+#' @keywords internal
 #' @export
 extract_pooled_summary <- function(model, prob = 0.95, ...) {
   UseMethod("extract_pooled_summary")
@@ -236,6 +239,7 @@ extract_pooled_summary.CmdStanMCMC <- function(model, prob = 0.95,
 #' @return A tibble with columns: \code{.draw}, \code{Author},
 #'   \code{theta_study}, \code{eta}, \code{tau}.
 #'
+#' @keywords internal
 #' @export
 extract_forest_draws <- function(model, data, ...) {
   UseMethod("extract_forest_draws")

@@ -17,3 +17,4 @@ A named character vector: names = Author keys (as they appear in
 \description{
 Build display labels for per-study random effects
 }
+\keyword{internal}

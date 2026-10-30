@@ -71,7 +71,7 @@
 #' @param color_study_posterior Color for study posterior densities.
 #' @param color_study_posterior_outline Color for study posterior outlines.
 #' @param color_overall_posterior Color for overall posterior.
-#' @param color_pointinterval Color for point intervals.
+#' @param color_shrinkage_pointinterval Color for point intervals.
 #' @param color_shrinkage_outline Color for shrinkage plot outlines.
 #' @param color_shrinkage_fill Color for shrinkage plot fill.
 #' @param split_color_by_null Logical. Split posterior densities by null value.
@@ -84,7 +84,9 @@
 #'   Only applicable to random-effect models.
 #' @param add_pred_subgroup Logical. Whether to add prediction to each subgroup. Default is FALSE.
 #' @param pred_output Character string specifying prediction visualization.
-#'   Options: "density" (default) or "pointinterval".
+#'   Options: "density" (default), "pointinterval", or "boxplot". When
+#'   `plot_output = "boxplot"`, `pred_output` defaults to "boxplot" too unless
+#'   explicitly set.
 #' @param color_pred_posterior Color for prediction density fill. Default is "orange".
 #' @param color_pred_outline Color for prediction density outline. Default is "darkorange2".
 #' @param color_pred_pointinterval Color for prediction point interval. Default is "orange".
@@ -155,7 +157,7 @@ bayes_forest <- function(model,
                          reverse_arm_labels = FALSE,
                          add_pred = FALSE,
                          add_pred_subgroup = FALSE,
-                         pred_output = c("density", "pointinterval"),
+                         pred_output = c("density", "pointinterval", "boxplot"),
                          color_pred_posterior = "orange",
                          color_pred_outline = "darkorange2",
                          color_pred_pointinterval = "orange",
@@ -285,8 +287,13 @@ bayes_forest <- function(model,
     }
   }
 
-  # Match pred_output argument
-  pred_output <- match.arg(pred_output)
+  # Match pred_output argument; boxplot forest plots get a boxplot prediction
+  # by default too, unless the caller explicitly asked for something else
+  if (plot_output == "boxplot" && missing(pred_output)) {
+    pred_output <- "boxplot"
+  } else {
+    pred_output <- match.arg(pred_output)
+  }
 
   # Count distinct studies after RoB filtering
   num_studies <- data |> dplyr::distinct(Author) |> nrow()
@@ -389,6 +396,7 @@ bayes_forest <- function(model,
       plot_output = plot_output,
       shrinkage_output = shrinkage_output,
       add_pred = add_pred,
+      add_pred_subgroup = add_pred_subgroup,
       pred_output = pred_output,
       color_pred_posterior = color_pred_posterior,
       color_pred_outline = color_pred_outline,
@@ -400,12 +408,6 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
-      add_pred = add_pred,
-      add_pred_subgroup = add_pred_subgroup,
-      pred_output = pred_output,
-      color_pred_posterior = color_pred_posterior,
-      color_pred_outline = color_pred_outline,
-      color_pred_pointinterval = color_pred_pointinterval,
       font = font
     )
 
@@ -555,7 +557,7 @@ bayes_forest <- function(model,
       plot_output = plot_output,
       shrinkage_output = shrinkage_output,
       add_pred = add_pred,
-      #add_pred_subgroup = add_pred_subgroup,
+      add_pred_subgroup = add_pred_subgroup,
       pred_output = pred_output,
       color_pred_posterior = color_pred_posterior,
       color_pred_outline = color_pred_outline,
@@ -567,11 +569,6 @@ bayes_forest <- function(model,
       add_rope = add_rope,
       rope_value = rope_value,
       rope_color = rope_color,
-      add_pred = add_pred,
-      pred_output = pred_output,
-      color_pred_posterior = color_pred_posterior,
-      color_pred_outline = color_pred_outline,
-      color_pred_pointinterval = color_pred_pointinterval,
       font = font
     )
   }
@@ -598,7 +595,8 @@ bayes_forest <- function(model,
     spec = rob_spec_obj,
     measure = measure,
     font = font,
-    effect_label = effect_label
+    effect_label = effect_label,
+    effect_type = model_type
   )
 
   # Validate RoB legend parameters

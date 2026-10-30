@@ -33,6 +33,7 @@
 #' @param refresh Passed to refits.
 #'
 #' @return An object of class \code{prior_dominance}.
+#' @keywords internal
 #' @export
 #'
 #' @importFrom stats var median quantile update
@@ -234,6 +235,7 @@ print.prior_dominance <- function(x, ...) {
 #' @param x A \code{prior_dominance} object.
 #' @param decimals Decimal places for numeric columns.
 #' @return A \code{gt_tbl}.
+#' @keywords internal
 #' @export
 gt_prior_dominance <- function(x, decimals = 3) {
 
@@ -293,6 +295,7 @@ gt_prior_dominance <- function(x, decimals = 3) {
 #' @param mu_par Pooled-effect draw name (auto-detected).
 #' @param refresh Passed to refits.
 #' @return A tibble: prior_sd, mu_median, mu_lo, mu_hi, pr_benefit.
+#' @keywords internal
 #' @export
 prior_scale_sweep <- function(fit,
                               scales = c(0.1, 0.25, 0.5, 1, 2, 5),
@@ -329,6 +332,7 @@ prior_scale_sweep <- function(fit,
 #' @param x_label,y_label Axis labels.
 #' @param font Font family.
 #' @return A ggplot.
+#' @keywords internal
 #' @export
 plot_prior_scale_sweep <- function(sweep, prior_mean = 0,
                                    x_label = "mu-prior SD (log scale)",
@@ -371,6 +375,7 @@ plot_prior_scale_sweep <- function(sweep, prior_mean = 0,
 #' @param prior_draws,mu_par As in \code{prior_dominance()}.
 #' @return A list: prior_sd, typical_se, prior_ess (study-equivalents), k (actual
 #'   studies), and the prior's share of total precision.
+#' @keywords internal
 #' @export
 prior_ess <- function(fit, data = NULL, typical_se = NULL,
                       prior_draws = NULL, mu_par = NULL) {
@@ -428,6 +433,7 @@ print.prior_ess <- function(x, ...) {
 #' @param refresh Passed to refits.
 #' @return A tibble: tau_prior_sd, mu_median, mu_lo, mu_hi, pr_benefit,
 #'   tau_median, tau_lo, tau_hi, tau_prior_pctile, conflict.
+#' @keywords internal
 #' @export
 tau_scale_sweep <- function(fit,
                             scales = c(0.25, 0.5, 0.75, 1, 1.5, 3),
@@ -479,6 +485,7 @@ tau_scale_sweep <- function(fit,
 #' @param null_value Reference line for mu (default 0).
 #' @param font Font family.
 #' @return A ggplot (two stacked panels: mu and tau vs tau-prior SD).
+#' @keywords internal
 #' @export
 plot_tau_scale_sweep <- function(sweep,
                                  mu_label = "Pooled effect (\u03bc)",

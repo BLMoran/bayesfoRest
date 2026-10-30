@@ -1,9 +1,9 @@
 # Create Bayesian Forest Plot for Meta-Analysis
 
-This function creates a Bayesian forest plot for meta-analysis using
-data prepared with metafor and a fitted brms model. It supports various
-effect measures and can handle both single and subgroup analyses with
-customizable visualization options.
+Creates a Bayesian forest plot for meta-analysis using a fitted Bayesian
+model. Supports multiple backends (brms, MetaStan, bayesmeta, rstanarm,
+rstan, cmdstanr, bayesma, RoBMA, R2jags) and both common-effect and
+random-effect models.
 
 ## Usage
 
@@ -13,20 +13,22 @@ bayes_forest(
   data,
   measure,
   studyvar = NULL,
-  year = NULL,
-  c_n = NULL,
-  i_n = NULL,
-  c_event = NULL,
-  i_event = NULL,
-  c_mean = NULL,
-  i_mean = NULL,
-  c_sd = NULL,
-  i_sd = NULL,
-  c_time = NULL,
-  i_time = NULL,
+  yearvar = NULL,
+  n_ctrl = NULL,
+  n_int = NULL,
+  event_ctrl = NULL,
+  event_int = NULL,
+  mean_ctrl = NULL,
+  mean_int = NULL,
+  sd_ctrl = NULL,
+  sd_int = NULL,
+  time_ctrl = NULL,
+  time_int = NULL,
   sort_studies_by = "author",
+  model_type = c("random_effect", "common_effect"),
+  re_min_k = NULL,
   subgroup = FALSE,
-  subgroup_var = NULL,
+  subgroupvar = NULL,
   sort_subgroup_by = "alphabetical",
   label_outcome = "Outcome",
   label_control = "Control",
@@ -36,10 +38,13 @@ bayes_forest(
   title_align = "left",
   xlim = NULL,
   x_breaks = NULL,
+  x_label = NULL,
+  effect_label = NULL,
   add_rope = FALSE,
   rope_value = NULL,
   rope_color = "grey50",
-  shrinkage_output = "density",
+  plot_output = c("density", "boxplot"),
+  shrinkage_output = c("density", "pointinterval"),
   null_value = NULL,
   color_palette = NULL,
   color_study_posterior_null_left = "deepskyblue",
@@ -47,15 +52,23 @@ bayes_forest(
   color_study_posterior = "dodgerblue",
   color_study_posterior_outline = "blue",
   color_overall_posterior = "blue",
-  color_pointinterval = "purple",
+  color_shrinkage_pointinterval = "purple",
   color_shrinkage_outline = "purple",
   color_shrinkage_fill = NULL,
   split_color_by_null = FALSE,
   color_favours_control = "firebrick",
   color_favours_intervention = "dodgerblue",
+  add_arm_labels = TRUE,
+  reverse_arm_labels = FALSE,
+  add_pred = FALSE,
+  add_pred_subgroup = FALSE,
+  pred_output = c("density", "pointinterval"),
+  color_pred_posterior = "orange",
+  color_pred_outline = "darkorange2",
+  color_pred_pointinterval = "orange",
   plot_width = 4,
   add_rob = FALSE,
-  rob_tool = c("rob2", "robins_i", "quadas2", "robins_e"),
+  rob_tool = "rob2",
   add_rob_legend = FALSE,
   exclude_high_rob = FALSE,
   font = NULL
@@ -66,8 +79,10 @@ bayes_forest(
 
 - model:
 
-  A fitted brms model object (class 'brmsfit') containing the Bayesian
-  meta-analysis results.
+  A fitted Bayesian meta-analysis model object. Supported classes:
+  `brmsfit` (brms), `meta_stan` (MetaStan), `bayesmeta`, `stanreg`
+  (rstanarm), `stanfit` (rstan), `CmdStanMCMC` (cmdstanr), `bayesma`
+  (bayesma), `brma` (RoBMA), `rjags` (R2jags/JAGS).
 
 - data:
 
@@ -82,79 +97,87 @@ bayes_forest(
 
 - studyvar:
 
-  Column name containing study identifiers/authors. Default is NULL.
+  Column name containing study identifiers/authors.
 
-- year:
+- yearvar:
 
   Column name containing publication years. Default is NULL.
 
-- c_n:
+- n_ctrl:
 
-  Column name containing control group sample sizes. Required for OR,
-  RR, MD, SMD.
+  Column name containing control group sample sizes.
 
-- i_n:
+- n_int:
 
-  Column name containing intervention group sample sizes. Required for
-  OR, RR, MD, SMD.
+  Column name containing intervention group sample sizes.
 
-- c_event:
+- event_ctrl:
 
-  Column name containing control group event counts. Required for OR,
-  RR, IRR.
+  Column name containing control group event counts.
 
-- i_event:
+- event_int:
 
-  Column name containing intervention group event counts. Required for
-  OR, RR, IRR.
+  Column name containing intervention group event counts.
 
-- c_mean:
+- mean_ctrl:
 
-  Column name containing control group means. Required for MD, SMD.
+  Column name containing control group means.
 
-- i_mean:
+- mean_int:
 
-  Column name containing intervention group means. Required for MD, SMD.
+  Column name containing intervention group means.
 
-- c_sd:
+- sd_ctrl:
 
-  Column name containing control group standard deviations. Required for
-  MD, SMD.
+  Column name containing control group standard deviations.
 
-- i_sd:
+- sd_int:
 
   Column name containing intervention group standard deviations.
-  Required for MD, SMD.
 
-- c_time:
+- time_ctrl:
 
-  Column name containing control group time periods. Required for IRR.
+  Column name containing control group time periods.
 
-- i_time:
+- time_int:
 
-  Column name containing intervention group time periods. Required for
-  IRR.
+  Column name containing intervention group time periods.
 
 - sort_studies_by:
 
   Character string specifying how to sort studies. Options: "author"
   (default), "year", or "effect".
 
+- model_type:
+
+  Pooling type used to draw the plot: "random_effect" or
+  "common_effect". If not supplied, it is detected from `model`.
+
+- re_min_k:
+
+  Optional minimum number of studies for a random-effect model.
+  Between-study heterogeneity (tau) is poorly identified when there are
+  few studies. If `re_min_k` is set and there are fewer studies than
+  this, a random-effect `model_type` is switched to "common_effect" with
+  a warning. `bayesma` models are refit as common-effect (overall and
+  per subgroup); for other backends only the plot changes, as the pooled
+  estimate still comes from the fitted random-effect model, so refit the
+  model as common-effect yourself. Default is NULL (no minimum). An
+  alternative is to keep `re_min_k = NULL` and fit the model with an
+  informative prior on tau.
+
 - subgroup:
 
   Logical indicating whether to create subgroup analysis. Default is
   FALSE.
 
-- subgroup_var:
+- subgroupvar:
 
-  Character string. Name of the variable in data to use for subgroup
-  analysis.
+  Column name in `data` to use for subgroup analysis.
 
 - sort_subgroup_by:
 
-  Character string or vector specifying subgroup ordering. Options:
-  "alphabetical" (default), "effect", or custom character vector of
-  subgroup names.
+  Character string or vector specifying subgroup ordering.
 
 - label_outcome:
 
@@ -179,44 +202,56 @@ bayes_forest(
 
 - title_align:
 
-  Character string specifying title alignment. Options: "left"
-  (default), "center"/"centre", "right".
+  Character string specifying title alignment.
 
 - xlim:
 
-  Numeric vector of length 2 specifying x-axis limits. Default is NULL
-  (auto-scaled).
+  Numeric vector of length 2 specifying x-axis limits. Default is NULL.
 
 - x_breaks:
 
-  Numeric vector specifying custom x-axis break points. Default is NULL
-  (uses measure-specific defaults).
+  Numeric vector specifying custom x-axis break points. Default is NULL.
+
+- x_label:
+
+  Character string for the x-axis label. Default is NULL
+  (measure-specific label).
+
+- effect_label:
+
+  Character string used for the effect columns in the right-hand table.
+  Default is NULL (uses `measure`).
 
 - add_rope:
 
-  Logical indicating whether to add ROPE (Region of Practical
-  Equivalence). Default is FALSE.
+  Logical indicating whether to add ROPE. Default is FALSE.
 
 - rope_value:
 
-  Numeric vector of length 2 specifying ROPE range, or single value for
-  symmetric range around null. Default is NULL (uses Kruschke's
-  recommendations: OR/HR/RR/IRR = c(0.9, 1.1), SMD = c(-0.1, 0.1), MD
-  requires specification).
+  Numeric vector of length 2 specifying ROPE range.
 
 - rope_color:
 
-  Color for ROPE shading. Default is transparent grey.
+  Color for ROPE shading.
+
+- plot_output:
+
+  Character string specifying how study and pooled effects are drawn:
+  "density" (default) or "boxplot". Boxplots are horizontal: the box
+  spans the interquartile range, the line marks the median, and the
+  whiskers span the 95% interval. With "boxplot", `shrinkage_output`
+  must be "pointinterval" (it is set automatically if not supplied).
 
 - shrinkage_output:
 
   Character string specifying shrinkage visualization. Options:
-  "density" (default) or "pointinterval".
+  "density" (default) or "pointinterval". Ignored for common-effect
+  models.
 
 - null_value:
 
   Numeric value specifying x-axis value of the null line. Default is
-  NULL (uses measure-specific defaults).
+  NULL.
 
 - color_palette:
 
@@ -224,51 +259,83 @@ bayes_forest(
 
 - color_study_posterior_null_left:
 
-  Color for left side of null study posteriors. Default is
-  "deepskyblue".
+  Color for left side of null study posteriors.
 
 - color_study_posterior_null_right:
 
-  Color for right side of null study posteriors. Default is "violet".
+  Color for right side of null study posteriors.
 
 - color_study_posterior:
 
-  Color for study posterior densities. Default is "dodgerblue".
+  Color for study posterior densities.
 
 - color_study_posterior_outline:
 
-  Color for study posterior outlines. Default is "blue".
+  Color for study posterior outlines.
 
 - color_overall_posterior:
 
-  Color for overall posterior. Default is "blue".
+  Color for overall posterior.
 
-- color_pointinterval:
+- color_shrinkage_pointinterval:
 
-  Color for point intervals. Default is "purple".
+  Color for point intervals.
 
 - color_shrinkage_outline:
 
-  Color for shrinkage plot outlines. Default is "purple".
+  Color for shrinkage plot outlines.
 
 - color_shrinkage_fill:
 
-  Color for shrinkage plot fill. Default is NULL.
+  Color for shrinkage plot fill.
 
 - split_color_by_null:
 
-  Logical. If TRUE, posterior densities are split and coloured based on
-  whether values fall above or below the null value.
+  Logical. Split posterior densities by null value. For boxplots, each
+  box is coloured by which side of the null its median falls.
 
 - color_favours_control:
 
-  Colour used for density regions favouring the control group when
-  `split_color_by_null = TRUE`.
+  Colour for density regions favouring the control group.
 
 - color_favours_intervention:
 
-  Colour used for density regions favouring the intervention group when
-  `split_color_by_null = TRUE`.
+  Colour for density regions favouring the intervention group.
+
+- add_arm_labels:
+
+  Logical. Whether to show "Favours Control/Intervention" labels.
+  Default is TRUE.
+
+- reverse_arm_labels:
+
+  Logical. Whether to swap the arm label positions. Default is FALSE.
+
+- add_pred:
+
+  Logical. Whether to add a predictive distribution for a new study.
+  Default is FALSE. Only applicable to random-effect models.
+
+- add_pred_subgroup:
+
+  Logical. Whether to add prediction to each subgroup. Default is FALSE.
+
+- pred_output:
+
+  Character string specifying prediction visualization. Options:
+  "density" (default) or "pointinterval".
+
+- color_pred_posterior:
+
+  Color for prediction density fill. Default is "orange".
+
+- color_pred_outline:
+
+  Color for prediction density outline. Default is "darkorange2".
+
+- color_pred_pointinterval:
+
+  Color for prediction point interval. Default is "orange".
 
 - plot_width:
 
@@ -282,7 +349,10 @@ bayes_forest(
 
 - rob_tool:
 
-  Character string specifying RoB tool. Options: "rob2" (default).
+  Risk of bias tool: "rob2" (default), "robins_i", "robins_e",
+  "quadas2", "clarity", "rob_nma", "probast", or "probast_ai". See
+  [`rob_plot()`](https://blmoran.github.io/bayesfoRest/reference/rob_plot.md)
+  for the domain columns each tool expects.
 
 - add_rob_legend:
 
@@ -290,85 +360,14 @@ bayes_forest(
 
 - exclude_high_rob:
 
-  Logical indicating whether to exclude high risk of bias studies and
-  refit the model. Default is FALSE.
+  Logical indicating whether to exclude studies with a high overall risk
+  of bias ("High", "Serious", "Critical", "Very high" or "Definitely
+  high") and refit the model. Requires an overall RoB column.
 
 - font:
 
-  Character string specifying the font family to use throughout the
-  plot. Default is NULL (uses system defaults). Common options include
-  "Arial", "Times New Roman", "Helvetica", "Georgia", etc. The font must
-  be available on your system.
+  Character string specifying the font family. Default is NULL.
 
 ## Value
 
-A patchwork object containing the complete forest plot with study
-information table, density plots, and effect size table.
-
-## Details
-
-The function performs several key operations:
-
-- Validates input parameters and data structure
-
-- Renames data columns based on the specified measure type
-
-- Updates the brms model if necessary
-
-- Handles Risk of Bias data if specified
-
-- Creates either single or subgroup forest plots
-
-- Combines tables and plots using patchwork
-
-For Risk of Bias functionality, the data must contain columns named
-"D1", "D2", "D3", and "Overall".
-
-When `exclude_high_rob = TRUE`, studies with "High" overall risk of bias
-are removed and the model is refitted on the filtered data.
-
-## See also
-
-[`brm`](https://paulbuerkner.com/brms/reference/brm.html) for fitting
-Bayesian models,
-[`metafor`](https://wviechtb.github.io/metafor/reference/metafor-package.html)
-for creating meta analysis models,
-[`gt`](https://gt.rstudio.com/reference/gt.html) for making great
-tables,
-[`patchwork`](https://patchwork.data-imaginist.com/reference/patchwork-package.html)
-for combining plots
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-# Basic usage with odds ratio
-forest_plot <- bayes_forest(
-  model = my_brms_model,
-  data = my_data,
-  measure = "OR",
-  studyvar = author,
-  year = year,
-  c_n = control_n,
-  i_n = intervention_n,
-  c_event = control_events,
-  i_event = intervention_events
-)
-
-# Subgroup analysis with mean difference
-forest_plot_subgroup <- bayes_forest(
-  model = my_brms_model,
-  data = my_data,
-  measure = "MD",
-  studyvar = author,
-  c_n = control_n,
-  i_n = intervention_n,
-  c_mean = control_mean,
-  i_mean = intervention_mean,
-  c_sd = control_sd,
-  i_sd = intervention_sd,
-  subgroup = TRUE,
-  sort_subgroup_by = "effect"
-)
-} # }
-```
+A patchwork object containing the complete forest plot.

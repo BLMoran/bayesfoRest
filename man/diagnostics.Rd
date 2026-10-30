@@ -27,6 +27,12 @@ population-level effect and between-study SD.}
 display labels, e.g. \code{c(b_Intercept = "\u03bc", sd_Author__Intercept = "\u03c4")}.
 Overrides the automatic mu / tau defaults.}
 
+\item{study_labels}{Optional named vector mapping study keys to display
+labels, e.g. as built by \code{\link[=make_study_labels]{make_study_labels()}}.}
+
+\item{model_label}{Optional character string naming the model, shown in
+the diagnostics page title.}
+
 \item{ndraws}{Draws used in the posterior predictive panel.}
 
 \item{font}{Font family for panel text.}
@@ -39,3 +45,4 @@ A patchwork object (the assembled diagnostic page).
 \description{
 Single-Page MCMC Diagnostics
 }
+\keyword{internal}

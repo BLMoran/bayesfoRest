@@ -1,22 +1,29 @@
 # Create Risk of Bias Plot
 
-Creates a publication-ready risk of bias assessment plot using gt
-tables, with options for single studies or subgroup analyses.
+Creates a publication-ready risk of bias plot using gt tables, for
+single studies or subgroup analyses. Uses the same risk of bias
+internals as the robbR package.
 
 ## Usage
 
 ``` r
 rob_plot(
   data,
-  studyvar = NULL,
-  sort_studies_by = "author",
+  studyvar = Author,
+  yearvar = Year,
+  subgroupvar = Subgroup,
+  effect = yi,
+  rob_tool = "rob2",
+  sort_studies_by = c("author", "year", "effect"),
   subgroup = FALSE,
   sort_subgroup_by = "alphabetical",
-  rob_tool = c("rob2", "robins_i", "robins_e", "quadas2"),
+  show_overall = TRUE,
+  derive_overall = FALSE,
   add_rob_legend = FALSE,
+  study_label = NULL,
   font = NULL,
   title = NULL,
-  title_align = "left",
+  title_align = c("left", "center", "centre", "right"),
   subtitle = NULL
 )
 ```
@@ -25,83 +32,128 @@ rob_plot(
 
 - data:
 
-  A data frame containing risk of bias assessments with required
-  columns: Author, Year, D1, D2, D3, and Overall. For subgroup analysis,
-  a Subgroup column is also required.
+  A data frame with a study, year and domain columns for the chosen
+  `rob_tool` (see Details). Judgements are standardised (e.g. "low risk"
+  -\> "Low"); `NA` -\> "Not applicable". Judgements not recognised by
+  the tool are shown as blank cells, with a warning.
 
-- studyvar:
+- studyvar, yearvar:
 
-  Character string specifying the study identifier variable (currently
-  not used).
+  \<[`data-masking`](https://dplyr.tidyverse.org/reference/dplyr_data_masking.html)\>
+  Study label and year columns.
 
-- sort_studies_by:
+- subgroupvar:
 
-  Character string specifying how to sort studies. Options: "author"
-  (default), "year", or "effect".
+  \<[`data-masking`](https://dplyr.tidyverse.org/reference/dplyr_data_masking.html)\>
+  Subgroup column, used when `subgroup = TRUE`.
 
-- subgroup:
+- effect:
 
-  Logical indicating whether to create a subgroup plot (default: FALSE).
-
-- sort_subgroup_by:
-
-  Character string or vector specifying subgroup ordering. Options:
-  "alphabetical" (default) or a character vector of subgroup names in
-  desired order.
+  \<[`data-masking`](https://dplyr.tidyverse.org/reference/dplyr_data_masking.html)\>
+  Effect size column, used when sorting by `"effect"`.
 
 - rob_tool:
 
-  Character string specifying the risk of bias tool used. Options:
-  "rob2" (default), "robins_i", "robins_e", or "quadas2".
+  Risk of bias tool: `"rob2"` (default), `"robins_i"`, `"robins_e"`,
+  `"quadas2"`, `"clarity"`, `"rob_nma"`, `"probast"`, or `"probast_ai"`.
+
+- sort_studies_by:
+
+  How to sort studies: `"author"` (default), `"year"`, or `"effect"`.
+
+- subgroup:
+
+  Logical. Create a subgroup plot? (default: `FALSE`).
+
+- sort_subgroup_by:
+
+  Subgroup ordering: `"alphabetical"` (default), `"effect"`, or a
+  character vector of subgroup names in the desired order.
+
+- show_overall:
+
+  Logical. Show the overall column(s)? (default: `TRUE`). Overall
+  columns absent from `data` are derived from the domains (worst
+  judgement).
+
+- derive_overall:
+
+  Logical. Always re-derive overall column(s) from the domains,
+  overwriting supplied values? (default: `FALSE`).
 
 - add_rob_legend:
 
-  Logical indicating whether to add a legend explaining risk of bias
-  symbols (default: FALSE).
+  Logical. Add a legend? (default: `FALSE`).
+
+- study_label:
+
+  Header for the study column. Defaults to `"Trial"` for randomised
+  trial tools (`"rob2"`, `"clarity"`), `"Review"` for `"rob_nma"`, and
+  `"Study"` otherwise.
 
 - font:
 
-  Character string specifying the font family to use for the plot.
+  Font family.
 
-- title:
+- title, subtitle:
 
-  Character string for the plot title.
+  Plot title and subtitle.
 
 - title_align:
 
-  Character string specifying title alignment. Options: "left"
-  (default), "center"/"centre", or "right".
-
-- subtitle:
-
-  Character string for the plot subtitle.
+  Title alignment: `"left"` (default), `"center"`/`"centre"`, or
+  `"right"`.
 
 ## Value
 
-A gt table object (or patchwork composition if legend is added)
-containing the risk of bias plot.
+A patchwork composition of the risk of bias table (and legend).
+
+## Details
+
+Domain columns by tool (optional columns in brackets are shown only if
+present; `NA` rows are shown as "Not applicable"):
+
+- rob2:
+
+  D1, (D1b), D2-D5, (DS), Overall.
+
+- robins_i:
+
+  ROBINS-I V2: D1-D6, Overall.
+
+- robins_e:
+
+  D1-D7, Overall.
+
+- quadas2:
+
+  D1-D4, Overall.
+
+- clarity:
+
+  D1-D10, (D11), (D12). No overall judgement.
+
+- rob_nma:
+
+  (R1-R3), D1-D3, Results, Conclusions.
+
+- probast, probast_ai:
+
+  D1-D4, (A1-A3), Overall, Applicability.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Create sample data
 rob_data <- data.frame(
   Author = c("Smith", "Jones", "Brown"),
   Year = c(2020, 2021, 2022),
   D1 = c("Low", "High", "Some concerns"),
   D2 = c("Low", "Low", "High"),
   D3 = c("Some concerns", "Low", "Low"),
-  Overall = c("Some concerns", "High", "High")
-)
+  D4 = "Low",
+  D5 = "Low")
 
-# Create basic risk of bias plot
-rob_plot(rob_data)
-
-# Create plot with legend and title
-rob_plot(rob_data, 
-         add_rob_legend = TRUE,
-         title = "Risk of Bias Assessment",
-         subtitle = "Using RoB 2 Tool")
+rob_plot(rob_data, add_rob_legend = TRUE)
 } # }
 ```

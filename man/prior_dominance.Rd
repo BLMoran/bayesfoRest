@@ -35,3 +35,4 @@ An object of class \code{prior_dominance}.
 \description{
 Assess prior dominance in a Bayesian meta-analysis (backend-agnostic)
 }
+\keyword{internal}
