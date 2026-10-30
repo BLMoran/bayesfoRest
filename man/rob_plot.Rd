@@ -6,73 +6,103 @@
 \usage{
 rob_plot(
   data,
-  studyvar = NULL,
-  sort_studies_by = "author",
+  studyvar = Author,
+  yearvar = Year,
+  subgroupvar = Subgroup,
+  effect = yi,
+  rob_tool = "rob2",
+  sort_studies_by = c("author", "year", "effect"),
   subgroup = FALSE,
   sort_subgroup_by = "alphabetical",
-  rob_tool = c("rob2", "robins_i", "robins_e", "quadas2"),
+  show_overall = TRUE,
+  derive_overall = FALSE,
   add_rob_legend = FALSE,
+  study_label = NULL,
   font = NULL,
   title = NULL,
-  title_align = "left",
+  title_align = c("left", "center", "centre", "right"),
   subtitle = NULL
 )
 }
 \arguments{
-\item{data}{A data frame containing risk of bias assessments with required columns:
-Author, Year, D1, D2, D3, and Overall. For subgroup analysis, a Subgroup column is also required.}
+\item{data}{A data frame with a study, year and domain columns for the
+chosen \code{rob_tool} (see Details). Judgements are standardised (e.g.
+"low risk" -> "Low"); \code{NA} -> "Not applicable". Judgements not recognised
+by the tool are shown as blank cells, with a warning.}
 
-\item{studyvar}{Character string specifying the study identifier variable (currently not used).}
+\item{studyvar, yearvar}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Study
+label and year columns.}
 
-\item{sort_studies_by}{Character string specifying how to sort studies.
-Options: "author" (default), "year", or "effect".}
+\item{subgroupvar}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Subgroup
+column, used when \code{subgroup = TRUE}.}
 
-\item{subgroup}{Logical indicating whether to create a subgroup plot (default: FALSE).}
+\item{effect}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Effect size
+column, used when sorting by \code{"effect"}.}
 
-\item{sort_subgroup_by}{Character string or vector specifying subgroup ordering.
-Options: "alphabetical" (default) or a character vector of subgroup names in desired order.}
+\item{rob_tool}{Risk of bias tool: \code{"rob2"} (default), \code{"robins_i"},
+\code{"robins_e"}, \code{"quadas2"}, \code{"clarity"}, \code{"rob_nma"}, \code{"probast"}, or
+\code{"probast_ai"}.}
 
-\item{rob_tool}{Character string specifying the risk of bias tool used.
-Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".}
+\item{sort_studies_by}{How to sort studies: \code{"author"} (default), \code{"year"},
+or \code{"effect"}.}
 
-\item{add_rob_legend}{Logical indicating whether to add a legend explaining risk of bias symbols (default: FALSE).}
+\item{subgroup}{Logical. Create a subgroup plot? (default: \code{FALSE}).}
 
-\item{font}{Character string specifying the font family to use for the plot.}
+\item{sort_subgroup_by}{Subgroup ordering: \code{"alphabetical"} (default),
+\code{"effect"}, or a character vector of subgroup names in the desired order.}
 
-\item{title}{Character string for the plot title.}
+\item{show_overall}{Logical. Show the overall column(s)? (default: \code{TRUE}).
+Overall columns absent from \code{data} are derived from the domains (worst judgement).}
 
-\item{title_align}{Character string specifying title alignment.
-Options: "left" (default), "center"/"centre", or "right".}
+\item{derive_overall}{Logical. Always re-derive overall column(s) from the
+domains, overwriting supplied values? (default: \code{FALSE}).}
 
-\item{subtitle}{Character string for the plot subtitle.}
+\item{add_rob_legend}{Logical. Add a legend? (default: \code{FALSE}).}
+
+\item{study_label}{Header for the study column. Defaults to \code{"Trial"} for
+randomised trial tools (\code{"rob2"}, \code{"clarity"}), \code{"Review"} for
+\code{"rob_nma"}, and \code{"Study"} otherwise.}
+
+\item{font}{Font family.}
+
+\item{title, subtitle}{Plot title and subtitle.}
+
+\item{title_align}{Title alignment: \code{"left"} (default), \code{"center"}/\code{"centre"},
+or \code{"right"}.}
 }
 \value{
-A gt table object (or patchwork composition if legend is added) containing the risk of bias plot.
+A patchwork composition of the risk of bias table (and legend).
 }
 \description{
-Creates a publication-ready risk of bias assessment plot using gt tables,
-with options for single studies or subgroup analyses.
+Creates a publication-ready risk of bias plot using gt tables, for single
+studies or subgroup analyses. Uses the same risk of bias internals as the
+robbR package.
+}
+\details{
+Domain columns by tool (optional columns in brackets are shown only if
+present; \code{NA} rows are shown as "Not applicable"):
+\describe{
+\item{rob2}{D1, (D1b), D2-D5, (DS), Overall.}
+\item{robins_i}{ROBINS-I V2: D1-D6, Overall.}
+\item{robins_e}{D1-D7, Overall.}
+\item{quadas2}{D1-D4, Overall.}
+\item{clarity}{D1-D10, (D11), (D12). No overall judgement.}
+\item{rob_nma}{(R1-R3), D1-D3, Results, Conclusions.}
+\item{probast, probast_ai}{D1-D4, (A1-A3), Overall, Applicability.}
+}
 }
 \examples{
 \dontrun{
-# Create sample data
 rob_data <- data.frame(
   Author = c("Smith", "Jones", "Brown"),
   Year = c(2020, 2021, 2022),
   D1 = c("Low", "High", "Some concerns"),
   D2 = c("Low", "Low", "High"),
   D3 = c("Some concerns", "Low", "Low"),
-  Overall = c("Some concerns", "High", "High")
-)
+  D4 = "Low",
+  D5 = "Low")
 
-# Create basic risk of bias plot
-rob_plot(rob_data)
-
-# Create plot with legend and title
-rob_plot(rob_data, 
-         add_rob_legend = TRUE,
-         title = "Risk of Bias Assessment",
-         subtitle = "Using RoB 2 Tool")
+rob_plot(rob_data, add_rob_legend = TRUE)
 }
 
 }

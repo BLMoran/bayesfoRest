@@ -1,271 +1,125 @@
 #' Create Risk of Bias Plot
 #'
-#' Creates a publication-ready risk of bias assessment plot using gt tables,
-#' with options for single studies or subgroup analyses.
+#' Creates a publication-ready risk of bias plot using gt tables, for single
+#' studies or subgroup analyses. Uses the same risk of bias internals as the
+#' robbR package.
 #'
-#' @param data A data frame containing risk of bias assessments with required columns:
-#'   Author, Year, D1, D2, D3, and Overall. For subgroup analysis, a Subgroup column is also required.
-#' @param studyvar Character string specifying the study identifier variable (currently not used).
-#' @param sort_studies_by Character string specifying how to sort studies. 
-#'   Options: "author" (default), "year", or "effect".
-#' @param subgroup Logical indicating whether to create a subgroup plot (default: FALSE).
-#' @param sort_subgroup_by Character string or vector specifying subgroup ordering.
-#'   Options: "alphabetical" (default) or a character vector of subgroup names in desired order.
-#' @param rob_tool Character string specifying the risk of bias tool used.
-#'   Options: "rob2" (default), "robins_i", "robins_e", or "quadas2".
-#' @param add_rob_legend Logical indicating whether to add a legend explaining risk of bias symbols (default: FALSE).
-#' @param font Character string specifying the font family to use for the plot.
-#' @param title Character string for the plot title.
-#' @param title_align Character string specifying title alignment.
-#'   Options: "left" (default), "center"/"centre", or "right".
-#' @param subtitle Character string for the plot subtitle.
+#' @param data A data frame with a study, year and domain columns for the
+#'   chosen `rob_tool` (see Details). Judgements are standardised (e.g.
+#'   "low risk" -> "Low"); `NA` -> "Not applicable". Judgements not recognised
+#'   by the tool are shown as blank cells, with a warning.
+#' @param studyvar,yearvar <[`data-masking`][dplyr::dplyr_data_masking]> Study
+#'   label and year columns.
+#' @param subgroupvar <[`data-masking`][dplyr::dplyr_data_masking]> Subgroup
+#'   column, used when `subgroup = TRUE`.
+#' @param effect <[`data-masking`][dplyr::dplyr_data_masking]> Effect size
+#'   column, used when sorting by `"effect"`.
+#' @param rob_tool Risk of bias tool: `"rob2"` (default), `"robins_i"`,
+#'   `"robins_e"`, `"quadas2"`, `"clarity"`, `"rob_nma"`, `"probast"`, or
+#'   `"probast_ai"`.
+#' @param sort_studies_by How to sort studies: `"author"` (default), `"year"`,
+#'   or `"effect"`.
+#' @param subgroup Logical. Create a subgroup plot? (default: `FALSE`).
+#' @param sort_subgroup_by Subgroup ordering: `"alphabetical"` (default),
+#'   `"effect"`, or a character vector of subgroup names in the desired order.
+#' @param show_overall Logical. Show the overall column(s)? (default: `TRUE`).
+#'   Overall columns absent from `data` are derived from the domains (worst judgement).
+#' @param derive_overall Logical. Always re-derive overall column(s) from the
+#'   domains, overwriting supplied values? (default: `FALSE`).
+#' @param add_rob_legend Logical. Add a legend? (default: `FALSE`).
+#' @param study_label Header for the study column. Defaults to `"Trial"` for
+#'   randomised trial tools (`"rob2"`, `"clarity"`), `"Review"` for
+#'   `"rob_nma"`, and `"Study"` otherwise.
+#' @param font Font family.
+#' @param title,subtitle Plot title and subtitle.
+#' @param title_align Title alignment: `"left"` (default), `"center"`/`"centre"`,
+#'   or `"right"`.
 #'
-#' @return A gt table object (or patchwork composition if legend is added) containing the risk of bias plot.
+#' @details
+#' Domain columns by tool (optional columns in brackets are shown only if
+#' present; `NA` rows are shown as "Not applicable"):
+#' \describe{
+#'   \item{rob2}{D1, (D1b), D2-D5, (DS), Overall.}
+#'   \item{robins_i}{ROBINS-I V2: D1-D6, Overall.}
+#'   \item{robins_e}{D1-D7, Overall.}
+#'   \item{quadas2}{D1-D4, Overall.}
+#'   \item{clarity}{D1-D10, (D11), (D12). No overall judgement.}
+#'   \item{rob_nma}{(R1-R3), D1-D3, Results, Conclusions.}
+#'   \item{probast, probast_ai}{D1-D4, (A1-A3), Overall, Applicability.}
+#' }
 #'
-#' @import dplyr
-#' @import gt
-#' @importFrom patchwork wrap_table plot_annotation
-#' @importFrom ggplot2 theme element_text margin
-#' @importFrom fontawesome fa
+#' @return A patchwork composition of the risk of bias table (and legend).
 #'
 #' @examples
 #' \dontrun{
-#' # Create sample data
 #' rob_data <- data.frame(
 #'   Author = c("Smith", "Jones", "Brown"),
 #'   Year = c(2020, 2021, 2022),
 #'   D1 = c("Low", "High", "Some concerns"),
 #'   D2 = c("Low", "Low", "High"),
 #'   D3 = c("Some concerns", "Low", "Low"),
-#'   Overall = c("Some concerns", "High", "High")
-#' )
+#'   D4 = "Low",
+#'   D5 = "Low")
 #'
-#' # Create basic risk of bias plot
-#' rob_plot(rob_data)
-#'
-#' # Create plot with legend and title
-#' rob_plot(rob_data, 
-#'          add_rob_legend = TRUE,
-#'          title = "Risk of Bias Assessment",
-#'          subtitle = "Using RoB 2 Tool")
+#' rob_plot(rob_data, add_rob_legend = TRUE)
 #' }
 #'
 #' @export
 rob_plot <- function(data,
-                     studyvar = NULL,
-                     sort_studies_by = "author",
+                     studyvar = Author,
+                     yearvar = Year,
+                     subgroupvar = Subgroup,
+                     effect = yi,
+                     rob_tool = "rob2",
+                     sort_studies_by = c("author", "year", "effect"),
                      subgroup = FALSE,
                      sort_subgroup_by = "alphabetical",
-                     rob_tool = c("rob2", "robins_i", "robins_e", "quadas2"),
+                     show_overall = TRUE,
+                     derive_overall = FALSE,
                      add_rob_legend = FALSE,
+                     study_label = NULL,
                      font = NULL,
                      title = NULL,
-                     title_align = "left",
+                     title_align = c("left", "center", "centre", "right"),
                      subtitle = NULL) {
-  
-  # Input validation
-  if (is.null(data)) {
-    stop("Data must be provided")
-  }
-  
-  # Determine RoB variables in data
-  rob_vars <- c("D1", "D2", "D3", "Overall")
-  missing_vars <- setdiff(rob_vars, names(data))
-  
-  if (length(missing_vars) > 0) {
-    stop("Risk of Bias columns must be provided for addition to the forest plot")
-  }
-  
-  if (!sort_studies_by %in% c("author", "year", "effect")) {
-    stop("sort_studies_by must be one of 'author', 'year', or 'effect'")
-  }
-  
-  # Handle different workflows for single vs subgroup plots
-  if (!subgroup) {
-    # Single RoB Plot Workflow
-    df <- data |> 
-      dplyr::select(Author, Year, D1:Overall) |> 
-      sort_studies_fn(sort_studies_by)
-    
-  } else {
-    # Subgroup RoB Plot Workflow
-    df <- data |> 
-      dplyr::select(Author, Year, Subgroup, D1:Overall) |> 
-      sort_studies_fn(sort_studies_by)
-    
-    # Apply subgroup ordering
-    if ("Subgroup" %in% names(df)) {
-      if (length(sort_subgroup_by) == 1 && sort_subgroup_by == "alphabetical") {
-        subgroup_order <- sort(unique(df$Subgroup[!is.na(df$Subgroup)]))
-      } else if (is.character(sort_subgroup_by)) {
-        # User supplied a custom group order directly
-        subgroup_order <- sort_subgroup_by
-      } else {
-        stop("Invalid input to sort_subgroup_by. Must be 'alphabetical', or a character vector of subgroup names.")
-      }
-      
-      df <- df |>
-        dplyr::mutate(Subgroup = factor(Subgroup, levels = subgroup_order)) |>
-        dplyr::arrange(Subgroup)
-    }
-  }
-  
-  # Create the main RoB table
-  rob.table <- rob.table_fn(df, subgroup = subgroup, font = font)
-  
-  # Add legend if requested
+  sort_studies_by <- rlang::arg_match(sort_studies_by)
+  title_align <- rlang::arg_match(title_align)
+  spec <- as_rob_spec(rob_tool)
+  uses_effect <- sort_studies_by == "effect" || identical(sort_subgroup_by, "effect")
+  data <- dplyr::rename(data, Author = {{ studyvar }}, Year = {{ yearvar }})
+  if (isTRUE(subgroup)) data <- dplyr::rename(data, Subgroup = {{ subgroupvar }})
+  if (uses_effect) data <- dplyr::rename(data, yi = {{ effect }})
+  data <- prepare_rob_data(data, spec, derive_overall = derive_overall)
+  rob_cols <- rob_columns(data, spec)
+  if (isFALSE(show_overall)) rob_cols <- setdiff(rob_cols, names(spec@overall))
+  df <- data |>
+    dplyr::select("Author", "Year", dplyr::any_of(c(if (isTRUE(subgroup)) "Subgroup", if (uses_effect) "yi")), dplyr::all_of(rob_cols)) |>
+    sort_studies_fn(sort_studies_by) |>
+    order_subgroups(subgroup, sort_subgroup_by) |>
+    dplyr::select(-dplyr::any_of("yi"))
+  plot <- rob_table_fn(df, spec, rob_cols, subgroup = subgroup, study_label = study_label, font = font) |>
+    patchwork::wrap_table(space = "fixed")
   if (isTRUE(add_rob_legend)) {
-    rob_legend <- rob_legend_fn(rob_tool, font)
-    rob.table <- patchwork::wrap_table(rob.table, space = "fixed") +
-      patchwork::wrap_table(rob_legend, space = "fixed")
-  } else {
-    rob.table <- patchwork::wrap_table(rob.table, space = "fixed")
+    levels_present <- df |>
+      dplyr::select(dplyr::all_of(rob_cols)) |>
+      purrr::map(as.character) |>
+      purrr::list_c() |>
+      unique()
+    legend <- rob_legend_fn(spec, domains_present = dplyr::intersect(rob_cols, names(spec@domains)), levels_present = levels_present, font = font)
+    plot <- plot + patchwork::wrap_table(legend, space = "fixed")
   }
-  
-  
-  
-  # Add title and/or subtitle if provided
-  if (!is.null(title) || !is.null(subtitle)) {
-    # Set alignment value based on title_align parameter
-    hjust_val <- switch(title_align,
-                        "left" = 0,
-                        "center" = 0.5,
-                        "centre" = 0.5,
-                        "right" = 1,
-                        0.5) # default to center if invalid input
-    
-    # Create theme elements
-    title_theme <- ggplot2::theme()
-    
-    if (!is.null(title)) {
-      title_theme <- title_theme + 
-        ggplot2::theme(
-          plot.title = ggplot2::element_text(
-            size = 16, 
-            face = "bold", 
-            hjust = hjust_val,
-            margin = ggplot2::margin(b = ifelse(is.null(subtitle), 10, 5)),
-            family = font))
-    }
-    
-    if (!is.null(subtitle)) {
-      title_theme <- title_theme + 
-        ggplot2::theme(
-          plot.subtitle = ggplot2::element_text(
-            size = 14, 
-            hjust = hjust_val,
-            margin = ggplot2::margin(b = 10),
-            color = "gray30",
-            family = font))
-    }
-    
-    rob.table <- rob.table + 
-      patchwork::plot_annotation(
-        title = title,
-        subtitle = subtitle,
-        theme = title_theme
-      )
-  }
-  
-  return(rob.table)
+  add_rob_titles(plot, title, subtitle, title_align, font)
 }
 
 
-#' Create Risk of Bias Table
+#' Internal: order and filter subgroups
 #'
-#' Internal function to create the gt table for risk of bias visualization.
-#'
-#' @param df Data frame with risk of bias data
-#' @param subgroup Logical indicating whether this is a subgroup analysis
-#' @param font Font family to use
-#'
-#' @return A gt table object
 #' @noRd
-rob.table_fn <- function(df,
-                         subgroup = FALSE,
-                         font = NULL) {
-  
-  df <- df |> dplyr::mutate(
-    Author = dplyr::if_else(
-      is.na(Year),
-      Author,
-      paste0(Author, " (", Year, ")")
-    )
-  )
-  
-  # Base gt table
-  if (isFALSE(subgroup)) {
-    rob.table <- df |>
-      gt::gt() |>
-      gt::cols_label(Author = "Study")
-    
-  } else {
-    rob.table <- df |>
-      gt::gt(groupname_col = "Subgroup") |>
-      gt::tab_options(row_group.font.weight = "bold") |>
-      gt::tab_style(
-        style = gt::cell_fill(color = "grey95"),
-        locations = gt::cells_row_groups()) |> 
-      gt::cols_label(Author = gt::md("Subgroup/ \nStudy")) |>
-      gt::cols_align(align = "left") |>
-      gt::tab_style(
-        style = gt::cell_text(indent = gt::px(10)),
-        locations = gt::cells_body(columns = Author))
-  }
-  
-  # Final styling
-  rob.table <- rob.table |>
-    gt::cols_align(align = "left",
-                   columns = Author) |> 
-    gt::cols_align(align = "center",
-                   columns = c(D1:Overall)) |> 
-    gt::tab_options(
-      column_labels.font.weight = "bold",
-      table.border.top.color = "white",
-      table.border.bottom.color = "white",
-      table.font.names = font) |>
-    gt::cols_hide(columns = Year) |>
-    gt::opt_table_lines(extent = "none") |> 
-    gt::text_case_match(
-      "High" ~ fontawesome::fa(name = "circle-plus", fill = "#e32400", height = "1.1em"),
-      "Low" ~ fontawesome::fa(name = "circle-minus", fill = "#77bb41", height = "1.1em"),
-      "Some concerns" ~ fontawesome::fa(name = "circle-question", fill = "#f5ec00", height = "1.1em"))
-  
-  return(rob.table)
-}
-
-
-#' Create Risk of Bias Legend
-#'
-#' Internal function to create a legend for risk of bias symbols.
-#'
-#' @param rob_tool Character string specifying the risk of bias tool
-#' @param font Font family to use
-#'
-#' @return A gt table object containing the legend
-#' @noRd
-create_rob_legend <- function(rob_tool, font = NULL) {
-  # This is a placeholder - you'll need to implement the actual legend creation
-  # based on your specific requirements for each tool type
-  
-  legend_data <- data.frame(
-    Symbol = c(
-      fontawesome::fa(name = "circle-minus", fill = "#77bb41", height = "1.1em"),
-      fontawesome::fa(name = "circle-question", fill = "#f5ec00", height = "1.1em"),
-      fontawesome::fa(name = "circle-plus", fill = "#e32400", height = "1.1em")
-    ),
-    Meaning = c("Low risk", "Some concerns", "High risk")
-  )
-  
-  legend_table <- legend_data |>
-    gt::gt() |>
-    gt::tab_options(
-      column_labels.hidden = TRUE,
-      table.font.names = font,
-      table.border.top.color = "white",
-      table.border.bottom.color = "white"
-    ) |>
-    gt::opt_table_lines(extent = "none")
-  
-  return(legend_table)
+order_subgroups <- function(data, subgroup = FALSE, sort_subgroup_by = "alphabetical") {
+  if (!isTRUE(subgroup)) return(data)
+  subgroup_order <- setdiff(get_subgroup_order(data, sort_subgroup_by), "Overall")
+  data |>
+    dplyr::filter(.data$Subgroup %in% subgroup_order) |>
+    dplyr::mutate(Subgroup = factor(.data$Subgroup, levels = subgroup_order)) |>
+    dplyr::arrange(.data$Subgroup)
 }

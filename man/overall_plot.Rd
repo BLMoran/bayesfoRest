@@ -5,13 +5,19 @@
 \title{Create posterior plots for Bayesian meta-analysis}
 \usage{
 overall_plot(
-  data = NULL,
   model,
+  data,
   measure,
-  study_var = NULL,
-  incl_tau = FALSE,
+  add_tau = FALSE,
+  add_pred = FALSE,
+  add_summary = TRUE,
   incl_mu_prior = FALSE,
   incl_tau_prior = FALSE,
+  mu_prior = NULL,
+  tau_prior = NULL,
+  color_prior = "grey40",
+  color_pred_posterior = "orange",
+  color_pred_posterior_outline = "darkorange2",
   null_value = NULL,
   null_range = NULL,
   add_null_range = FALSE,
@@ -21,10 +27,13 @@ overall_plot(
   title = NULL,
   subtitle = NULL,
   title_align = "left",
+  x_label = NULL,
   mu_xlim = NULL,
   tau_xlim = NULL,
+  pred_xlim = NULL,
   x_breaks = NULL,
   tau_breaks = NULL,
+  pred_breaks = NULL,
   color_overall_posterior = "dodgerblue",
   color_overall_posterior_outline = "blue",
   split_color_by_null = FALSE,
@@ -34,73 +43,130 @@ overall_plot(
   tau_posterior_outline = NULL,
   tau_slab_scale = 0.7,
   font = NULL,
-  plot_arrangement = "vertical"
+  plot_arrangement = "vertical",
+  ...
 )
 }
 \arguments{
-\item{data}{The data used for the model (optional, for reference)}
+\item{model}{A fitted model object (brmsfit, meta_stan, bayesmeta,
+stanreg, stanfit, or CmdStanMCMC).}
 
-\item{model}{A brms model object from a meta-analysis}
+\item{data}{Data frame with study information. Must include an
+\code{Author} column and effect size / SE columns appropriate
+for the backend.}
 
-\item{measure}{Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD")}
+\item{measure}{Character string for effect measure
+("OR", "RR", "HR", "IRR", "MD", "SMD").}
 
-\item{study_var}{Character string for the study grouping variable name (default extracts from model)}
+\item{add_tau}{Logical, whether to include the heterogeneity (tau) plot.}
 
-\item{incl_tau}{Logical, whether to include the heterogeneity (tau) plot}
+\item{add_pred}{Logical, whether to include the prediction distribution
+plot.}
 
-\item{incl_mu_prior}{Logical, whether to include the prior distribution for mu}
+\item{add_summary}{Logical, whether to annotate the mu plot with a summary
+of the effect estimate, 95\\% CrI, and posterior probabilities of
+benefit/harm. When \code{null_range} is provided, also shows
+Pr(Benefit > \eqn{\delta}) and Pr(Harm > \eqn{\delta}). Default
+\code{TRUE}.}
 
-\item{incl_tau_prior}{Logical, whether to include the prior distribution for tau}
+\item{incl_mu_prior}{Logical, whether to draw the prior for \eqn{\mu} as a
+dashed line behind the posterior. Default \code{FALSE}.}
 
-\item{null_value}{Numeric, the null value for the effect (default from get_measure_properties)}
+\item{incl_tau_prior}{Logical, whether to draw the prior for \eqn{\tau} as a
+dashed line behind the posterior (needs \code{add_tau = TRUE}). Default
+\code{FALSE}.}
 
-\item{null_range}{Numeric vector of length 2, range for null region (e.g., c(0.9, 1.1))}
+\item{mu_prior, tau_prior}{Optional priors to draw, as \code{bf_prior}
+objects (e.g. \code{bf_normal(0, 1)}, \code{bf_half_cauchy(0, 0.5)}) or
+density functions on the model scale (log scale for ratio measures). When
+\code{NULL}, the priors are read from brms and bayesmeta models. Other
+backends do not store their priors, so supply them here.}
 
-\item{add_null_range}{Logical, whether to add shaded null range region}
+\item{color_prior}{Color for the prior lines.}
 
-\item{color_null_range}{Color for the null range shading}
+\item{color_pred_posterior}{Color for the prediction posterior
+distribution.}
 
-\item{label_control}{Character string for control group label}
+\item{color_pred_posterior_outline}{Outline color for the prediction
+posterior distribution.}
 
-\item{label_intervention}{Character string for intervention group label}
+\item{null_value}{Numeric, the null value for the effect (default from
+\code{get_measure_properties}).}
 
-\item{title}{Plot title}
+\item{null_range}{Range for the null region: a numeric vector of length 2
+(e.g., \code{c(0.9, 1.1)}) or a single half-width around
+\code{null_value}. When \code{NULL} and \code{add_null_range = TRUE},
+defaults to 0.9 to 1.1 for ratio measures and -0.1 to 0.1 for SMD.}
 
-\item{subtitle}{Plot subtitle}
+\item{add_null_range}{Logical, whether to add shaded null range region.}
 
-\item{title_align}{Alignment for title ("left", "center", "right")}
+\item{color_null_range}{Color for the null range shading.}
 
-\item{mu_xlim}{Numeric vector of length 2 for mu plot x-axis limits}
+\item{label_control}{Character string for control group label.}
 
-\item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits}
+\item{label_intervention}{Character string for intervention group label.}
 
-\item{x_breaks}{Numeric vector for x-axis breaks on mu plot}
+\item{title}{Plot title.}
 
-\item{tau_breaks}{Numeric vector for x-axis breaks on tau plot}
+\item{subtitle}{Plot subtitle.}
 
-\item{color_overall_posterior}{Color for the overall posterior distribution}
+\item{title_align}{Alignment for title ("left", "center", "right").}
 
-\item{color_overall_posterior_outline}{Outline color for the posterior distribution}
+\item{mu_xlim}{Numeric vector of length 2 for mu plot x-axis limits.}
 
-\item{split_color_by_null}{Logical, whether to split posterior color by null value}
+\item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits.}
 
-\item{color_favours_control}{Color for region favoring control}
+\item{pred_xlim}{Numeric vector of length 2 for prediction plot x-axis
+limits.}
 
-\item{color_favours_intervention}{Color for region favoring intervention}
+\item{x_breaks}{Numeric vector for x-axis breaks on mu plot.}
 
-\item{tau_posterior_color}{Base color for tau posterior}
+\item{tau_breaks}{Numeric vector for x-axis breaks on tau plot.}
 
-\item{tau_posterior_outline}{Outline color for tau posterior}
+\item{pred_breaks}{Numeric vector for x-axis breaks on prediction plot.}
 
-\item{tau_slab_scale}{Numeric, scaling factor for tau slab height relative to mu (default 0.7)}
+\item{color_overall_posterior}{Color for the overall posterior
+distribution.}
 
-\item{font}{Font family for text elements}
+\item{color_overall_posterior_outline}{Outline color for the posterior
+distribution.}
 
-\item{plot_arrangement}{Character, "vertical" (stacked) or "horizontal" (side by side)}
+\item{split_color_by_null}{Logical, whether to split posterior color by
+null value.}
+
+\item{color_favours_control}{Color for region favoring control.}
+
+\item{color_favours_intervention}{Color for region favoring
+intervention.}
+
+\item{tau_posterior_color}{Base color for tau posterior.}
+
+\item{tau_posterior_outline}{Outline color for tau posterior.}
+
+\item{tau_slab_scale}{Numeric, scaling factor for tau slab height
+relative to mu (default 0.7).}
+
+\item{font}{Font family for text elements.}
+
+\item{plot_arrangement}{Character, "vertical" (stacked) or "horizontal"
+(side by side).}
+
+\item{...}{Additional arguments passed to
+\code{extract_forest_draws} (e.g., \code{theta_par},
+\code{tau_par}, \code{study_par} for stanfit/CmdStanMCMC models).}
 }
 \value{
-A ggplot object (or combined plot if incl_tau = TRUE)
+A ggplot object (or combined plot if \code{add_tau = TRUE} or
+\code{add_pred = TRUE}).
 }
 \description{
-Create posterior plots for Bayesian meta-analysis
+Produces density plots of the pooled effect (\eqn{\mu}), heterogeneity
+(\eqn{\tau}), and/or prediction distribution from a fitted model.
+Supports all bayesfoRest backends: brms, MetaStan, bayesmeta, rstan,
+cmdstanr, and rstanarm.
+}
+\details{
+Priors and posteriors are drawn on the same density scale, so a vague prior
+appears almost flat and a prior that dominates the posterior appears taller
+than it.
 }
