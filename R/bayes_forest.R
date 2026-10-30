@@ -85,9 +85,9 @@
 #' @param add_pred_subgroup Logical. Whether to add prediction to each subgroup. Default is FALSE.
 #' @param pred_output Character string specifying prediction visualization.
 #'   Options: "density" (default) or "pointinterval".
-#' @param color_pred_posterior Color for prediction density fill. Default is "forestgreen".
-#' @param color_pred_outline Color for prediction density outline. Default is "darkgreen".
-#' @param color_pred_pointinterval Color for prediction point interval. Default is "forestgreen".
+#' @param color_pred_posterior Color for prediction density fill. Default is "orange".
+#' @param color_pred_outline Color for prediction density outline. Default is "darkorange2".
+#' @param color_pred_pointinterval Color for prediction point interval. Default is "orange".
 #' @param plot_width Numeric value specifying the relative width of the plot component. Default is 4.
 #' @param add_rob Logical indicating whether to add Risk of Bias assessment. Default is FALSE.
 #' @param rob_tool Risk of bias tool: "rob2" (default), "robins_i", "robins_e",
@@ -156,9 +156,9 @@ bayes_forest <- function(model,
                          add_pred = FALSE,
                          add_pred_subgroup = FALSE,
                          pred_output = c("density", "pointinterval"),
-                         color_pred_posterior = "forestgreen",
-                         color_pred_outline = "darkgreen",
-                         color_pred_pointinterval = "forestgreen",
+                         color_pred_posterior = "orange",
+                         color_pred_outline = "darkorange2",
+                         color_pred_pointinterval = "orange",
                          plot_width = 4,
                          add_rob = FALSE,
                          rob_tool = "rob2",

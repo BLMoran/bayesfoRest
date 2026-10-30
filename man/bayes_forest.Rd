@@ -59,9 +59,9 @@ bayes_forest(
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
   pred_output = c("density", "pointinterval"),
-  color_pred_posterior = "forestgreen",
-  color_pred_outline = "darkgreen",
-  color_pred_pointinterval = "forestgreen",
+  color_pred_posterior = "orange",
+  color_pred_outline = "darkorange2",
+  color_pred_pointinterval = "orange",
   plot_width = 4,
   add_rob = FALSE,
   rob_tool = "rob2",
@@ -204,11 +204,11 @@ Only applicable to random-effect models.}
 \item{pred_output}{Character string specifying prediction visualization.
 Options: "density" (default) or "pointinterval".}
 
-\item{color_pred_posterior}{Color for prediction density fill. Default is "forestgreen".}
+\item{color_pred_posterior}{Color for prediction density fill. Default is "orange".}
 
-\item{color_pred_outline}{Color for prediction density outline. Default is "darkgreen".}
+\item{color_pred_outline}{Color for prediction density outline. Default is "darkorange2".}
 
-\item{color_pred_pointinterval}{Color for prediction point interval. Default is "forestgreen".}
+\item{color_pred_pointinterval}{Color for prediction point interval. Default is "orange".}
 
 \item{plot_width}{Numeric value specifying the relative width of the plot component. Default is 4.}
 
