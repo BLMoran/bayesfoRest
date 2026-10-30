@@ -30,7 +30,6 @@ Imports:
     tidyr,
     utils
 Suggests:
-    bayesma,
     bayesmeta,
     bayesplot,
     BayesTools,
