@@ -1,0 +1,20 @@
+#Model for binary data Random-effects Meta-analysis with normal prior  #2026-05-11 22:30:44.752945 
+  ## c. binary standard random-effects meta-analysis with normal prior 
+  
+ model{  
+  for (s in 1:S){
+  y0[s]~dbin(pi0[s],n0[s])
+  y1[s]~dbin(pi1[s],n1[s])
+  logit(pi0[s])<-alpha[s]
+  logit(pi1[s])<-alpha[s]+delta[s]
+  
+  alpha[s]~dnorm(0,0.0001)
+  delta[s]~dnorm(mu,tau)
+  gamma[s]<-exp(delta[s])
+  }
+  ###prior###
+  mu~dnorm(0,0.0001)
+  sigma~dunif(0,5)
+  tau<-pow(sigma,-2)
+  rho<-exp(mu)
+  } 
