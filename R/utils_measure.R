@@ -49,27 +49,16 @@ get_measure_properties <- function(measure) {
   )
 }
 
-#' Extract Intercept Draws from Model
+#' Extract Intercept Draws from Model (Backend-Agnostic)
 #'
-#' @description
-#' Extracts posterior draws for the intercept parameter and transforms them
-#' according to the effect measure.
+#' @param model A fitted model object (any supported backend).
+#' @param measure Character string. Effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param data Data frame containing study data.
 #'
-#' @param model A fitted brmsfit object
-#' @param measure Character string. Effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD")
-#'
-#' @return Numeric vector of transformed posterior draws
+#' @return Numeric vector of transformed posterior draws.
 #'
 #' @keywords internal
 #' @noRd
-extract_intercept_draws <- function(model, measure) {
-  draws <- tidybayes::spread_draws(model, b_Intercept)
-  
-  if (measure %in% c("OR", "RR", "HR", "IRR")) {
-    draws$x <- exp(draws$b_Intercept)
-  } else {
-    draws$x <- draws$b_Intercept
-  }
-  
-  draws$x
+extract_intercept_draws <- function(model, measure, data) {
+  extract_pooled_draws(model, data, measure)
 }

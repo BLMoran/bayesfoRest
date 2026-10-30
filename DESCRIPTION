@@ -1,31 +1,52 @@
 Package: bayesfoRest
 Type: Package
 Title: Forest Plots for Bayesian Meta Analyses in R
-Description: bayesfoRest creates forest plots for Bayesian meta-analyses in data that has been prepared using the metafor and brms packages. 
-    In addition to forest plots, posterior probability plots are generated for the overall effect and for the heterogeneity parameter.
+Description: bayesfoRest creates forest plots for Bayesian meta-analyses
+    using various modelling backends including brms, MetaStan, bayesmeta,
+    rstanarm, rstan, cmdstanr, and R2jags. Supports both common-effects and
+    random-effects models with customizable visualization options.
 Version: 0.0.0.9000
-Imports: 
-    brms,
+Imports:
+    cli,
     distributional,
     dplyr,
     fontawesome,
     forcats,
     ggdist,
     ggplot2,
-    glue,
     gt,
     paletteer,
     patchwork,
     posterior,
     purrr,
+    RColorBrewer,
     rlang,
+    S7,
     scales,
     stats,
     stringr,
+    tibble,
     tidybayes,
-    tidyr
+    tidyr,
+    tidyselect,
+    utils
+Suggests:
+    bayesma,
+    bayesmeta,
+    bayesplot,
+    BayesTools,
+    brms,
+    coda,
+    ggrepel,
+    knitr,
+    MetaStan,
+    R2jags,
+    rmarkdown,
+    RoBMA,
+    rstan,
+    rstanarm
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 URL: https://github.com/BLMoran/bayesfoRest, https://blmoran.github.io/bayesfoRest/
 BugReports: https://github.com/BLMoran/bayesfoRest/issues
 Authors@R: c(
@@ -43,9 +64,7 @@ License: AGPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Suggests: 
-    knitr,
-    rmarkdown
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
+Config/roxygen2/version: 8.1.0
+RoxygenNote: 7.3.2

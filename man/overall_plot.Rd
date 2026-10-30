@@ -5,13 +5,14 @@
 \title{Create posterior plots for Bayesian meta-analysis}
 \usage{
 overall_plot(
-  data = NULL,
   model,
+  data,
   measure,
-  study_var = NULL,
-  incl_tau = FALSE,
-  incl_mu_prior = FALSE,
-  incl_tau_prior = FALSE,
+  add_tau = FALSE,
+  add_pred = FALSE,
+  add_summary = TRUE,
+  color_pred_posterior = "forestgreen",
+  color_pred_posterior_outline = "darkgreen",
   null_value = NULL,
   null_range = NULL,
   add_null_range = FALSE,
@@ -21,10 +22,13 @@ overall_plot(
   title = NULL,
   subtitle = NULL,
   title_align = "left",
+  x_label = NULL,
   mu_xlim = NULL,
   tau_xlim = NULL,
+  pred_xlim = NULL,
   x_breaks = NULL,
   tau_breaks = NULL,
+  pred_breaks = NULL,
   color_overall_posterior = "dodgerblue",
   color_overall_posterior_outline = "blue",
   split_color_by_null = FALSE,
@@ -34,73 +38,108 @@ overall_plot(
   tau_posterior_outline = NULL,
   tau_slab_scale = 0.7,
   font = NULL,
-  plot_arrangement = "vertical"
+  plot_arrangement = "vertical",
+  ...
 )
 }
 \arguments{
-\item{data}{The data used for the model (optional, for reference)}
+\item{model}{A fitted model object (brmsfit, meta_stan, bayesmeta,
+stanreg, stanfit, or CmdStanMCMC).}
 
-\item{model}{A brms model object from a meta-analysis}
+\item{data}{Data frame with study information. Must include an
+\code{Author} column and effect size / SE columns appropriate
+for the backend.}
 
-\item{measure}{Character string for effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD")}
+\item{measure}{Character string for effect measure
+("OR", "RR", "HR", "IRR", "MD", "SMD").}
 
-\item{study_var}{Character string for the study grouping variable name (default extracts from model)}
+\item{add_tau}{Logical, whether to include the heterogeneity (tau) plot.}
 
-\item{incl_tau}{Logical, whether to include the heterogeneity (tau) plot}
+\item{add_pred}{Logical, whether to include the prediction distribution
+plot.}
 
-\item{incl_mu_prior}{Logical, whether to include the prior distribution for mu}
+\item{add_summary}{Logical, whether to annotate the mu plot with a summary
+of the effect estimate, 95\\% CrI, and posterior probabilities of
+benefit/harm. When \code{null_range} is provided, also shows
+Pr(Benefit > \eqn{\delta}) and Pr(Harm > \eqn{\delta}). Default
+\code{TRUE}.}
 
-\item{incl_tau_prior}{Logical, whether to include the prior distribution for tau}
+\item{color_pred_posterior}{Color for the prediction posterior
+distribution.}
 
-\item{null_value}{Numeric, the null value for the effect (default from get_measure_properties)}
+\item{color_pred_posterior_outline}{Outline color for the prediction
+posterior distribution.}
 
-\item{null_range}{Numeric vector of length 2, range for null region (e.g., c(0.9, 1.1))}
+\item{null_value}{Numeric, the null value for the effect (default from
+\code{get_measure_properties}).}
 
-\item{add_null_range}{Logical, whether to add shaded null range region}
+\item{null_range}{Numeric vector of length 2, range for null region
+(e.g., \code{c(0.9, 1.1)}).}
 
-\item{color_null_range}{Color for the null range shading}
+\item{add_null_range}{Logical, whether to add shaded null range region.}
 
-\item{label_control}{Character string for control group label}
+\item{color_null_range}{Color for the null range shading.}
 
-\item{label_intervention}{Character string for intervention group label}
+\item{label_control}{Character string for control group label.}
 
-\item{title}{Plot title}
+\item{label_intervention}{Character string for intervention group label.}
 
-\item{subtitle}{Plot subtitle}
+\item{title}{Plot title.}
 
-\item{title_align}{Alignment for title ("left", "center", "right")}
+\item{subtitle}{Plot subtitle.}
 
-\item{mu_xlim}{Numeric vector of length 2 for mu plot x-axis limits}
+\item{title_align}{Alignment for title ("left", "center", "right").}
 
-\item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits}
+\item{mu_xlim}{Numeric vector of length 2 for mu plot x-axis limits.}
 
-\item{x_breaks}{Numeric vector for x-axis breaks on mu plot}
+\item{tau_xlim}{Numeric vector of length 2 for tau plot x-axis limits.}
 
-\item{tau_breaks}{Numeric vector for x-axis breaks on tau plot}
+\item{pred_xlim}{Numeric vector of length 2 for prediction plot x-axis
+limits.}
 
-\item{color_overall_posterior}{Color for the overall posterior distribution}
+\item{x_breaks}{Numeric vector for x-axis breaks on mu plot.}
 
-\item{color_overall_posterior_outline}{Outline color for the posterior distribution}
+\item{tau_breaks}{Numeric vector for x-axis breaks on tau plot.}
 
-\item{split_color_by_null}{Logical, whether to split posterior color by null value}
+\item{pred_breaks}{Numeric vector for x-axis breaks on prediction plot.}
 
-\item{color_favours_control}{Color for region favoring control}
+\item{color_overall_posterior}{Color for the overall posterior
+distribution.}
 
-\item{color_favours_intervention}{Color for region favoring intervention}
+\item{color_overall_posterior_outline}{Outline color for the posterior
+distribution.}
 
-\item{tau_posterior_color}{Base color for tau posterior}
+\item{split_color_by_null}{Logical, whether to split posterior color by
+null value.}
 
-\item{tau_posterior_outline}{Outline color for tau posterior}
+\item{color_favours_control}{Color for region favoring control.}
 
-\item{tau_slab_scale}{Numeric, scaling factor for tau slab height relative to mu (default 0.7)}
+\item{color_favours_intervention}{Color for region favoring
+intervention.}
 
-\item{font}{Font family for text elements}
+\item{tau_posterior_color}{Base color for tau posterior.}
 
-\item{plot_arrangement}{Character, "vertical" (stacked) or "horizontal" (side by side)}
+\item{tau_posterior_outline}{Outline color for tau posterior.}
+
+\item{tau_slab_scale}{Numeric, scaling factor for tau slab height
+relative to mu (default 0.7).}
+
+\item{font}{Font family for text elements.}
+
+\item{plot_arrangement}{Character, "vertical" (stacked) or "horizontal"
+(side by side).}
+
+\item{...}{Additional arguments passed to
+\code{extract_forest_draws} (e.g., \code{theta_par},
+\code{tau_par}, \code{study_par} for stanfit/CmdStanMCMC models).}
 }
 \value{
-A ggplot object (or combined plot if incl_tau = TRUE)
+A ggplot object (or combined plot if \code{add_tau = TRUE} or
+\code{add_pred = TRUE}).
 }
 \description{
-Create posterior plots for Bayesian meta-analysis
+Produces density plots of the pooled effect (\eqn{\mu}), heterogeneity
+(\eqn{\tau}), and/or prediction distribution from a fitted model.
+Supports all bayesfoRest backends: brms, MetaStan, bayesmeta, rstan,
+cmdstanr, and rstanarm.
 }

@@ -9,15 +9,17 @@ sensitivity_plot(
   data,
   priors,
   measure,
-  study_var = NULL,
+  prior_order = NULL,
+  model_order = NULL,
   rob_var = NULL,
   exclude_high_rob = FALSE,
+  incl_common_effect = FALSE,
+  incl_random_effect = TRUE,
+  incl_selection_weight = FALSE,
   incl_pet_peese = FALSE,
-  pet_peese_direction = "negative",
-  pet_peese_threshold = 0.1,
-  incl_mixture = FALSE,
-  incl_bma = FALSE,
-  model_bma = NULL,
+  incl_robma = FALSE,
+  robma_fit = NULL,
+  seed = TRUE,
   add_probs = FALSE,
   null_value = NULL,
   null_range = NULL,
@@ -41,153 +43,130 @@ sensitivity_plot(
 )
 }
 \arguments{
-\item{model}{A fitted brmsfit object from a Bayesian meta-analysis}
+\item{model}{A fitted model object (brmsfit, meta_stan, bayesmeta,
+stanreg, stanfit, or CmdStanMCMC).}
 
-\item{data}{A data frame containing the study data used to fit the model}
+\item{data}{A data frame containing the study data.}
 
-\item{priors}{A named list of brms prior specifications (created with \code{brms::prior()})
-with names typically including "vague", "weakreg", and "informative"}
+\item{priors}{A named list of prior specifications. Each element should
+be a list with \code{name} (display label), \code{mu_prior} (a
+\code{bf_prior} object), and optionally \code{tau_prior} (a
+\code{bf_prior} object). See \code{\link{bf_normal}} for constructors.}
 
-\item{measure}{Character string specifying the effect measure. One of "OR" (odds ratio),
-"RR" (risk ratio), "HR" (hazard ratio), "IRR" (incidence rate ratio),
-"MD" (mean difference), or "SMD" (standardized mean difference)}
+\item{measure}{Character. Effect measure: "OR", "RR", "HR", "IRR",
+"MD", or "SMD".}
 
-\item{study_var}{Optional. Name of the study identifier variable (unquoted). Required
-if \code{incl_pet_peese = TRUE} or \code{incl_mixture = TRUE}}
+\item{prior_order}{Optional character vector of prior keys specifying display
+order. Defaults to the order in \code{priors}.}
 
-\item{rob_var}{Optional. Name of the risk of bias variable (unquoted). Should contain
-values like "Low", "Some concerns", "High"}
+\item{model_order}{Optional character vector of section labels specifying
+display order. Overrides the default ordering.}
 
-\item{exclude_high_rob}{Logical. If TRUE, performs sensitivity analysis excluding
-studies with high risk of bias. Default is FALSE}
+\item{rob_var}{Optional. Name of risk of bias variable (unquoted).}
 
-\item{incl_pet_peese}{Logical. If TRUE, includes PET-PEESE bias adjustment analysis.
-Default is FALSE}
+\item{exclude_high_rob}{Logical. Include sensitivity excluding high RoB
+studies. Default FALSE.}
 
-\item{pet_peese_direction}{Character string. Direction of expected bias for PET-PEESE.
-Either "negative" or "positive". Default is "negative"}
+\item{incl_common_effect}{Logical. Include common-effect model section.
+Default FALSE. Only applies when the base model is random-effects.}
 
-\item{pet_peese_threshold}{Numeric. Threshold for choosing between PET and PEESE
-(based on proportion of studies showing effect). Default is 0.10}
+\item{incl_random_effect}{Logical. Include random-effects model section.
+Default TRUE.}
 
-\item{incl_mixture}{Logical. If TRUE, includes robust mixture model analysis.
-Default is FALSE}
+\item{incl_selection_weight}{Logical. Include RoBMA selection (weight)
+model rows. Default FALSE. Requires \code{robma_fit}.}
 
-\item{incl_bma}{Logical. If TRUE, includes Bayesian model averaging results.
-Default is FALSE}
+\item{incl_pet_peese}{Logical. Include RoBMA PET-PEESE rows. Default FALSE.
+Requires \code{robma_fit}.}
 
-\item{model_bma}{Named list of RoBMA model fits (from \code{RoBMA_brms()}) to include
-in model averaging. Names should be "vague", "weakreg", or "informative"}
+\item{incl_robma}{Logical. Include full RoBMA sensitivity rows (conditional
+and model-averaged). Default FALSE. Requires \code{robma_fit}.}
 
-\item{add_probs}{Logical. If TRUE, adds probability columns to the results table.
-Default is FALSE}
+\item{robma_fit}{A single fitted RoBMA object (from \code{RoBMA::RoBMA()})
+or a named list of RoBMA objects (one per prior
+level). Required when any RoBMA option is TRUE.}
 
-\item{null_value}{Numeric. The null value for the effect measure. If NULL, uses
-default based on measure (1 for ratio measures, 0 for difference measures)}
+\item{seed}{Integer seed for reproducibility. Default TRUE (uses model seed).}
 
-\item{null_range}{Numeric vector of length 2 or single numeric value. Defines the
-range of practical equivalence around the null value. If single value, creates
-symmetric range around null_value}
+\item{add_probs}{Logical. Add probability columns. Default FALSE.}
 
-\item{add_null_range}{Logical. If TRUE, displays the null range region on the plot.
-Default is FALSE}
+\item{null_value}{Numeric. Null value for hypothesis testing.}
 
-\item{color_null_range}{Character string. Color for the null range region.
-Default is "#77bb41" (green)}
+\item{null_range}{Numeric vector of length 2 or single value. ROPE.}
 
-\item{label_control}{Character string. Label for the control/reference group.
-Default is "Control"}
+\item{add_null_range}{Logical. Show null range region. Default FALSE.}
 
-\item{label_intervention}{Character string. Label for the intervention group.
-Default is "Intervention"}
+\item{color_null_range}{Character. Color for null range. Default "#77bb41".}
 
-\item{title}{Optional character string. Main title for the plot}
+\item{label_control}{Character. Control group label. Default "Control".}
 
-\item{subtitle}{Optional character string. Subtitle for the plot}
+\item{label_intervention}{Character. Intervention label. Default
+"Intervention".}
 
-\item{title_align}{Character string. Alignment for title and subtitle.
-One of "left", "center", or "right". Default is "left"}
+\item{title}{Optional title.}
 
-\item{xlim}{Optional numeric vector of length 2. X-axis limits for the density plot}
+\item{subtitle}{Optional subtitle.}
 
-\item{x_breaks}{Optional numeric vector. Custom x-axis break points}
+\item{title_align}{Character. "left", "center", or "right".}
 
-\item{color_palette}{Optional color palette for the plot}
+\item{xlim}{Optional x-axis limits.}
 
-\item{color_overall_posterior}{Character string. Fill color for posterior densities.
-Default is "dodgerblue"}
+\item{x_breaks}{Optional x-axis breaks.}
 
-\item{color_overall_posterior_outline}{Character string. Outline color for posterior
-densities. Default is "blue"}
+\item{color_palette}{Optional named vector of colors for sections.}
 
-\item{split_color_by_null}{Logical. If TRUE, colors densities based on which side
-of null they favor. Default is FALSE}
+\item{color_overall_posterior}{Fill color. Default "dodgerblue".}
 
-\item{color_favours_control}{Character string. Color when effect favors control.
-Default is "firebrick"}
+\item{color_overall_posterior_outline}{Outline color. Default "blue".}
 
-\item{color_favours_intervention}{Character string. Color when effect favors
-intervention. Default is "dodgerblue"}
+\item{split_color_by_null}{Logical. Color by null. Default FALSE.}
 
-\item{plot_width}{Numeric. Width ratio for the density plot section. Default is 4}
+\item{color_favours_control}{Character. Default "firebrick".}
 
-\item{font}{Optional character string. Font family to use for the plot}
+\item{color_favours_intervention}{Character. Default "dodgerblue".}
+
+\item{plot_width}{Numeric. Width ratio for density plot. Default 4.}
+
+\item{font}{Optional font family.}
 }
 \value{
-A patchwork object combining the sensitivity analysis tables and density plots
+A patchwork object combining tables and density plots.
 }
 \description{
-Creates a comprehensive sensitivity analysis visualization showing how meta-analytic
-estimates vary across different prior specifications and analysis approaches. The plot
-combines forest-plot style density distributions with tabulated results.
-}
-\details{
-This function performs comprehensive sensitivity analyses including:
-\itemize{
-\item Prior sensitivity: Re-fits the model with different prior specifications
-\item Risk of bias sensitivity: Excludes high risk of bias studies
-\item PET-PEESE: Publication bias adjustment using precision-based methods
-\item Mixture models: Robust analysis using mixture distributions
-\item Bayesian model averaging: Combines results across model specifications
-}
-
-The output combines three elements using patchwork:
-\itemize{
-\item Left table: Prior specifications
-\item Center plot: Density distributions of posterior estimates
-\item Right table: Numerical summaries and probabilities
-}
+Creates a comprehensive sensitivity analysis visualization showing how
+meta-analytic estimates vary across different prior specifications,
+analysis approaches, and publication bias adjustments. Supports all
+model backends (brms, MetaStan, bayesmeta, rstan, cmdstanr) and
+integrates RoBMA for bias-adjusted sensitivity analyses.
 }
 \examples{
 \dontrun{
-# Basic sensitivity plot
-sensitivity_plot(
-  model = my_brms_model,
-  data = my_data,
-  priors = list(
-    vague = prior("normal(0, 10)", class = "Intercept"),
-    weakreg = prior("normal(0, 1)", class = "Intercept"),
-    informative = prior("normal(0.5, 0.5)", class = "Intercept")
+priors <- list(
+  vague = list(
+    name      = "Vague",
+    mu_prior  = bf_normal(0, 10),
+    tau_prior = bf_half_cauchy(0, 1)
   ),
-  measure = "SMD"
+  weakreg = list(
+    name      = "Weakly Regularising",
+    mu_prior  = bf_normal(0, 1),
+    tau_prior = bf_half_cauchy(0, 0.5)
+  ),
+  informative = list(
+    name      = "Informative",
+    mu_prior  = bf_normal(0, 0.5),
+    tau_prior = bf_half_cauchy(0, 0.3)
+  )
 )
 
-# Advanced sensitivity with all options
 sensitivity_plot(
-  model = my_model,
-  data = my_data,
-  priors = my_priors,
+  model   = fit,
+  data    = dat,
+  priors  = priors,
   measure = "OR",
-  study_var = study_id,
-  rob_var = rob,
-  exclude_high_rob = TRUE,
-  incl_pet_peese = TRUE,
-  incl_mixture = TRUE,
-  incl_bma = TRUE,
-  model_bma = my_robma_models,
-  add_probs = TRUE,
-  null_range = c(0.9, 1.1),
-  add_null_range = TRUE
+  incl_common_effect = TRUE,
+  exclude_high_rob   = TRUE,
+  rob_var            = rob_rating
 )
 }
 

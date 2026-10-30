@@ -4,8 +4,7 @@
 patchwork_fn <- function(table.left,
                          study.density.plot,
                          table.right,
-                         add_rob_legend = FALSE,
-                         rob_tool = "rob2",
+                         rob_legend = NULL,
                          plot_width = NULL,
                          title = NULL,
                          subtitle = NULL,
@@ -16,14 +15,13 @@ patchwork_fn <- function(table.left,
   }
   
   # Create the base plot layout
-  if (isFALSE(add_rob_legend)) {
+  if (is.null(rob_legend)) {
     base_plot <- patchwork::wrap_table(table.left, space = "fixed") + 
       study.density.plot + 
       patchwork::wrap_table(table.right, space = "fixed") +
       patchwork::plot_layout(widths = grid::unit(c(-1, plot_width, -1), 
                                                  c("null", "cm", "null")))
   } else {
-    rob_legend <- rob_legend_fn(rob_tool, font)
     # Include rob_legend to the right of table.right
     base_plot <- patchwork::wrap_table(table.left, space = "fixed") + 
       study.density.plot + 
