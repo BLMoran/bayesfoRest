@@ -26,8 +26,21 @@
 #'   posterior distribution.
 #' @param null_value Numeric, the null value for the effect (default from
 #'   \code{get_measure_properties}).
-#' @param null_range Numeric vector of length 2, range for null region
-#'   (e.g., \code{c(0.9, 1.1)}).
+#' @param incl_mu_prior Logical, whether to draw the prior for \eqn{\mu} as a
+#'   dashed line behind the posterior. Default \code{FALSE}.
+#' @param incl_tau_prior Logical, whether to draw the prior for \eqn{\tau} as a
+#'   dashed line behind the posterior (needs \code{add_tau = TRUE}). Default
+#'   \code{FALSE}.
+#' @param mu_prior,tau_prior Optional priors to draw, as \code{bf_prior}
+#'   objects (e.g. \code{bf_normal(0, 1)}, \code{bf_half_cauchy(0, 0.5)}) or
+#'   density functions on the model scale (log scale for ratio measures). When
+#'   \code{NULL}, the priors are read from brms and bayesmeta models. Other
+#'   backends do not store their priors, so supply them here.
+#' @param color_prior Color for the prior lines.
+#' @param null_range Range for the null region: a numeric vector of length 2
+#'   (e.g., \code{c(0.9, 1.1)}) or a single half-width around
+#'   \code{null_value}. When \code{NULL} and \code{add_null_range = TRUE},
+#'   defaults to 0.9 to 1.1 for ratio measures and -0.1 to 0.1 for SMD.
 #' @param add_null_range Logical, whether to add shaded null range region.
 #' @param color_null_range Color for the null range shading.
 #' @param label_control Character string for control group label.
@@ -62,6 +75,11 @@
 #'   \code{extract_forest_draws} (e.g., \code{theta_par},
 #'   \code{tau_par}, \code{study_par} for stanfit/CmdStanMCMC models).
 #'
+#' @details
+#' Priors and posteriors are drawn on the same density scale, so a vague prior
+#' appears almost flat and a prior that dominates the posterior appears taller
+#' than it.
+#'
 #' @return A ggplot object (or combined plot if \code{add_tau = TRUE} or
 #'   \code{add_pred = TRUE}).
 #' @export
@@ -85,6 +103,11 @@ overall_plot <- function(model,
                          add_tau = FALSE,
                          add_pred = FALSE,
                          add_summary = TRUE,
+                         incl_mu_prior = FALSE,
+                         incl_tau_prior = FALSE,
+                         mu_prior = NULL,
+                         tau_prior = NULL,
+                         color_prior = "grey40",
                          color_pred_posterior = "forestgreen",
                          color_pred_posterior_outline = "darkgreen",
                          null_value = NULL,
@@ -139,6 +162,8 @@ overall_plot <- function(model,
   null_value <- null_value %||% props$null_value
   is_log_scale <- props$log_scale
   x_label <- x_label %||% props$x_label
+  null_range <- .resolve_null_range(measure, null_value, null_range,
+                                    add_null_range)
 
   # Set tau x-axis label
   tau_x_label <- if (measure %in% c("MD", "SMD")) {
@@ -178,6 +203,20 @@ overall_plot <- function(model,
     pooled_draws$tau
   } else {
     NULL
+  }
+
+  # Prior density functions on the model scale (NULL when not drawn)
+  model_priors <- if (isTRUE(incl_mu_prior) || isTRUE(incl_tau_prior)) {
+    overall_model_priors(model)
+  } else {
+    list()
+  }
+  mu_prior_fn <- if (isTRUE(incl_mu_prior)) {
+    resolve_prior_density(mu_prior, model_priors$mu, "mu", model)
+  }
+  tau_prior_fn <- if (isTRUE(incl_tau_prior) && isTRUE(add_tau) &&
+                      !is.null(tau_samples)) {
+    resolve_prior_density(tau_prior, model_priors$tau, "tau", model)
   }
 
   # ========================================================================
@@ -257,6 +296,11 @@ overall_plot <- function(model,
   # Start building mu plot
   mu_plot <- ggplot2::ggplot(mu_df, ggplot2::aes(x = mu))
 
+  # Prior line and the slab height that keeps it on the posterior's scale
+  mu_overlay <- prior_overlay(mu_prior_fn, mu_samples,
+                              lims = if (is_log_scale) log(mu_xlim) else mu_xlim,
+                              back = transform_fn, base_scale = 0.9)
+
   # Add null range shading if requested
   if (add_null_range && !is.null(null_range)) {
     mu_plot <- mu_plot +
@@ -272,7 +316,8 @@ overall_plot <- function(model,
       ggdist::stat_slab(
         ggplot2::aes(fill = ggplot2::after_stat(x < null_value)),
         color = color_overall_posterior_outline,
-        alpha = 0.8
+        alpha = 0.8,
+        scale = mu_overlay$slab_scale
       ) +
       ggplot2::scale_fill_manual(
         values = c("TRUE" = color_favours_intervention,
@@ -283,7 +328,8 @@ overall_plot <- function(model,
     mu_plot <- mu_plot +
       ggdist::stat_slab(fill = color_overall_posterior,
                         color = color_overall_posterior_outline,
-                        alpha = 0.8)
+                        alpha = 0.8,
+                        scale = mu_overlay$slab_scale)
   }
 
   # Add point interval
@@ -291,6 +337,13 @@ overall_plot <- function(model,
     ggdist::stat_pointinterval(.width = c(.66, .80, .95),
                                color = "black",
                                point_size = 2)
+
+  # Prior on top of the posterior so it stays visible where they overlap
+  if (!is.null(mu_overlay$prior_df)) {
+    mu_plot <- mu_plot +
+      prior_line(mu_overlay$prior_df, color_prior) +
+      ggplot2::labs(caption = "Dashed line: prior")
+  }
 
   # Add null reference line (black, solid)
   mu_plot <- mu_plot +
@@ -611,8 +664,14 @@ overall_plot <- function(model,
           tau_breaks <- sort(unique(c(tau_breaks, tau_xlim[2])))
       }
 
+      tau_overlay <- prior_overlay(tau_prior_fn, tau_samples,
+                                   lims = c(max(tau_xlim[1], 1e-6), tau_xlim[2]),
+                                   back = identity, base_scale = tau_slab_scale)
+
       # Build tau plot with scaled slab height
-      tau_plot <- ggplot2::ggplot(tau_df, ggplot2::aes(x = tau)) +
+      tau_plot <- ggplot2::ggplot(tau_df, ggplot2::aes(x = tau))
+
+      tau_plot <- tau_plot +
         ggdist::stat_slab(
           ggplot2::aes(
             fill_ramp = ggplot2::after_stat(
@@ -624,7 +683,7 @@ overall_plot <- function(model,
           fill = tau_posterior_color,
           color = tau_posterior_outline,
           linewidth = 0.8,
-          scale = tau_slab_scale
+          scale = tau_overlay$slab_scale
         ) +
         ggdist::scale_fill_ramp_discrete(
           range = c(0.8, 0.2),
@@ -633,6 +692,12 @@ overall_plot <- function(model,
         ggdist::stat_pointinterval(.width = c(.66, .80, .95),
                                    color = "black",
                                    point_size = 2)
+
+      if (!is.null(tau_overlay$prior_df)) {
+        tau_plot <- tau_plot +
+          prior_line(tau_overlay$prior_df, color_prior) +
+          ggplot2::labs(caption = "Dashed line: prior")
+      }
 
       # Add heterogeneity category reference lines (dashed, grey)
       tau_plot <- tau_plot +
@@ -788,4 +853,143 @@ overall_plot <- function(model,
   }
 
   combined_plot
+}
+
+
+# =============================================================================
+# Internal: prior overlays
+# =============================================================================
+
+#' Prior line data and posterior slab height
+#'
+#' Scales the prior density and the posterior slab by the same factor, so the
+#' taller of the two peaks at `base_scale`. Densities are on the model scale;
+#' `back` maps model-scale values to the plotted scale.
+#'
+#' @keywords internal
+#' @noRd
+prior_overlay <- function(prior_fn, samples, lims, back, base_scale) {
+  if (is.null(prior_fn)) {
+    return(list(prior_df = NULL, slab_scale = base_scale))
+  }
+  # ggdist estimates the slab from the draws inside the axis limits
+  samples <- samples[samples >= lims[1] & samples <= lims[2]]
+  grid <- seq(lims[1], lims[2], length.out = 501)
+  prior_y <- prior_fn(grid)
+  post_peak <- max(ggdist::density_bounded(samples)$y)
+  peak <- max(post_peak, prior_y, na.rm = TRUE)
+  list(
+    prior_df = data.frame(x = back(grid), y = prior_y / peak * base_scale),
+    slab_scale = base_scale * post_peak / peak
+  )
+}
+
+#' @keywords internal
+#' @noRd
+prior_line <- function(prior_df, color) {
+  ggplot2::geom_line(data = prior_df,
+                     ggplot2::aes(x = .data$x, y = .data$y),
+                     inherit.aes = FALSE, color = color,
+                     linetype = "dashed", linewidth = 0.7)
+}
+
+#' Choose the prior to draw: user supplied, else read from the model
+#'
+#' @keywords internal
+#' @noRd
+resolve_prior_density <- function(user_prior, model_prior, param, model) {
+  if (!is.null(user_prior)) {
+    if (is.function(user_prior)) return(user_prior)
+    if (inherits(user_prior, "bf_prior")) return(bf_prior_density(user_prior))
+    cli::cli_abort(
+      "{.arg {param}_prior} must be a {.cls bf_prior} (e.g. {.fn bf_normal}) or a density function."
+    )
+  }
+  if (!is.null(model_prior)) return(model_prior)
+  cli::cli_warn(c(
+    "Could not read the {param} prior from the {.cls {class(model)[1]}} model, so it is not drawn.",
+    "i" = "Supply it with {.arg {param}_prior}, e.g. {.code {param}_prior = {if (param == 'mu') 'bf_normal(0, 1)' else 'bf_half_cauchy(0, 0.5)'}}."
+  ))
+  NULL
+}
+
+#' Density function for a bf_prior (half distributions are folded at 0)
+#'
+#' @keywords internal
+#' @noRd
+bf_prior_density <- function(prior) {
+  switch(
+    prior$family,
+    normal      = function(x) stats::dnorm(x, prior$mean, prior$sd),
+    half_normal = truncate_at_zero(function(x) stats::dnorm(x, prior$mean, prior$sd)),
+    half_cauchy = truncate_at_zero(function(x) stats::dcauchy(x, prior$location, prior$scale)),
+    half_t      = truncate_at_zero(function(x) stats::dt((x - prior$location) / prior$scale,
+                                             prior$df) / prior$scale),
+    exponential = function(x) stats::dexp(x, prior$rate),
+    cli::cli_abort("Unsupported prior family {.val {prior$family}}.")
+  )
+}
+
+#' Read the mu and tau priors stored in a fitted model
+#'
+#' Returns density functions on the model scale. Only brms and bayesmeta store
+#' their priors; other backends return NULLs.
+#'
+#' @keywords internal
+#' @noRd
+overall_model_priors <- function(model) {
+  if (inherits(model, "brmsfit")) {
+    pr <- as.data.frame(model$prior)
+    pr <- pr[nzchar(pr$prior), , drop = FALSE]
+    mu_row <- pr[pr$class == "Intercept" |
+                   (pr$class == "b" & pr$coef == "Intercept"), , drop = FALSE]
+    tau_row <- pr[pr$class == "sd", , drop = FALSE]
+    return(list(
+      mu  = if (nrow(mu_row)) brms_prior_density(mu_row$prior[1], half = FALSE),
+      tau = if (nrow(tau_row)) brms_prior_density(tau_row$prior[1], half = TRUE)
+    ))
+  }
+  if (inherits(model, "bayesmeta")) {
+    mu_pr <- model$mu.prior
+    return(list(
+      mu  = if (all(is.finite(mu_pr))) {
+        function(x) stats::dnorm(x, mu_pr[[1]], mu_pr[[2]])
+      },
+      tau = if (isTRUE(model$tau.prior.proper)) {
+        function(x) model$dprior(tau = x)
+      }
+    ))
+  }
+  list(mu = NULL, tau = NULL)
+}
+
+#' Density function for a brms prior string such as "student_t(3, 0, 2.5)"
+#'
+#' @keywords internal
+#' @noRd
+brms_prior_density <- function(prior_string, half = FALSE) {
+  m <- regmatches(prior_string,
+                  regexec("^\\s*([a-z_]+)\\((.*)\\)\\s*$", prior_string))[[1]]
+  if (length(m) != 3) return(NULL)
+  args <- suppressWarnings(as.numeric(strsplit(m[3], ",")[[1]]))
+  if (anyNA(args)) return(NULL)
+  f <- switch(
+    m[2],
+    normal      = if (length(args) == 2) function(x) stats::dnorm(x, args[1], args[2]),
+    student_t   = if (length(args) == 3) function(x) stats::dt((x - args[2]) / args[3], args[1]) / args[3],
+    cauchy      = if (length(args) == 2) function(x) stats::dcauchy(x, args[1], args[2]),
+    exponential = if (length(args) == 1) function(x) stats::dexp(x, args[1]),
+    NULL
+  )
+  if (is.null(f) || !half || m[2] == "exponential") return(f)
+  truncate_at_zero(f)
+}
+
+#' Truncate a density at zero and renormalise it
+#'
+#' @keywords internal
+#' @noRd
+truncate_at_zero <- function(f) {
+  mass <- stats::integrate(f, 0, Inf)$value
+  function(x) ifelse(x < 0, 0, f(x) / mass)
 }

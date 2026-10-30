@@ -70,7 +70,8 @@ fig(rob_plot(binary_outcome, rob_tool = "rob2", add_rob_legend = TRUE),
 # Overall, funnel and diagnostics ---------------------------------------------
 
 fig(overall_plot(model_bin, binary_es, measure = "OR", add_tau = TRUE,
-                 add_pred = TRUE, mu_xlim = c(0.1, 3.5), tau_xlim = c(0, 1.5),
+                 add_pred = TRUE, incl_mu_prior = TRUE, incl_tau_prior = TRUE,
+                 add_null_range = TRUE, mu_xlim = c(0.1, 3.5), tau_xlim = c(0, 1.5),
                  plot_arrangement = "vertical"),
     "overall_plot.png", width = 9, height = 9)
 

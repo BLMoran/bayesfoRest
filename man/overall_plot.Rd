@@ -11,6 +11,11 @@ overall_plot(
   add_tau = FALSE,
   add_pred = FALSE,
   add_summary = TRUE,
+  incl_mu_prior = FALSE,
+  incl_tau_prior = FALSE,
+  mu_prior = NULL,
+  tau_prior = NULL,
+  color_prior = "grey40",
   color_pred_posterior = "forestgreen",
   color_pred_posterior_outline = "darkgreen",
   null_value = NULL,
@@ -64,6 +69,21 @@ benefit/harm. When \code{null_range} is provided, also shows
 Pr(Benefit > \eqn{\delta}) and Pr(Harm > \eqn{\delta}). Default
 \code{TRUE}.}
 
+\item{incl_mu_prior}{Logical, whether to draw the prior for \eqn{\mu} as a
+dashed line behind the posterior. Default \code{FALSE}.}
+
+\item{incl_tau_prior}{Logical, whether to draw the prior for \eqn{\tau} as a
+dashed line behind the posterior (needs \code{add_tau = TRUE}). Default
+\code{FALSE}.}
+
+\item{mu_prior, tau_prior}{Optional priors to draw, as \code{bf_prior}
+objects (e.g. \code{bf_normal(0, 1)}, \code{bf_half_cauchy(0, 0.5)}) or
+density functions on the model scale (log scale for ratio measures). When
+\code{NULL}, the priors are read from brms and bayesmeta models. Other
+backends do not store their priors, so supply them here.}
+
+\item{color_prior}{Color for the prior lines.}
+
 \item{color_pred_posterior}{Color for the prediction posterior
 distribution.}
 
@@ -73,8 +93,10 @@ posterior distribution.}
 \item{null_value}{Numeric, the null value for the effect (default from
 \code{get_measure_properties}).}
 
-\item{null_range}{Numeric vector of length 2, range for null region
-(e.g., \code{c(0.9, 1.1)}).}
+\item{null_range}{Range for the null region: a numeric vector of length 2
+(e.g., \code{c(0.9, 1.1)}) or a single half-width around
+\code{null_value}. When \code{NULL} and \code{add_null_range = TRUE},
+defaults to 0.9 to 1.1 for ratio measures and -0.1 to 0.1 for SMD.}
 
 \item{add_null_range}{Logical, whether to add shaded null range region.}
 
@@ -142,4 +164,9 @@ Produces density plots of the pooled effect (\eqn{\mu}), heterogeneity
 (\eqn{\tau}), and/or prediction distribution from a fitted model.
 Supports all bayesfoRest backends: brms, MetaStan, bayesmeta, rstan,
 cmdstanr, and rstanarm.
+}
+\details{
+Priors and posteriors are drawn on the same density scale, so a vague prior
+appears almost flat and a prior that dominates the posterior appears taller
+than it.
 }

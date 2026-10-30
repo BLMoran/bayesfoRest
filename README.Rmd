@@ -257,12 +257,21 @@ overall_plot(
   measure = "OR",
   add_tau = TRUE,
   add_pred = TRUE,
+  incl_mu_prior = TRUE,
+  incl_tau_prior = TRUE,
+  add_null_range = TRUE,
   mu_xlim = c(0.1, 3.5),
   tau_xlim = c(0, 1.5),
   plot_arrangement = "vertical"
 )
 ```
 ![](man/figures/overall_plot.png)
+
+The dashed lines are the priors, drawn on the same density scale as the
+posteriors. They are read from brms and bayesmeta models; for other backends,
+pass them with `mu_prior` and `tau_prior` (e.g. `mu_prior = bf_normal(0, 1)`).
+With `add_null_range = TRUE` the shaded region defaults to an odds ratio of 0.9
+to 1.1; set your own with `null_range`.
 
 ### Funnel Plot
 
