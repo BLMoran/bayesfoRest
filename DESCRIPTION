@@ -39,6 +39,7 @@ Suggests:
     coda,
     ggrepel,
     knitr,
+    metafor,
     MetaStan,
     R2jags,
     rmarkdown,
