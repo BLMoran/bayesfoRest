@@ -62,7 +62,7 @@ bayes_forest(
   reverse_arm_labels = FALSE,
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
-  pred_output = c("density", "pointinterval"),
+  pred_output = c("density", "pointinterval", "boxplot"),
   color_pred_posterior = "orange",
   color_pred_outline = "darkorange2",
   color_pred_pointinterval = "orange",
@@ -323,7 +323,9 @@ bayes_forest(
 - pred_output:
 
   Character string specifying prediction visualization. Options:
-  "density" (default) or "pointinterval".
+  "density" (default), "pointinterval", or "boxplot". When
+  `plot_output = "boxplot"`, `pred_output` defaults to "boxplot" too
+  unless explicitly set.
 
 - color_pred_posterior:
 
