@@ -33,9 +33,7 @@ cont_es <- escalc(
   data = cont_outcome) |>
   dplyr::mutate(sei = sqrt(vi))
 
-brma.
-
-model_robma <- brma.norm(data = cont_es,
+model_robma <- brma(data = cont_es,
                    yi = yi,
                    vi = vi,
                   measure = "SMD",
@@ -43,14 +41,8 @@ model_robma <- brma.norm(data = cont_es,
                   parallel = TRUE,
                   chains = 3,
                   sample = 5000,
-                  burnin = 4000,
-                  autofit = TRUE)
+                  burnin = 4000)
 ```
-
-`autofit = TRUE` lets RoBMA keep sampling until its own convergence
-checks pass, rather than stopping at a fixed number of iterations –
-worth leaving on, since the ensemble has more moving parts than a
-single-model fit and can need more draws.
 
 ## Create the forest plot
 
