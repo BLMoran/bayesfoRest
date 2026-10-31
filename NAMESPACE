@@ -10,7 +10,6 @@ S3method(detect_model_info,meta_stan)
 S3method(detect_model_info,rjags)
 S3method(detect_model_info,stanfit)
 S3method(detect_model_info,stanreg)
-S3method(diagnostics,default)
 S3method(extract_forest_draws,CmdStanMCMC)
 S3method(extract_forest_draws,bayesma)
 S3method(extract_forest_draws,bayesmeta)
@@ -45,8 +44,6 @@ S3method(model_has_re,bayesmeta)
 S3method(model_has_re,brmsfit)
 S3method(model_has_re,default)
 S3method(print,bf_prior)
-S3method(print,prior_dominance)
-S3method(print,prior_ess)
 S3method(refit_for_subgroup,bayesma)
 S3method(refit_for_subgroup,bayesmeta)
 S3method(refit_for_subgroup,brma)
@@ -71,28 +68,19 @@ export(bf_student_t)
 export(bf_turner)
 export(bf_uniform)
 export(detect_model_info)
-export(diagnostics)
 export(ecdf_model_plot)
 export(ecdf_prior_plot)
 export(extract_forest_draws)
 export(extract_pooled_summary)
 export(funnel_plot)
-export(gt_prior_dominance)
 export(jags_model_file)
 export(jags_prior_halfcauchy)
 export(jags_prior_halfnormal)
 export(jags_prior_uniform)
-export(make_study_labels)
 export(overall_plot)
-export(plot_prior_scale_sweep)
-export(plot_tau_scale_sweep)
-export(prior_dominance)
-export(prior_ess)
-export(prior_scale_sweep)
 export(rob_plot)
 export(rob_summary)
 export(sensitivity_plot)
-export(tau_scale_sweep)
 if (getRversion() < "4.3.0") importFrom("S7", "@")
 importFrom(RColorBrewer,brewer.pal)
 importFrom(dplyr,
@@ -159,17 +147,6 @@ importFrom(patchwork,
   plot_layout,
   plot_spacer
 )
-importFrom(posterior,
-  as_draws_array,
-  as_draws_matrix,
-  ess_bulk,
-  ess_tail,
-  ndraws,
-  rhat,
-  subset_draws,
-  summarise_draws,
-  variables
-)
 importFrom(purrr,
   imap_dfr,
   keep,
@@ -196,11 +173,9 @@ importFrom(stats,
   dnorm,
   median,
   qnorm,
-  quantile,
   rnorm,
   setNames,
   update,
-  var,
   weighted.mean
 )
 importFrom(tidyr,complete)

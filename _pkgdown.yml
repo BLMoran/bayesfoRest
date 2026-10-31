@@ -78,7 +78,16 @@ reference:
       - cont_outcome
 
 articles:
-  - title: Articles
+  - title: Get Started
     navbar: ~
     contents:
-      - articles/Meta_Analysis_Workflow
+      - bayesfoRest
+
+  - title: Use with Other Meta-Analysis Tools
+    desc: One page per modelling backend
+    contents:
+      - brms
+      - bayesmeta
+      - MetaStan
+      - RoBMA
+      - bayesma

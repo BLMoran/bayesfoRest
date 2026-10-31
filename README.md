@@ -478,7 +478,7 @@ ecdf_model_plot(
 
 <p align="center">
 
-<img src="man/figures/ecdf_plot.png" width="585"/>
+<img src="man/figures/ecdf_plot.png" width="600"/>
 
 </p>
 
@@ -497,7 +497,7 @@ ecdf_prior_plot(
 
 <p align="center">
 
-<img src="man/figures/ecdf_prior_plot.png" width="570"/>
+<img src="man/figures/ecdf_prior_plot.png" width="600"/>
 
 </p>
 
@@ -523,8 +523,9 @@ bayesfoRest depends on several R packages:
   [bayesmeta](https://cran.r-project.org/package=bayesmeta),
   [MetaStan](https://cran.r-project.org/package=MetaStan),
   [RoBMA](https://fbartos.github.io/RoBMA/),
-  [bayesma](https://blmoran.github.io/bayesma/) and other backends for
-  Bayesian model fitting (suggested; install the ones you use)
+  [bayesma](https://blmoran.github.io/bayesma/) and other Bayesian
+  meta-analysis model fitting packages (suggested; install the ones you
+  use)
 - [gt](https://gt.rstudio.com) for creating tables
 - [patchwork](https://patchwork.data-imaginist.com) for combining plots
 - [ggplot2](https://ggplot2.tidyverse.org) for plotting

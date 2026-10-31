@@ -362,7 +362,7 @@ bayes_forest <- function(model,
   # Handle different workflows for single vs subgroup plots
   if (!subgroup) {
     # Single Forest Plot Workflow
-    study.effect.draws <- forest.data_fn(
+    study.effect.draws <- forest_data_fn(
       data = data,
       model = model,
       subgroup = FALSE,
@@ -411,7 +411,7 @@ bayes_forest <- function(model,
       font = font
     )
 
-    forest.data.summary <- forest.data.summary_fn(
+    forest.data.summary <- forest_data_summary_fn(
       spread_df = study.effect.draws,
       data = data,
       measure = measure,
@@ -422,7 +422,7 @@ bayes_forest <- function(model,
 
   } else {
     # Subgroup Forest Plot Workflow
-    subgroup.effect.draws <- forest.data_fn(
+    subgroup.effect.draws <- forest_data_fn(
       data = data,
       model = model,
       subgroup = TRUE,
@@ -442,7 +442,7 @@ bayes_forest <- function(model,
       dplyr::rename(spread_df = data) |>
       dplyr::mutate(
         spread_df = purrr::map2(spread_df, Subgroup, ~ dplyr::mutate(.x, Subgroup = .y)),
-        subgroup.forest.summary = purrr::map(spread_df, ~ forest.data.summary_fn(
+        subgroup.forest.summary = purrr::map(spread_df, ~ forest_data_summary_fn(
           spread_df = .x,
           data = data,
           measure = measure,
@@ -577,7 +577,7 @@ bayes_forest <- function(model,
   # (density plot handles its own filtering via add_pred flag)
 
   # Create left table (study information)
-  forest.table.left <- forest.table.left_fn(
+  forest.table.left <- forest_table_left_fn(
     forest.data.summary = forest.data.summary,
     subgroup = subgroup,
     label_control = label_control,
@@ -587,7 +587,7 @@ bayes_forest <- function(model,
   )
 
   # Create right table (effect sizes and optionally RoB)
-  forest.table.right <- forest.table.right_fn(
+  forest.table.right <- forest_table_right_fn(
     df = forest.data.summary,
     subgroup = subgroup,
     add_rob = add_rob,

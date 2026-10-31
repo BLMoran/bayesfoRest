@@ -18,7 +18,10 @@
 <link href="../deps/Montserrat-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to Creating Forest Plots for Bayesian Meta Analyses">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="bayesfoRest_files/libs/quarto-html/popper.min.js"></script><script src="bayesfoRest_files/libs/quarto-html/tippy.umd.min.js"></script><link href="bayesfoRest_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="bayesfoRest_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to Creating Forest Plots for Bayesian Meta Analyses">
+<meta property="og:image" content="https://blmoran.github.io/bayesfoRest/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -42,7 +45,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/Meta_Analysis_Workflow.html">Meta Analysis Workflow</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -58,31 +62,28 @@
 
 
   </div>
-</nav><div class="container template-article">
-
-
-
-
+</nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Introduction to Creating Forest Plots for Bayesian Meta Analyses</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/BLMoran/bayesfoRest/blob/HEAD/vignettes/bayesfoRest.Rmd" class="external-link"><code>vignettes/bayesfoRest.Rmd</code></a></small>
-      <div class="d-none name"><code>bayesfoRest.Rmd</code></div>
+
+
+
+
+      <small class="dont-index">Source: <a href="https://github.com/BLMoran/bayesfoRest/blob/HEAD/vignettes/bayesfoRest.qmd" class="external-link"><code>vignettes/bayesfoRest.qmd</code></a></small>
+      <div class="d-none name"><code></code></div>
     </div>
 
-    
-    
-<p>bayesfoRest draws forest plots from a fitted Bayesian meta-analysis.
-You fit the model with whichever backend you prefer (brms, bayesmeta,
-MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA or R2jags), then
-pass it to <code><a href="../reference/bayes_forest.html">bayes_forest()</a></code> together with the study-level
-data.</p>
-<div class="section level2">
-<h2 id="prepare-the-data-and-fit-a-model">Prepare the data and fit a model<a class="anchor" aria-label="anchor" href="#prepare-the-data-and-fit-a-model"></a>
+
+
+
+
+
+    <p>bayesfoRest draws forest plots from a fitted Bayesian meta-analysis. You fit the model with whichever backend you prefer (brms, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, bayesma, RoBMA or R2jags), then pass it to <code><a href="../reference/bayes_forest.html">bayes_forest()</a></code> together with the study-level data.</p>
+<section class="level2"><h2 id="prepare-the-data-and-fit-a-model">Prepare the data and fit a model<a class="anchor" aria-label="anchor" href="#prepare-the-data-and-fit-a-model"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.metafor-project.org" class="external-link">metafor</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paul-buerkner/brms" class="external-link">brms</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/BLMoran/bayesfoRest" class="external-link">bayesfoRest</a></span><span class="op">)</span></span>
@@ -108,12 +109,11 @@ data.</p>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adapt_delta <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span>,</span>
 <span>  silent <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="create-the-forest-plot">Create the forest plot<a class="anchor" aria-label="anchor" href="#create-the-forest-plot"></a>
+</section><section class="level2"><h2 id="create-the-forest-plot">Create the forest plot<a class="anchor" aria-label="anchor" href="#create-the-forest-plot"></a>
 </h2>
-<p>Name the columns that hold the study label, year and arm-level data.
-For a binary outcome these are the group sizes and event counts:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>Name the columns that hold the study label, year and arm-level data. For a binary outcome these are the group sizes and event counts:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
@@ -128,51 +128,112 @@ For a binary outcome these are the group sizes and event counts:</p>
 <span>  subtitle <span class="op">=</span> <span class="st">"Bayesian Random-Effect Meta-Analysis (Odds Ratio)"</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="../reference/figures/forest_plot_binary.png"></p>
-<p>For a continuous outcome, use <code>mean_ctrl</code>,
-<code>mean_int</code>, <code>sd_ctrl</code> and <code>sd_int</code> in
-place of the event columns. For time-to-event and rate outcomes, use
-<code>time_ctrl</code> and <code>time_int</code>.</p>
 </div>
-<div class="section level2">
-<h2 id="common-options">Common options<a class="anchor" aria-label="anchor" href="#common-options"></a>
+<p><img src="../reference/figures/forest_plot_binary.png"></p>
+<p>For a continuous outcome, use <code>mean_ctrl</code>, <code>mean_int</code>, <code>sd_ctrl</code> and <code>sd_int</code> in place of the event columns. For time-to-event and rate outcomes, use <code>time_ctrl</code> and <code>time_int</code>.</p>
+</section><section class="level2"><h2 id="common-options">Common options<a class="anchor" aria-label="anchor" href="#common-options"></a>
 </h2>
 <ul>
 <li>
-<code>model_type</code>: <code>"random_effect"</code> or
-<code>"common_effect"</code>. Detected from the model when not
-given.</li>
+<code>model_type</code>: <code>"random_effect"</code> or <code>"common_effect"</code>. Detected from the model when not given.</li>
 <li>
-<code>plot_output = "boxplot"</code>: horizontal boxplots instead of
-densities.</li>
+<code>plot_output = "boxplot"</code>: horizontal boxplots instead of densities.</li>
 <li>
-<code>subgroup = TRUE, subgroupvar = Subgroup</code>: one panel per
-subgroup.</li>
+<code>subgroup = TRUE, subgroupvar = Subgroup</code>: one panel per subgroup.</li>
 <li>
-<code>re_min_k</code>: show a common-effect model when an analysis
-or subgroup has fewer than this many studies, because tau is poorly
-identified with so few.</li>
+<code>re_min_k</code>: show a common-effect model when an analysis or subgroup has fewer than this many studies, because tau is poorly identified with so few.</li>
 <li>
-<code>add_rob = TRUE</code>: add risk of bias columns. Choose the
-tool with <code>rob_tool</code> (<code>"rob2"</code>,
-<code>"robins_i"</code>, <code>"robins_e"</code>,
-<code>"quadas2"</code>, <code>"clarity"</code>, <code>"rob_nma"</code>,
-<code>"probast"</code> or <code>"probast_ai"</code>) and add a key with
-<code>add_rob_legend = TRUE</code>.</li>
+<code>add_rob = TRUE</code>: add risk of bias columns. Choose the tool with <code>rob_tool</code> (<code>"rob2"</code>, <code>"robins_i"</code>, <code>"robins_e"</code>, <code>"quadas2"</code>, <code>"clarity"</code>, <code>"rob_nma"</code>, <code>"probast"</code> or <code>"probast_ai"</code>) and add a key with <code>add_rob_legend = TRUE</code>.</li>
 <li>
-<code>exclude_high_rob = TRUE</code>: drop studies with an overall
-high risk of bias.</li>
+<code>exclude_high_rob = TRUE</code>: drop studies with an overall high risk of bias.</li>
 </ul>
-<p>See <code><a href="../reference/bayes_forest.html">?bayes_forest</a></code> for the full list, and the README for
-examples of the other plots: <code><a href="../reference/rob_plot.html">rob_plot()</a></code>,
-<code><a href="../reference/overall_plot.html">overall_plot()</a></code>, <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code>,
-<code><a href="../reference/diagnostics.html">diagnostics()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>,
-<code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> and <code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code>.</p>
-</div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+<p>See <code><a href="../reference/bayes_forest.html">?bayes_forest</a></code> for the full list, and the README for examples of the other plots: <code><a href="../reference/rob_plot.html">rob_plot()</a></code>, <code><a href="../reference/overall_plot.html">overall_plot()</a></code>, <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>, <code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> and <code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code>.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'light-border',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config);
+    }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
-
 
 
     <footer><div class="pkgdown-footer-left">

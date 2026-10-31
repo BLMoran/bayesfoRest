@@ -88,7 +88,6 @@ for the full list, and the README for examples of the other plots:
 [`rob_plot()`](https://blmoran.github.io/bayesfoRest/reference/rob_plot.md),
 [`overall_plot()`](https://blmoran.github.io/bayesfoRest/reference/overall_plot.md),
 [`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md),
-[`diagnostics()`](https://blmoran.github.io/bayesfoRest/reference/diagnostics.md),
 [`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md),
 [`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
 and

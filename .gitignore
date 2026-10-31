@@ -9,3 +9,9 @@
 inst/doc
 .Rproj
 .positai
+vignettes/*.html
+vignettes/*_files/
+vignettes/*.knit.md
+vignettes/articles/*.html
+vignettes/articles/*_files/
+vignettes/articles/*.knit.md

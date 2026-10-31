@@ -14,7 +14,7 @@
 #' @param re_min_k Passed to subgroup refits (bayesma models only).
 #'
 #' @noRd
-forest.data_fn <- function(data,
+forest_data_fn <- function(data,
                            model,
                            subgroup = FALSE,
                            sort_studies_by = "author",
@@ -148,7 +148,7 @@ forest.data_fn <- function(data,
 #' @param rob_cols Risk of bias columns to carry through to the summary.
 #'
 #' @noRd
-forest.data.summary_fn <- function(spread_df,
+forest_data_summary_fn <- function(spread_df,
                                    data,
                                    measure,
                                    sort_studies_by = "author",

@@ -1,7 +1,7 @@
 #' Internal function to create table for left side of forest plot
 #'
 #' @noRd
-forest.table.left_fn <- function(forest.data.summary,
+forest_table_left_fn <- function(forest.data.summary,
                                  subgroup = FALSE,
                                  label_control = "Control",
                                  label_intervention = "Intervention",
@@ -130,7 +130,7 @@ forest.table.left_fn <- function(forest.data.summary,
 #'   no shrinkage without a random effect).
 #'
 #' @noRd
-forest.table.right_fn <- function(df,
+forest_table_right_fn <- function(df,
                                   subgroup = FALSE,
                                   measure = "OR",
                                   add_rob = FALSE,

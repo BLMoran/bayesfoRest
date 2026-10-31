@@ -1,0 +1,111 @@
+# Using bayesfoRest with RoBMA
+
+RoBMA is different in kind from the other backends. Rather than fitting
+one random-effects model, it fits a *model-averaged ensemble* across
+models with and without an effect, heterogeneity, and publication-bias
+adjustment (selection models and PET-PEESE), then averages over them
+weighted by their posterior model probability. The pooled estimate and
+per-study shrinkage you get from
+[`bayes_forest()`](https://blmoran.github.io/bayesfoRest/reference/bayes_forest.md)
+already reflect that averaging – there’s no separate “turn on
+bias-adjustment” step.
+
+## Fit the model
+
+RoBMA takes effect sizes and sampling variances directly, computed with
+[`metafor::escalc()`](https://wviechtb.github.io/metafor/reference/escalc.html),
+the same way bayesmeta does. One real constraint: RoBMA’s `measure` only
+accepts `"SMD"`, `"ZCOR"`, `"RR"`, `"OR"`, `"HR"`, `"RD"`, `"IRR"`, or
+`"GEN"` – there’s no raw mean difference option, so unlike the other
+continuous-outcome examples in this series this one stays on the
+standardised scale:
+
+``` r
+
+library(metafor)
+library(RoBMA)
+library(bayesfoRest)
+
+cont_es <- escalc(
+  measure = "SMD",
+  m1i = Mean_Intervention, sd1i = SD_Intervention, n1i = N_Intervention,
+  m2i = Mean_Control, sd2i = SD_Control, n2i = N_Control,
+  data = cont_outcome) |>
+  dplyr::mutate(sei = sqrt(vi))
+
+brma.
+
+model_robma <- brma.norm(data = cont_es,
+                   yi = yi,
+                   vi = vi,
+                  measure = "SMD",
+                  seed = 1234,
+                  parallel = TRUE,
+                  chains = 3,
+                  sample = 5000,
+                  burnin = 4000,
+                  autofit = TRUE)
+```
+
+`autofit = TRUE` lets RoBMA keep sampling until its own convergence
+checks pass, rather than stopping at a fixed number of iterations –
+worth leaving on, since the ensemble has more moving parts than a
+single-model fit and can need more draws.
+
+## Create the forest plot
+
+``` r
+
+bayes_forest(
+  model = model_robma,
+  data = cont_outcome,
+  measure = "SMD",
+  studyvar = Author,
+  yearvar = Year,
+  mean_ctrl = Mean_Control,
+  mean_int = Mean_Intervention,
+  sd_ctrl = SD_Control,
+  sd_int = SD_Intervention,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  xlim = c(-6, 3)
+)
+```
+
+![](../reference/figures/robma_forest.png)
+
+## Subgroup analysis and funnel plots
+
+Subgroup refits work the same way as brms:
+`subgroup = TRUE, subgroupvar = Subgroup` refits RoBMA per subgroup
+automatically.
+[`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md)
+also works directly with a RoBMA model.
+
+## No prior-sensitivity refit – RoBMA plugs into sensitivity_plot() instead
+
+Because RoBMA’s priors are specified very differently from the `bf_*()`
+single-distribution priors the other backends use, it doesn’t have a
+[`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)/[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
+refit method of its own – passing a RoBMA model as the base `model`
+there will error. Instead, RoBMA is the mechanism *other* backends use
+to add publication-bias-adjusted sections to their own sensitivity
+analysis: fit your main model with brms/bayesmeta/MetaStan as usual,
+then pass a RoBMA fit alongside it:
+
+``` r
+
+sensitivity_plot(
+  model = model_re,          # a brms/bayesmeta/MetaStan fit
+  data = binary_es,
+  priors = priors,
+  measure = "OR",
+  robma_fit = model_robma,
+  incl_robma = TRUE,
+  incl_pet_peese = TRUE,
+  incl_selection_weight = TRUE
+)
+```
+
+See `vignette("sensitivity-analysis")` for the full walkthrough of
+combining a primary model with RoBMA-adjusted sections.

@@ -779,7 +779,7 @@ detect_model_info.bayesma <- function(model, ...) {
 
 #' @export
 extract_pooled_summary.bayesma <- function(model, prob = 0.95, ...) {
-  mu_draws <- as.numeric(model$draws[["mu"]])
+  mu_draws <- as.numeric(model$draws$mu$mu)
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(mu_draws),
     lower    = unname(stats::quantile(mu_draws, alpha)),
@@ -792,53 +792,44 @@ extract_forest_draws.bayesma <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  meta       <- model$meta
-  raw_draws  <- model$draws
-  n_draws    <- nrow(raw_draws)
-  draw_ids   <- seq_len(n_draws)
-  mu_draws   <- as.numeric(raw_draws[["mu"]])
-  study_names <- as.character(data$Author)
-  n_studies   <- length(study_names)
+  is_re    <- model$meta$model_type != "common_effect"
+  mu_draws <- as.numeric(model$draws$mu$mu)
+  n_draws  <- length(mu_draws)
+  draw_ids <- seq_len(n_draws)
 
-  is_re <- meta$model_type != "common_effect"
+  if (is_re && !is.null(model$draws$study)) {
+    tau_draws <- as.numeric(model$draws$tau$tau)
+    study_col <- model$meta$studyvar %||% "Author"
 
-  tau_vec <- if (is_re && "tau" %in% names(raw_draws)) {
-    as.numeric(raw_draws[["tau"]])
+    study_draws <- model$draws$study |>
+      dplyr::transmute(
+        .draw       = .draw,
+        Author      = as.character(.data[[study_col]]),
+        theta_study = theta,
+        eta         = theta - mu,
+        tau         = tau
+      )
   } else {
-    rep(NA_real_, n_draws)
+    tau_draws   <- rep(NA_real_, n_draws)
+    study_names <- as.character(data$Author)
+
+    study_draws <- purrr::map_dfr(study_names, function(nm) {
+      tibble::tibble(
+        .draw       = draw_ids,
+        Author      = nm,
+        theta_study = mu_draws,
+        eta         = 0,
+        tau         = tau_draws
+      )
+    })
   }
-
-  study_draws <- purrr::map_dfr(seq_len(n_studies), function(i) {
-    if (is_re) {
-      if (meta$stage == "two_stage") {
-        theta_var <- paste0("theta[", i, "]")
-        theta_i <- as.numeric(raw_draws[[theta_var]])
-      } else {
-        eps_var <- paste0("epsilon[", i, "]")
-        eps_i   <- as.numeric(raw_draws[[eps_var]])
-        theta_i <- mu_draws + eps_i
-      }
-      deviation <- theta_i - mu_draws
-    } else {
-      theta_i   <- mu_draws
-      deviation <- rep(0, n_draws)
-    }
-
-    tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
-      theta_study = theta_i,
-      eta         = deviation,
-      tau         = tau_vec
-    )
-  })
 
   pooled_draws <- tibble::tibble(
     .draw       = draw_ids,
     Author      = "Pooled Effect",
     theta_study = mu_draws,
     eta         = NA_real_,
-    tau         = tau_vec
+    tau         = tau_draws
   )
 
   dplyr::bind_rows(study_draws, pooled_draws)
@@ -853,33 +844,33 @@ refit_for_subgroup.bayesma <- function(model, data, ..., re_min_k = NULL) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     rlang::abort(paste0("Package '", pkg, "' is required."))
   }
-  bayesma_fit <- utils::getFromNamespace(pkg, pkg)
-  if (is.null(model$meta$call_args)) {
-    rlang::warn("Cannot refit bayesma: no stored call_args.")
+  if (is.null(model$call)) {
+    rlang::warn("Cannot refit bayesma: no stored call.")
     return(NULL)
   }
+
   tryCatch({
-    args <- model$meta$call_args
-    # bayes_forest() renames the data columns; point call_args at the new names
-    forest_col_map <- c(
-      studyvar   = "Author",
-      n_ctrl     = "N_Control",
-      n_int      = "N_Intervention",
-      mean_ctrl  = "Mean_Control",
-      mean_int   = "Mean_Intervention",
-      sd_ctrl    = "SD_Control",
-      sd_int     = "SD_Intervention",
-      event_ctrl = "Event_Control",
-      event_int  = "Event_Intervention"
+    # bayes_forest() renames data columns to its own canonical names; point
+    # the stored call's column arguments (tidy-eval symbols) at those names
+    forest_col_map <- list(
+      studyvar   = quote(Author),
+      yearvar    = quote(Year),
+      n_ctrl     = quote(N_Control),
+      n_int      = quote(N_Intervention),
+      mean_ctrl  = quote(Mean_Control),
+      mean_int   = quote(Mean_Intervention),
+      sd_ctrl    = quote(SD_Control),
+      sd_int     = quote(SD_Intervention),
+      event_ctrl = quote(Event_Control),
+      event_int  = quote(Event_Intervention)
     )
-    for (arg_nm in names(forest_col_map)) {
-      if (!is.null(args[[arg_nm]]) && forest_col_map[[arg_nm]] %in% names(data)) {
-        args[[arg_nm]] <- forest_col_map[[arg_nm]]
-      }
-    }
-    if (!is.null(re_min_k)) args$re_min_k <- re_min_k
-    args$data <- data
-    do.call(bayesma_fit, args)
+    call_args <- as.list(model$call)[-1]
+    present <- names(forest_col_map)[
+      names(forest_col_map) %in% names(call_args) &
+        purrr::map_lgl(forest_col_map, ~ as.character(.x) %in% names(data))
+    ]
+    new_call <- rlang::call_modify(model$call, !!!forest_col_map[present], data = data)
+    eval(new_call, asNamespace(pkg))
   }, error = function(e) {
     rlang::warn(paste0("bayesma subgroup refit failed: ", e$message))
     NULL
@@ -896,7 +887,7 @@ detect_model_info.brma <- function(model, ...) {
   if (!requireNamespace("posterior", quietly = TRUE)) {
     rlang::abort("Package 'posterior' is required for brma models.")
   }
-  draws_df <- posterior::as_draws_df(model)
+  draws_df <- posterior::as_draws_df(model$fit$mcmc)
   has_tau <- "tau" %in% names(draws_df)
   list(backend = "brma",
        pooling = if (has_tau) "random_effect" else "common_effect")
@@ -907,7 +898,7 @@ extract_pooled_summary.brma <- function(model, prob = 0.95, ...) {
   if (!requireNamespace("posterior", quietly = TRUE)) {
     rlang::abort("Package 'posterior' is required for brma models.")
   }
-  draws_df <- posterior::as_draws_df(model)
+  draws_df <- posterior::as_draws_df(model$fit$mcmc)
   mu <- as.numeric(draws_df[["mu"]])
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(mu),
@@ -920,11 +911,14 @@ extract_forest_draws.brma <- function(model, data, ...) {
   if (!requireNamespace("posterior", quietly = TRUE)) {
     rlang::abort("Package 'posterior' is required for brma models.")
   }
+  if (!requireNamespace("RoBMA", quietly = TRUE)) {
+    rlang::abort("Package 'RoBMA' is required.")
+  }
   if (!"Author" %in% names(data)) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  draws_df    <- posterior::as_draws_df(model)
+  draws_df    <- posterior::as_draws_df(model$fit$mcmc)
   mu_draws    <- as.numeric(draws_df[["mu"]])
   n_draws     <- length(mu_draws)
   draw_ids    <- seq_len(n_draws)
