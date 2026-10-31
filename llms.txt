@@ -490,8 +490,9 @@ bayesfoRest depends on several R packages:
   [bayesmeta](https://cran.r-project.org/package=bayesmeta),
   [MetaStan](https://cran.r-project.org/package=MetaStan),
   [RoBMA](https://fbartos.github.io/RoBMA/),
-  [bayesma](https://blmoran.github.io/bayesma/) and other backends for
-  Bayesian model fitting (suggested; install the ones you use)
+  [bayesma](https://blmoran.github.io/bayesma/) and other Bayesian
+  meta-analysis model fitting packages (suggested; install the ones you
+  use)
 - [gt](https://gt.rstudio.com) for creating tables
 - [patchwork](https://patchwork.data-imaginist.com) for combining plots
 - [ggplot2](https://ggplot2.tidyverse.org) for plotting
@@ -580,7 +581,22 @@ Example data for binary and continuous outcomes
 
 # Articles
 
-### Articles
+### Get Started
 
-- [Meta Analysis
-  Workflow](https://blmoran.github.io/bayesfoRest/articles/Meta_Analysis_Workflow.md):
+- [Introduction to Creating Forest Plots for Bayesian Meta
+  Analyses](https://blmoran.github.io/bayesfoRest/articles/bayesfoRest.md):
+
+### Use with Other Meta-Analysis Tools
+
+One page per modelling backend
+
+- [Using bayesfoRest with
+  brms](https://blmoran.github.io/bayesfoRest/articles/brms.md):
+- [Using bayesfoRest with
+  bayesmeta](https://blmoran.github.io/bayesfoRest/articles/bayesmeta.md):
+- [Using bayesfoRest with
+  MetaStan](https://blmoran.github.io/bayesfoRest/articles/MetaStan.md):
+- [Using bayesfoRest with
+  RoBMA](https://blmoran.github.io/bayesfoRest/articles/RoBMA.md):
+- [Using bayesfoRest with
+  bayesma](https://blmoran.github.io/bayesfoRest/articles/bayesma.md):
