@@ -89,7 +89,8 @@ random-effect models.</p>
 <span>  add_rope <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  rope_value <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rope_color <span class="op">=</span> <span class="st">"grey50"</span>,</span>
-<span>  plot_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"boxplot"</span><span class="op">)</span>,</span>
+<span>  study_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"boxplot"</span>, <span class="st">"sq_whisker"</span><span class="op">)</span>,</span>
+<span>  pooled_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"boxplot"</span>, <span class="st">"sq_whisker"</span>, <span class="st">"diamond"</span><span class="op">)</span>,</span>
 <span>  shrinkage_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"pointinterval"</span><span class="op">)</span>,</span>
 <span>  null_value <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  color_palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -108,7 +109,7 @@ random-effect models.</p>
 <span>  reverse_arm_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  add_pred <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  add_pred_subgroup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  pred_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"pointinterval"</span>, <span class="st">"boxplot"</span><span class="op">)</span>,</span>
+<span>  pred_output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"density"</span>, <span class="st">"pointinterval"</span>, <span class="st">"boxplot"</span>, <span class="st">"sq_whisker"</span>, <span class="st">"diamond"</span><span class="op">)</span>,</span>
 <span>  color_pred_posterior <span class="op">=</span> <span class="st">"orange"</span>,</span>
 <span>  color_pred_outline <span class="op">=</span> <span class="st">"darkorange2"</span>,</span>
 <span>  color_pred_pointinterval <span class="op">=</span> <span class="st">"orange"</span>,</span>
@@ -278,12 +279,22 @@ right-hand table. Default is NULL (uses <code>measure</code>).</p></dd>
 <dd><p>Color for ROPE shading.</p></dd>
 
 
-<dt id="arg-plot-output">plot_output<a class="anchor" aria-label="anchor" href="#arg-plot-output"></a></dt>
-<dd><p>Character string specifying how study and pooled effects
-are drawn: "density" (default) or "boxplot". Boxplots are horizontal: the
-box spans the interquartile range, the line marks the median, and the
-whiskers span the 95% interval. With "boxplot", <code>shrinkage_output</code> must be
-"pointinterval" (it is set automatically if not supplied).</p></dd>
+<dt id="arg-study-output">study_output<a class="anchor" aria-label="anchor" href="#arg-study-output"></a></dt>
+<dd><p>Character string specifying how per-study rows are
+drawn: "density" (default), "boxplot", or "sq_whisker". Boxplots and
+square-whiskers are horizontal: the interval spans the 95% interval;
+boxplots also show the interquartile range as a box. With "boxplot" or
+"sq_whisker", <code>shrinkage_output</code> must be "pointinterval" (it is set
+automatically if not supplied).</p></dd>
+
+
+<dt id="arg-pooled-output">pooled_output<a class="anchor" aria-label="anchor" href="#arg-pooled-output"></a></dt>
+<dd><p>Character string specifying how the Pooled/Overall
+Effect row(s) are drawn: "density", "boxplot", "sq_whisker", or
+"diamond" – independent of <code>study_output</code>. Defaults to match
+<code>study_output</code> ("density"-&gt;"density", "boxplot"-&gt;"boxplot"), except
+"sq_whisker" defaults to "diamond" (the classic forest-plot pairing of
+square studies with a diamond pooled estimate), unless explicitly set.</p></dd>
 
 
 <dt id="arg-shrinkage-output">shrinkage_output<a class="anchor" aria-label="anchor" href="#arg-shrinkage-output"></a></dt>
@@ -363,9 +374,9 @@ Only applicable to random-effect models.</p></dd>
 
 <dt id="arg-pred-output">pred_output<a class="anchor" aria-label="anchor" href="#arg-pred-output"></a></dt>
 <dd><p>Character string specifying prediction visualization.
-Options: "density" (default), "pointinterval", or "boxplot". When
-<code>plot_output = "boxplot"</code>, <code>pred_output</code> defaults to "boxplot" too unless
-explicitly set.</p></dd>
+Options: "density" (default), "pointinterval", "boxplot", "sq_whisker",
+or "diamond". When <code>study_output = "boxplot"</code>, <code>pred_output</code> defaults to
+"boxplot" too unless explicitly set.</p></dd>
 
 
 <dt id="arg-color-pred-posterior">color_pred_posterior<a class="anchor" aria-label="anchor" href="#arg-color-pred-posterior"></a></dt>

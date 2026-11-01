@@ -5,6 +5,13 @@
 - [Introduction to Creating Forest Plots for Bayesian Meta
   Analyses](https://blmoran.github.io/bayesfoRest/articles/bayesfoRest.md):
 
+### Sensitivity Analysis
+
+Prior and model-strategy sensitivity across every supported backend
+
+- [Sensitivity
+  Analysis](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md):
+
 ### Use with Other Meta-Analysis Tools
 
 One page per modelling backend

@@ -13,8 +13,9 @@ measures, subgroup analyses, and risk of bias assessments.
   brms, bayesma, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, RoBMA
   or R2jags
 - **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, and SMD
-- **Density or Boxplot Output**: Show study posteriors as densities or
-  horizontal boxplots
+- **Flexible Glyph Styles**: Show study and pooled-effect rows as
+  densities, boxplots, square-whiskers, or (for pooled rows) a classic
+  diamond, mixed and matched independently
 - **Subgroup Analysis**: Built-in support for subgroup meta-analyses
 - **Risk of Bias Integration**: Incorporate risk of bias assessments
   (RoB 2, ROBINS-I, ROBINS-E, QUADAS-2, CLARITY, ROB-NMA, PROBAST)
@@ -142,7 +143,7 @@ bayes_forest(
 
 ### Boxplot Output
 
-`plot_output = "boxplot"` draws each study as a horizontal boxplot.
+`study_output = "boxplot"` draws each study as a horizontal boxplot.
 Shrinkage estimates are shown as point intervals.
 
 ``` r
@@ -157,12 +158,38 @@ bayes_forest(
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
-  plot_output = "boxplot",
+  study_output = "boxplot",
   xlim = c(0.1, 3.5)
 )
 ```
 
 ![](reference/figures/forest_plot_boxplot.png)
+
+### Classic Forest Plot
+
+`study_output` and `pooled_output` are independent, so per-study and
+pooled rows can use different glyphs. `study_output = "sq_whisker"`
+pairs with `pooled_output = "diamond"` by default, giving the classic
+square-study / diamond-pooled forest-plot look.
+
+``` r
+
+bayes_forest(
+  model = model_bin,
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  study_output = "sq_whisker",
+  xlim = c(0.1, 3.5)
+)
+```
+
+![](reference/figures/forest_plot_classic.png)
 
 ### Add Subgroups
 
@@ -563,12 +590,32 @@ Core functions for creating Bayesian forest plots
   : Create posterior plots for Bayesian meta-analysis
 - [`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md)
   : Funnel Plot (multi-backend)
+
+## Sensitivity Analysis
+
+Compare pooled estimates across priors, model strategies, and
+publication-bias adjustments
+
+- [`forest_sens_plot()`](https://blmoran.github.io/bayesfoRest/reference/forest_sens_plot.md)
+  : Create a Forest Plot with Multi-Prior Pooled-Effect Rows
 - [`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)
   : Generate Sensitivity Analysis Plot for Bayesian Meta-Analysis
-- [`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
-  : ECDF Plot Comparing Priors (fixed section)
 - [`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
   : ECDF Plot Comparing Model Strategies (fixed prior)
+- [`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
+  : ECDF Plot Comparing Priors (fixed section)
+- [`bf_normal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_student_t()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_half_normal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_half_cauchy()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_half_t()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_exponential()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_lognormal()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  [`bf_uniform()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+  : Prior Distribution Constructors for Sensitivity Analysis
+- [`bf_turner()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)
+  [`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)
+  : Empirical Heterogeneity Priors
 
 ## Example Datasets
 
@@ -585,6 +632,13 @@ Example data for binary and continuous outcomes
 
 - [Introduction to Creating Forest Plots for Bayesian Meta
   Analyses](https://blmoran.github.io/bayesfoRest/articles/bayesfoRest.md):
+
+### Sensitivity Analysis
+
+Prior and model-strategy sensitivity across every supported backend
+
+- [Sensitivity
+  Analysis](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md):
 
 ### Use with Other Meta-Analysis Tools
 

@@ -102,5 +102,6 @@ and
 [`bf_uniform()`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
 all work. See
 [`vignette("brms")`](https://blmoran.github.io/bayesfoRest/articles/brms.md)
-for a worked sensitivity example and `vignette("sensitivity-analysis")`
+for a worked sensitivity example and
+[`vignette("sensitivity-analysis")`](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md)
 for the full walkthrough.

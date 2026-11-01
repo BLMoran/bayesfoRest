@@ -136,7 +136,9 @@
 <li>
 <code>model_type</code>: <code>"random_effect"</code> or <code>"common_effect"</code>. Detected from the model when not given.</li>
 <li>
-<code>plot_output = "boxplot"</code>: horizontal boxplots instead of densities.</li>
+<code>study_output = "boxplot"</code> or <code>"sq_whisker"</code>: horizontal boxplots or square-whisker markers instead of densities for per-study rows.</li>
+<li>
+<code>pooled_output = "diamond"</code>: a classic meta-analysis diamond for the Pooled/Overall Effect row(s), independent of <code>study_output</code>.</li>
 <li>
 <code>subgroup = TRUE, subgroupvar = Subgroup</code>: one panel per subgroup.</li>
 <li>

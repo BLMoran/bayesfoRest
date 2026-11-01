@@ -70,7 +70,10 @@ outcomes, use `time_ctrl` and `time_int`.
 
 - `model_type`: `"random_effect"` or `"common_effect"`. Detected from
   the model when not given.
-- `plot_output = "boxplot"`: horizontal boxplots instead of densities.
+- `study_output = "boxplot"` or `"sq_whisker"`: horizontal boxplots or
+  square-whisker markers instead of densities for per-study rows.
+- `pooled_output = "diamond"`: a classic meta-analysis diamond for the
+  Pooled/Overall Effect row(s), independent of `study_output`.
 - `subgroup = TRUE, subgroupvar = Subgroup`: one panel per subgroup.
 - `re_min_k`: show a common-effect model when an analysis or subgroup
   has fewer than this many studies, because tau is poorly identified
