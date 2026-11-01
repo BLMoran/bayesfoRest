@@ -49,6 +49,14 @@ model_has_re.brmsfit <- function(model) {
 #' @exportS3Method
 model_has_re.bayesmeta <- function(model) TRUE   # bayesmeta is always random-effects
 
+#' @exportS3Method
+model_has_re.brma <- function(model) {
+  # Mirrors detect_model_info.brma(): a tau column means prior_heterogeneity
+  # was fit, i.e. a random-effects model.
+  if (!requireNamespace("posterior", quietly = TRUE)) return(NA)
+  "tau" %in% names(posterior::as_draws_df(model$fit$mcmc))
+}
+
 #' Update Model with New Priors (S3 Generic)
 #'
 #' @description
@@ -75,7 +83,7 @@ update_model_prior.default <- function(model, data, new_prior, ...) {
 
   rlang::abort(paste0(
     "Prior updating not supported for model class '", class(model)[1], "'.\n",
-    "Supported backends: brmsfit, bayesmeta, meta_stan, bayesma, brma, rjags."
+    "Supported backends: brmsfit, bayesmeta, meta_stan, brma."
   ))
 }
 
@@ -203,6 +211,35 @@ update_model_prior.meta_stan <- function(model, data, new_prior, ...) {
   )
 }
 
+#' @exportS3Method
+update_model_prior.brma <- function(model, data, new_prior, ...) {
+  if (!requireNamespace("RoBMA", quietly = TRUE)) {
+    rlang::abort("Package 'RoBMA' is required.")
+  }
+  if (!all(c("yi", "vi") %in% names(data))) {
+    rlang::abort("Data must contain 'yi' and 'vi' columns for brma refit.")
+  }
+
+  fit_ctrl <- model$fit_control
+  measure  <- attr(model$data, "measure")
+
+  RoBMA::brma(
+    yi                  = data$yi,
+    sei                 = sqrt(data$vi),
+    slab                = as.character(data$Author),
+    measure             = measure,
+    prior_effect        = new_prior$prior_effect        %||% model$priors$outcome$mu,
+    prior_heterogeneity = new_prior$prior_heterogeneity %||% model$priors$outcome$tau,
+    sample              = fit_ctrl$sample %||% 5000L,
+    burnin              = fit_ctrl$burnin %||% 2000L,
+    adapt               = fit_ctrl$adapt  %||% 500L,
+    chains              = fit_ctrl$chains %||% 3L,
+    thin                = fit_ctrl$thin   %||% 1L,
+    seed                = fit_ctrl$seed,
+    silent              = TRUE
+  )
+}
+
 
 #' Perform Prior Sensitivity Analysis (Backend-Agnostic)
 #'
@@ -258,7 +295,10 @@ update_prior_sensitivity <- function(model,
         prior         = prior_name,
         prior_label   = prior_label,
         re            = re_flag,
-        x             = extract_pooled_draws(updated_model, data, measure)
+        x             = extract_pooled_draws(updated_model, data, measure),
+        tau           = extract_forest_draws(updated_model, data) |>
+          dplyr::filter(Author == "Pooled Effect") |>
+          dplyr::pull(tau)
       )
     }, error = function(e) {
       rlang::warn(paste0(
@@ -270,7 +310,8 @@ update_prior_sensitivity <- function(model,
         prior         = character(),
         prior_label   = character(),
         re            = logical(),
-        x             = numeric()
+        x             = numeric(),
+        tau           = numeric()
       )
     })
   })

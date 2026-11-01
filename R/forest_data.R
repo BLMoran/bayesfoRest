@@ -71,9 +71,8 @@ forest_data_fn <- function(data,
     study.effect.draws <- subgroup_df |>
       dplyr::mutate(
         effect_draws = purrr::pmap(
-          list(subgroup_model, data, study_count, Subgroup),   # <- add Subgroup
-          function(sg_model, sg_data, n_studies, sg_label) {   # <- receive it as sg_label
-            # If refit returned NULL, filter from overall model draws
+          list(subgroup_model, data, study_count, Subgroup),
+          function(sg_model, sg_data, n_studies, sg_label) {  
             if (is.null(sg_model)) {
               sg_study_names <- as.character(sg_data$Author)
 
@@ -88,8 +87,7 @@ forest_data_fn <- function(data,
                   theta_study = mean(theta_study),
                   eta         = NA_real_,
                   tau         = mean(tau, na.rm = TRUE),
-                  .groups     = "drop"
-                ) |>
+                  .groups     = "drop") |>
                 dplyr::mutate(Author = pooled_label)
 
               combined <- dplyr::bind_rows(study_draws, pooled_draws)
@@ -101,8 +99,7 @@ forest_data_fn <- function(data,
               if (pooled_label != "Pooled Effect") {
                 combined <- combined |>
                   dplyr::mutate(Author = dplyr::if_else(
-                    Author == "Pooled Effect", pooled_label, Author
-                  ))
+                    Author == "Pooled Effect", pooled_label, Author))
               }
             }
 
@@ -225,9 +222,7 @@ forest_data_summary_fn <- function(spread_df,
           as.character(Author) == "Prediction", "", unweighted_effect
         ))
   } else {
-    # Common-effects: no tau and no shrinkage, so the single effect column
-    # shows the observed effect for studies and the pooled posterior
-    # estimate (otherwise held in weighted_effect) for the pooled row(s)
+    # Common-effects: no tau and no shrinkage
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
         unweighted_effect = if (measure %in% c("MD", "SMD")) {

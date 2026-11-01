@@ -116,21 +116,22 @@ are on the standard deviation of the study effects.
 Sensitivity refits stop with an error if the model's backend cannot fit
 a prior exactly:
 
-|                             |      |           |                  |
-|-----------------------------|------|-----------|------------------|
-| Prior                       | brms | bayesmeta | MetaStan         |
-| `bf_normal` (\\\mu\\)       | yes  | yes       | yes              |
-| `bf_student_t` (\\\mu\\)    | yes  | no        | no               |
-| `bf_half_normal`            | yes  | yes       | yes (mean 0)     |
-| `bf_half_cauchy`            | yes  | yes       | yes (location 0) |
-| `bf_half_t`                 | yes  | yes       | no               |
-| `bf_exponential`            | yes  | yes       | no               |
-| `bf_lognormal`, `bf_turner` | yes  | yes       | no               |
-| `bf_uniform`                | yes  | yes       | yes              |
-| `bf_rhodes`                 | yes  | yes       | no               |
+|                             |      |           |                  |              |
+|-----------------------------|------|-----------|------------------|--------------|
+| Prior                       | brms | bayesmeta | MetaStan         | RoBMA (brma) |
+| `bf_normal` (\\\mu\\)       | yes  | yes       | yes              | yes          |
+| `bf_student_t` (\\\mu\\)    | yes  | no        | no               | yes          |
+| `bf_half_normal`            | yes  | yes       | yes (mean 0)     | yes          |
+| `bf_half_cauchy`            | yes  | yes       | yes (location 0) | yes          |
+| `bf_half_t`                 | yes  | yes       | no               | yes          |
+| `bf_exponential`            | yes  | yes       | no               | yes          |
+| `bf_lognormal`, `bf_turner` | yes  | yes       | no               | yes          |
+| `bf_uniform`                | yes  | yes       | yes              | yes          |
+| `bf_rhodes`                 | yes  | yes       | no               | no           |
 
-Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma, RoBMA
-or JAGS models.
+[`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)'s
+log-t prior has no RoBMA/BayesTools equivalent. Priors cannot be changed
+for rstan, cmdstanr, rstanarm, bayesma or JAGS models.
 
 ## Examples
 

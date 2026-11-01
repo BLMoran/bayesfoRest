@@ -25,14 +25,14 @@ utils::globalVariables(c(
   "ratio", "re",
   "section_label", "sei", "side", "spread_df", "study_count",
   "subgroup.forest.summary", "subgroup_model",
-  "tau", "tau_hi", "tau_lo", "tau_median", "tau_prior", "tau_prior_pctile",
+  "tau", "tau.lower", "tau.upper", "tau_hi", "tau_lo", "tau_median", "tau_prior", "tau_prior_pctile",
   "tau_prior_sd", "tau_prior_unicode", "theta", "theta_study",
   "u95", "unweighted_effect",
   "val", "variable", "vi",
   "weighted_effect",
   "x", "x_studies", "x_val", "xdist",
   "y", "yi", "yint",
-  ".above_null", ".fill", ".overall", "n", "se",
+  ".above_null", ".fill", ".overall", "fill", "n", "se",
   "xlower", "xmax", "xmiddle", "xmin", "xupper"
 ))
 

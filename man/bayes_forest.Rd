@@ -39,7 +39,8 @@ bayes_forest(
   add_rope = FALSE,
   rope_value = NULL,
   rope_color = "grey50",
-  plot_output = c("density", "boxplot"),
+  study_output = c("density", "boxplot", "sq_whisker"),
+  pooled_output = c("density", "boxplot", "sq_whisker", "diamond"),
   shrinkage_output = c("density", "pointinterval"),
   null_value = NULL,
   color_palette = NULL,
@@ -58,7 +59,7 @@ bayes_forest(
   reverse_arm_labels = FALSE,
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
-  pred_output = c("density", "pointinterval", "boxplot"),
+  pred_output = c("density", "pointinterval", "boxplot", "sq_whisker", "diamond"),
   color_pred_posterior = "orange",
   color_pred_outline = "darkorange2",
   color_pred_pointinterval = "orange",
@@ -156,11 +157,19 @@ right-hand table. Default is NULL (uses \code{measure}).}
 
 \item{rope_color}{Color for ROPE shading.}
 
-\item{plot_output}{Character string specifying how study and pooled effects
-are drawn: "density" (default) or "boxplot". Boxplots are horizontal: the
-box spans the interquartile range, the line marks the median, and the
-whiskers span the 95\% interval. With "boxplot", \code{shrinkage_output} must be
-"pointinterval" (it is set automatically if not supplied).}
+\item{study_output}{Character string specifying how per-study rows are
+drawn: "density" (default), "boxplot", or "sq_whisker". Boxplots and
+square-whiskers are horizontal: the interval spans the 95\% interval;
+boxplots also show the interquartile range as a box. With "boxplot" or
+"sq_whisker", \code{shrinkage_output} must be "pointinterval" (it is set
+automatically if not supplied).}
+
+\item{pooled_output}{Character string specifying how the Pooled/Overall
+Effect row(s) are drawn: "density", "boxplot", "sq_whisker", or
+"diamond" -- independent of \code{study_output}. Defaults to match
+\code{study_output} ("density"->"density", "boxplot"->"boxplot"), except
+"sq_whisker" defaults to "diamond" (the classic forest-plot pairing of
+square studies with a diamond pooled estimate), unless explicitly set.}
 
 \item{shrinkage_output}{Character string specifying shrinkage visualization.
 Options: "density" (default) or "pointinterval". Ignored for common-effect models.}
@@ -202,9 +211,9 @@ Only applicable to random-effect models.}
 \item{add_pred_subgroup}{Logical. Whether to add prediction to each subgroup. Default is FALSE.}
 
 \item{pred_output}{Character string specifying prediction visualization.
-Options: "density" (default), "pointinterval", or "boxplot". When
-\code{plot_output = "boxplot"}, \code{pred_output} defaults to "boxplot" too unless
-explicitly set.}
+Options: "density" (default), "pointinterval", "boxplot", "sq_whisker",
+or "diamond". When \code{study_output = "boxplot"}, \code{pred_output} defaults to
+"boxplot" too unless explicitly set.}
 
 \item{color_pred_posterior}{Color for prediction density fill. Default is "orange".}
 

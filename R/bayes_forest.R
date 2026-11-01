@@ -54,11 +54,18 @@
 #'   (measure-specific label).
 #' @param effect_label Character string used for the effect columns in the
 #'   right-hand table. Default is NULL (uses `measure`).
-#' @param plot_output Character string specifying how study and pooled effects
-#'   are drawn: "density" (default) or "boxplot". Boxplots are horizontal: the
-#'   box spans the interquartile range, the line marks the median, and the
-#'   whiskers span the 95% interval. With "boxplot", `shrinkage_output` must be
-#'   "pointinterval" (it is set automatically if not supplied).
+#' @param study_output Character string specifying how per-study rows are
+#'   drawn: "density" (default), "boxplot", or "sq_whisker". Boxplots and
+#'   square-whiskers are horizontal: the interval spans the 95% interval;
+#'   boxplots also show the interquartile range as a box. With "boxplot" or
+#'   "sq_whisker", `shrinkage_output` must be "pointinterval" (it is set
+#'   automatically if not supplied).
+#' @param pooled_output Character string specifying how the Pooled/Overall
+#'   Effect row(s) are drawn: "density", "boxplot", "sq_whisker", or
+#'   "diamond" -- independent of `study_output`. Defaults to match
+#'   `study_output` ("density"->"density", "boxplot"->"boxplot"), except
+#'   "sq_whisker" defaults to "diamond" (the classic forest-plot pairing of
+#'   square studies with a diamond pooled estimate), unless explicitly set.
 #' @param shrinkage_output Character string specifying shrinkage visualization.
 #'   Options: "density" (default) or "pointinterval". Ignored for common-effect models.
 #' @param null_value Numeric value specifying x-axis value of the null line. Default is NULL.
@@ -84,9 +91,9 @@
 #'   Only applicable to random-effect models.
 #' @param add_pred_subgroup Logical. Whether to add prediction to each subgroup. Default is FALSE.
 #' @param pred_output Character string specifying prediction visualization.
-#'   Options: "density" (default), "pointinterval", or "boxplot". When
-#'   `plot_output = "boxplot"`, `pred_output` defaults to "boxplot" too unless
-#'   explicitly set.
+#'   Options: "density" (default), "pointinterval", "boxplot", "sq_whisker",
+#'   or "diamond". When `study_output = "boxplot"`, `pred_output` defaults to
+#'   "boxplot" too unless explicitly set.
 #' @param color_pred_posterior Color for prediction density fill. Default is "orange".
 #' @param color_pred_outline Color for prediction density outline. Default is "darkorange2".
 #' @param color_pred_pointinterval Color for prediction point interval. Default is "orange".
@@ -138,7 +145,8 @@ bayes_forest <- function(model,
                          add_rope = FALSE,
                          rope_value = NULL,
                          rope_color = "grey50",
-                         plot_output = c("density", "boxplot"),
+                         study_output = c("density", "boxplot", "sq_whisker"),
+                         pooled_output = c("density", "boxplot", "sq_whisker", "diamond"),
                          shrinkage_output = c("density", "pointinterval"),
                          null_value = NULL,
                          color_palette = NULL,
@@ -157,7 +165,7 @@ bayes_forest <- function(model,
                          reverse_arm_labels = FALSE,
                          add_pred = FALSE,
                          add_pred_subgroup = FALSE,
-                         pred_output = c("density", "pointinterval", "boxplot"),
+                         pred_output = c("density", "pointinterval", "boxplot", "sq_whisker", "diamond"),
                          color_pred_posterior = "orange",
                          color_pred_outline = "darkorange2",
                          color_pred_pointinterval = "orange",
@@ -180,18 +188,27 @@ bayes_forest <- function(model,
     sort_studies_by = sort_studies_by
   )
 
-  # Boxplots only pair with point-interval shrinkage estimates
-  plot_output <- rlang::arg_match(plot_output)
-  if (plot_output == "boxplot") {
+  # Boxplots and square-whiskers only pair with point-interval shrinkage estimates
+  study_output <- rlang::arg_match(study_output)
+  if (study_output %in% c("boxplot", "sq_whisker")) {
     if (!missing(shrinkage_output) && identical(shrinkage_output, "density")) {
       cli::cli_abort(c(
-        "{.arg shrinkage_output} must be {.val pointinterval} when {.arg plot_output} = {.val boxplot}.",
+        "{.arg shrinkage_output} must be {.val pointinterval} when {.arg study_output} = {.val {study_output}}.",
         "i" = "Drop {.arg shrinkage_output} or set it to {.val pointinterval}."
       ))
     }
     shrinkage_output <- "pointinterval"
   } else {
     shrinkage_output <- rlang::arg_match(shrinkage_output)
+  }
+
+  # pooled_output defaults to match study_output, except "sq_whisker" pairs
+  # with "diamond" by default (classic square-studies/diamond-pooled look)
+  if (missing(pooled_output)) {
+    pooled_output <- switch(study_output,
+      "density" = "density", "boxplot" = "boxplot", "sq_whisker" = "diamond")
+  } else {
+    pooled_output <- rlang::arg_match(pooled_output)
   }
 
   # Auto-detect model type (or use user override)
@@ -287,10 +304,11 @@ bayes_forest <- function(model,
     }
   }
 
-  # Match pred_output argument; boxplot forest plots get a boxplot prediction
-  # by default too, unless the caller explicitly asked for something else
-  if (plot_output == "boxplot" && missing(pred_output)) {
-    pred_output <- "boxplot"
+  # Match pred_output argument; boxplot/sq_whisker forest plots get a matching
+  # prediction glyph by default too, unless the caller explicitly asked for
+  # something else
+  if (study_output %in% c("boxplot", "sq_whisker") && missing(pred_output)) {
+    pred_output <- study_output
   } else {
     pred_output <- match.arg(pred_output)
   }
@@ -393,7 +411,8 @@ bayes_forest <- function(model,
       label_intervention = label_intervention,
       add_arm_labels = add_arm_labels,
       reverse_arm_labels = reverse_arm_labels,
-      plot_output = plot_output,
+      study_output = study_output,
+      pooled_output = pooled_output,
       shrinkage_output = shrinkage_output,
       add_pred = add_pred,
       add_pred_subgroup = add_pred_subgroup,
@@ -554,7 +573,8 @@ bayes_forest <- function(model,
       label_intervention = label_intervention,
       add_arm_labels = add_arm_labels,
       reverse_arm_labels = reverse_arm_labels,
-      plot_output = plot_output,
+      study_output = study_output,
+      pooled_output = pooled_output,
       shrinkage_output = shrinkage_output,
       add_pred = add_pred,
       add_pred_subgroup = add_pred_subgroup,

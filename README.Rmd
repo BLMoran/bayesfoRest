@@ -40,8 +40,9 @@ measures, subgroup analyses, and risk of bias assessments.
   brms, bayesma, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, RoBMA
   or R2jags
 - **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, and SMD
-- **Density or Boxplot Output**: Show study posteriors as densities or
-  horizontal boxplots
+- **Flexible Glyph Styles**: Show study and pooled-effect rows as
+  densities, boxplots, square-whiskers, or (for pooled rows) a classic
+  diamond, mixed and matched independently
 - **Subgroup Analysis**: Built-in support for subgroup meta-analyses
 - **Risk of Bias Integration**: Incorporate risk of bias assessments
   (RoB 2, ROBINS-I, ROBINS-E, QUADAS-2, CLARITY, ROB-NMA, PROBAST)
@@ -171,7 +172,7 @@ bayes_forest(
 
 ### Boxplot Output
 
-`plot_output = "boxplot"` draws each study as a horizontal boxplot.
+`study_output = "boxplot"` draws each study as a horizontal boxplot.
 Shrinkage estimates are shown as point intervals.
 
 ``` r
@@ -185,7 +186,7 @@ bayes_forest(
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
-  plot_output = "boxplot",
+  study_output = "boxplot",
   xlim = c(0.1, 3.5)
 )
 ```
@@ -193,6 +194,35 @@ bayes_forest(
 <p align="center">
 
 <img src="man/figures/forest_plot_boxplot.png"/>
+
+</p>
+
+### Classic Forest Plot
+
+`study_output` and `pooled_output` are independent, so per-study and
+pooled rows can use different glyphs. `study_output = "sq_whisker"`
+pairs with `pooled_output = "diamond"` by default, giving the classic
+square-study / diamond-pooled forest-plot look.
+
+``` r
+bayes_forest(
+  model = model_bin,
+  data = binary_es,
+  measure = "OR",
+  studyvar = Author,
+  yearvar = Year,
+  n_ctrl = N_Control,
+  n_int = N_Intervention,
+  event_ctrl = Event_Control,
+  event_int = Event_Intervention,
+  study_output = "sq_whisker",
+  xlim = c(0.1, 3.5)
+)
+```
+
+<p align="center">
+
+<img src="man/figures/forest_plot_classic.png"/>
 
 </p>
 

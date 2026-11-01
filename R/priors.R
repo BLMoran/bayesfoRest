@@ -52,20 +52,21 @@
 #'
 #' Sensitivity refits stop with an error if the model's backend cannot fit a
 #' prior exactly:
-#' \tabular{lccc}{
-#'   Prior \tab brms \tab bayesmeta \tab MetaStan \cr
-#'   \code{bf_normal} (\eqn{\mu}) \tab yes \tab yes \tab yes \cr
-#'   \code{bf_student_t} (\eqn{\mu}) \tab yes \tab no \tab no \cr
-#'   \code{bf_half_normal} \tab yes \tab yes \tab yes (mean 0) \cr
-#'   \code{bf_half_cauchy} \tab yes \tab yes \tab yes (location 0) \cr
-#'   \code{bf_half_t} \tab yes \tab yes \tab no \cr
-#'   \code{bf_exponential} \tab yes \tab yes \tab no \cr
-#'   \code{bf_lognormal}, \code{bf_turner} \tab yes \tab yes \tab no \cr
-#'   \code{bf_uniform} \tab yes \tab yes \tab yes \cr
-#'   \code{bf_rhodes} \tab yes \tab yes \tab no \cr
+#' \tabular{lcccc}{
+#'   Prior \tab brms \tab bayesmeta \tab MetaStan \tab RoBMA (brma) \cr
+#'   \code{bf_normal} (\eqn{\mu}) \tab yes \tab yes \tab yes \tab yes \cr
+#'   \code{bf_student_t} (\eqn{\mu}) \tab yes \tab no \tab no \tab yes \cr
+#'   \code{bf_half_normal} \tab yes \tab yes \tab yes (mean 0) \tab yes \cr
+#'   \code{bf_half_cauchy} \tab yes \tab yes \tab yes (location 0) \tab yes \cr
+#'   \code{bf_half_t} \tab yes \tab yes \tab no \tab yes \cr
+#'   \code{bf_exponential} \tab yes \tab yes \tab no \tab yes \cr
+#'   \code{bf_lognormal}, \code{bf_turner} \tab yes \tab yes \tab no \tab yes \cr
+#'   \code{bf_uniform} \tab yes \tab yes \tab yes \tab yes \cr
+#'   \code{bf_rhodes} \tab yes \tab yes \tab no \tab no \cr
 #' }
-#' Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma, RoBMA or
-#' JAGS models.
+#' \code{bf_rhodes()}'s log-t prior has no RoBMA/BayesTools equivalent.
+#' Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma or JAGS
+#' models.
 #'
 #' @examples
 #' \dontrun{
@@ -242,7 +243,10 @@ new_bf_prior <- function(family, ...) {
 .bf_backend_support <- list(
   brms      = list(mu = .bf_mu_families, tau = .bf_tau_families),
   bayesmeta = list(mu = "normal", tau = .bf_tau_families),
-  MetaStan  = list(mu = "normal", tau = c("half_normal", "half_cauchy", "uniform"))
+  MetaStan  = list(mu = "normal", tau = c("half_normal", "half_cauchy", "uniform")),
+  # BayesTools (which RoBMA re-exports prior() from) has no log-t family
+  RoBMA     = list(mu = .bf_mu_families,
+                   tau = setdiff(.bf_tau_families, "log_t"))
 )
 
 #' Check a bf_prior suits the parameter and the backend
@@ -384,6 +388,34 @@ bf_prior_to_brms <- function(prior, class = "Intercept") {
   brms::prior_string(str, class = class)
 }
 
+#' Translate bf_prior to a RoBMA::prior() object
+#'
+#' @param prior A \code{bf_prior} object.
+#'
+#' @return A \code{RoBMA::prior()}/\code{BayesTools::prior()} object.
+#'
+#' @keywords internal
+#' @noRd
+bf_prior_to_robma <- function(prior) {
+  rlang::check_installed("RoBMA")
+
+  switch(
+    prior$family,
+    normal      = RoBMA::prior("normal", list(mean = prior$mean, sd = prior$sd)),
+    student_t   = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df)),
+    half_normal = RoBMA::prior("normal", list(mean = prior$mean, sd = prior$sd),
+                               truncation = list(lower = 0, upper = Inf)),
+    half_cauchy = RoBMA::prior("cauchy", list(location = prior$location, scale = prior$scale),
+                               truncation = list(lower = 0, upper = Inf)),
+    half_t      = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df),
+                               truncation = list(lower = 0, upper = Inf)),
+    exponential = RoBMA::prior("exp", list(rate = prior$rate)),
+    lognormal   = RoBMA::prior("lognormal", list(meanlog = prior$meanlog, sdlog = prior$sdlog)),
+    uniform     = RoBMA::prior("uniform", list(a = prior$lower, b = prior$upper)),
+    cli::cli_abort("Unknown prior family {.val {prior$family}}.")
+  )
+}
+
 #' Build Backend-Specific Prior Set from bf_prior Specifications
 #'
 #' @description
@@ -444,10 +476,16 @@ translate_priors_for_backend <- function(prior_spec, model) {
       )
     )
 
+  } else if (identical(backend, "RoBMA")) {
+    list(
+      prior_effect        = if (!is.null(mu_prior)) bf_prior_to_robma(mu_prior),
+      prior_heterogeneity = if (!is.null(tau_prior)) bf_prior_to_robma(tau_prior)
+    )
+
   } else {
     cli::cli_abort(c(
       "Priors cannot be changed for {.cls {class(model)[1]}} models.",
-      "i" = "Prior sensitivity refits support brms, bayesmeta and MetaStan models."
+      "i" = "Prior sensitivity refits support brms, bayesmeta, MetaStan and RoBMA (brma) models."
     ))
   }
 }
@@ -460,6 +498,7 @@ prior_backend <- function(model) {
   if (inherits(model, "brmsfit")) "brms"
   else if (inherits(model, "bayesmeta")) "bayesmeta"
   else if (inherits(model, "meta_stan")) "MetaStan"
+  else if (inherits(model, "brma")) "RoBMA"
   else NULL
 }
 

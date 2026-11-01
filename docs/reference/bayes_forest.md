@@ -43,7 +43,8 @@ bayes_forest(
   add_rope = FALSE,
   rope_value = NULL,
   rope_color = "grey50",
-  plot_output = c("density", "boxplot"),
+  study_output = c("density", "boxplot", "sq_whisker"),
+  pooled_output = c("density", "boxplot", "sq_whisker", "diamond"),
   shrinkage_output = c("density", "pointinterval"),
   null_value = NULL,
   color_palette = NULL,
@@ -62,7 +63,7 @@ bayes_forest(
   reverse_arm_labels = FALSE,
   add_pred = FALSE,
   add_pred_subgroup = FALSE,
-  pred_output = c("density", "pointinterval", "boxplot"),
+  pred_output = c("density", "pointinterval", "boxplot", "sq_whisker", "diamond"),
   color_pred_posterior = "orange",
   color_pred_outline = "darkorange2",
   color_pred_pointinterval = "orange",
@@ -234,13 +235,23 @@ bayes_forest(
 
   Color for ROPE shading.
 
-- plot_output:
+- study_output:
 
-  Character string specifying how study and pooled effects are drawn:
-  "density" (default) or "boxplot". Boxplots are horizontal: the box
-  spans the interquartile range, the line marks the median, and the
-  whiskers span the 95% interval. With "boxplot", `shrinkage_output`
-  must be "pointinterval" (it is set automatically if not supplied).
+  Character string specifying how per-study rows are drawn: "density"
+  (default), "boxplot", or "sq_whisker". Boxplots and square-whiskers
+  are horizontal: the interval spans the 95% interval; boxplots also
+  show the interquartile range as a box. With "boxplot" or "sq_whisker",
+  `shrinkage_output` must be "pointinterval" (it is set automatically if
+  not supplied).
+
+- pooled_output:
+
+  Character string specifying how the Pooled/Overall Effect row(s) are
+  drawn: "density", "boxplot", "sq_whisker", or "diamond" – independent
+  of `study_output`. Defaults to match `study_output`
+  ("density"-\>"density", "boxplot"-\>"boxplot"), except "sq_whisker"
+  defaults to "diamond" (the classic forest-plot pairing of square
+  studies with a diamond pooled estimate), unless explicitly set.
 
 - shrinkage_output:
 
@@ -323,9 +334,9 @@ bayes_forest(
 - pred_output:
 
   Character string specifying prediction visualization. Options:
-  "density" (default), "pointinterval", or "boxplot". When
-  `plot_output = "boxplot"`, `pred_output` defaults to "boxplot" too
-  unless explicitly set.
+  "density" (default), "pointinterval", "boxplot", "sq_whisker", or
+  "diamond". When `study_output = "boxplot"`, `pred_output` defaults to
+  "boxplot" too unless explicitly set.
 
 - color_pred_posterior:
 

@@ -427,12 +427,21 @@ extract_forest_draws.bayesmeta <- function(model, data, ...) {
   tau_idx   <- pmin(tau_idx, length(tau_grid))
   tau_draws <- tau_grid[tau_idx]
 
-  # Sample mu | tau analytically: mu | tau, y ~ N(mu_hat, 1/prec_mu)
+  # Sample mu | tau analytically: mu | tau, y ~ N(mu_hat, 1/prec_mu). The
+  # model is jointly normal (y ~ N(theta,sigma^2), theta ~ N(mu,tau^2), and
+  # a normal or improper-flat prior on mu), so this conjugate update is
+  # exact, not an approximation -- but it must include the fitted model's
+  # own mu.prior (mean, sd), or an informative prior silently has zero
+  # effect on the draws regardless of what the model was actually fit with.
+  mu_prior_sd   <- model$mu.prior["sd"]
+  mu_prior_prec <- if (!is.na(mu_prior_sd) && is.finite(mu_prior_sd)) 1 / mu_prior_sd^2 else 0
+  mu_prior_contrib <- if (mu_prior_prec > 0) mu_prior_prec * model$mu.prior["mean"] else 0
+
   prec_mu <- vapply(tau_draws, function(t) {
-    sum(1 / (sigma_obs^2 + t^2))
+    mu_prior_prec + sum(1 / (sigma_obs^2 + t^2))
   }, numeric(1))
   mu_hat <- vapply(seq_along(tau_draws), function(j) {
-    sum(y_obs / (sigma_obs^2 + tau_draws[j]^2)) / prec_mu[j]
+    (mu_prior_contrib + sum(y_obs / (sigma_obs^2 + tau_draws[j]^2))) / prec_mu[j]
   }, numeric(1))
   mu_draws <- stats::rnorm(n_draws, mean = mu_hat, sd = sqrt(1 / prec_mu))
 
@@ -924,22 +933,36 @@ extract_forest_draws.brma <- function(model, data, ...) {
   draw_ids    <- seq_len(n_draws)
   study_names <- as.character(data$Author)
   n_studies   <- length(study_names)
+  has_tau     <- "tau" %in% names(draws_df)
 
-  tau_vec <- if ("tau" %in% names(draws_df)) {
+  tau_vec <- if (has_tau) {
     as.numeric(draws_df[["tau"]])
   } else {
     rep(NA_real_, n_draws)
   }
 
+  # predict(type = "estimate") returns each study's conditional posterior
+  # *mean* E[theta_i | mu, tau, y_i] per draw, not an actual draw from that
+  # conditional distribution (verified: identical to the analytic mean to
+  # floating-point precision) -- so its own sampling variance v_i must be
+  # added back in, the same way extract_forest_draws.bayesmeta() does, or
+  # every per-study shrinkage interval comes out too narrow.
   blup_mat <- tryCatch({
     unclass(stats::predict(model, newdata = NULL, type = "estimate", quiet = TRUE))
   }, error = function(e) NULL)
+
+  sigma_obs <- if (!is.null(data$vi)) sqrt(data$vi) else rep(NA_real_, n_studies)
 
   study_draws <- purrr::map_dfr(seq_len(n_studies), function(i) {
     theta_i <- if (!is.null(blup_mat) && i <= ncol(blup_mat)) {
       as.numeric(blup_mat[, i])
     } else {
       mu_draws
+    }
+
+    if (has_tau && !is.na(sigma_obs[i])) {
+      v_i     <- 1 / (1 / sigma_obs[i]^2 + 1 / tau_vec^2)
+      theta_i <- stats::rnorm(n_draws, mean = theta_i, sd = sqrt(v_i))
     }
 
     tibble::tibble(

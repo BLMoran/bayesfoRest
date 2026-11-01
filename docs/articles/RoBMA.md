@@ -74,16 +74,42 @@ automatically.
 [`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md)
 also works directly with a RoBMA model.
 
-## No prior-sensitivity refit – RoBMA plugs into sensitivity_plot() instead
+## Prior sensitivity – two different roles for RoBMA
 
-Because RoBMA’s priors are specified very differently from the `bf_*()`
-single-distribution priors the other backends use, it doesn’t have a
-[`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)/[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
-refit method of its own – passing a RoBMA model as the base `model`
-there will error. Instead, RoBMA is the mechanism *other* backends use
-to add publication-bias-adjusted sections to their own sensitivity
-analysis: fit your main model with brms/bayesmeta/MetaStan as usual,
-then pass a RoBMA fit alongside it:
+`model_robma` here is a `brma` fit
+([`RoBMA::brma()`](https://fbartos.github.io/RoBMA/reference/brma.html),
+a single model with `prior_effect`/`prior_heterogeneity`), not a
+[`RoBMA::RoBMA()`](https://fbartos.github.io/RoBMA/reference/RoBMA.html)
+model-averaged ensemble, and it can be used as the primary `model` in
+[`forest_sens_plot()`](https://blmoran.github.io/bayesfoRest/reference/forest_sens_plot.md),
+[`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md),
+[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md),
+and
+[`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
+– each `bf_*()` prior in your `priors` list is translated to a
+[`RoBMA::prior()`](https://fbartos.github.io/RoBMA/reference/prior.html)
+object and the model is refit under it, the same way brms, bayesmeta,
+and MetaStan do.
+[`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)’s
+log-t prior has no RoBMA/BayesTools equivalent and is the one family it
+can’t fit exactly; see
+[`?bf_priors`](https://blmoran.github.io/bayesfoRest/reference/bf_priors.md)
+for the full support table.
+
+``` r
+
+sensitivity_plot(
+  model = model_robma,
+  data = cont_es,
+  priors = priors,
+  measure = "SMD"
+)
+```
+
+Separately, RoBMA is also the mechanism *other* backends use to add
+publication-bias-adjusted sections to their own sensitivity analysis:
+fit your main model with brms/bayesmeta/MetaStan as usual, then pass a
+RoBMA fit alongside it as `robma_fit`:
 
 ``` r
 
@@ -99,5 +125,12 @@ sensitivity_plot(
 )
 ```
 
-See `vignette("sensitivity-analysis")` for the full walkthrough of
-combining a primary model with RoBMA-adjusted sections.
+These answer different questions: the first refits `model_robma` itself
+under each prior; the second adds bias-adjusted *sections* alongside a
+different primary model’s own prior sensitivity. See
+[`vignette("sensitivity-analysis")`](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md)
+for the full walkthrough of both, plus
+[`forest_sens_plot()`](https://blmoran.github.io/bayesfoRest/reference/forest_sens_plot.md),
+[`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md),
+and
+[`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md).

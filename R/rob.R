@@ -537,7 +537,7 @@ create_rob_labels <- function(rob_cols, measure, effect_label = NULL, effect_typ
 
   base_labels <- list(
     weighted_effect = gt::md(paste("Shrinkage", effect_label, "\n", "[95% CrI]")),
-    unweighted_effect = gt::md(paste("Observed", effect_label, "\n", "[95% CrI]"))
+    unweighted_effect = gt::md(paste("Observed", effect_label, "\n", "[95% CI]"))
   )
   if (effect_type == "common_effect") base_labels$weighted_effect <- NULL
 

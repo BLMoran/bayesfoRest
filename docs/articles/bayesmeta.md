@@ -87,6 +87,7 @@ bayesmeta also supports the full `bf_*()` prior-sensitivity workflow
 [`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)),
 refitting the model under each prior you specify. See
 [`vignette("brms")`](https://blmoran.github.io/bayesfoRest/articles/brms.md)
-for a worked sensitivity example and `vignette("sensitivity-analysis")`
+for a worked sensitivity example and
+[`vignette("sensitivity-analysis")`](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md)
 for the full walkthrough – the calls are identical, just swap in a
 bayesmeta model.

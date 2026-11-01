@@ -224,6 +224,7 @@ ecdf_prior_plot(
 )
 ```
 
-See `vignette("sensitivity-analysis")` for publication-bias-adjusted
-sensitivity sections built from a RoBMA fit (`incl_robma`,
-`incl_pet_peese`, `incl_selection_weight`).
+See
+[`vignette("sensitivity-analysis")`](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md)
+for publication-bias-adjusted sensitivity sections built from a RoBMA
+fit (`incl_robma`, `incl_pet_peese`, `incl_selection_weight`).

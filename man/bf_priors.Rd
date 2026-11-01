@@ -87,20 +87,21 @@ Use \code{\link{bf_turner}} for the empirical priors of Turner et al.}
 
 Sensitivity refits stop with an error if the model's backend cannot fit a
 prior exactly:
-\tabular{lccc}{
-Prior \tab brms \tab bayesmeta \tab MetaStan \cr
-\code{bf_normal} (\eqn{\mu}) \tab yes \tab yes \tab yes \cr
-\code{bf_student_t} (\eqn{\mu}) \tab yes \tab no \tab no \cr
-\code{bf_half_normal} \tab yes \tab yes \tab yes (mean 0) \cr
-\code{bf_half_cauchy} \tab yes \tab yes \tab yes (location 0) \cr
-\code{bf_half_t} \tab yes \tab yes \tab no \cr
-\code{bf_exponential} \tab yes \tab yes \tab no \cr
-\code{bf_lognormal}, \code{bf_turner} \tab yes \tab yes \tab no \cr
-\code{bf_uniform} \tab yes \tab yes \tab yes \cr
-\code{bf_rhodes} \tab yes \tab yes \tab no \cr
+\tabular{lcccc}{
+Prior \tab brms \tab bayesmeta \tab MetaStan \tab RoBMA (brma) \cr
+\code{bf_normal} (\eqn{\mu}) \tab yes \tab yes \tab yes \tab yes \cr
+\code{bf_student_t} (\eqn{\mu}) \tab yes \tab no \tab no \tab yes \cr
+\code{bf_half_normal} \tab yes \tab yes \tab yes (mean 0) \tab yes \cr
+\code{bf_half_cauchy} \tab yes \tab yes \tab yes (location 0) \tab yes \cr
+\code{bf_half_t} \tab yes \tab yes \tab no \tab yes \cr
+\code{bf_exponential} \tab yes \tab yes \tab no \tab yes \cr
+\code{bf_lognormal}, \code{bf_turner} \tab yes \tab yes \tab no \tab yes \cr
+\code{bf_uniform} \tab yes \tab yes \tab yes \tab yes \cr
+\code{bf_rhodes} \tab yes \tab yes \tab no \tab no \cr
 }
-Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma, RoBMA or
-JAGS models.
+\code{bf_rhodes()}'s log-t prior has no RoBMA/BayesTools equivalent.
+Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma or JAGS
+models.
 }
 \examples{
 \dontrun{

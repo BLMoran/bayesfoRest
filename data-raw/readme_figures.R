@@ -1,4 +1,5 @@
-# Regenerates the figures in man/figures/ that README.Rmd displays.
+# Regenerates the figures in man/figures/ that README.Rmd and
+# vignettes/sensitivity-analysis.qmd display.
 # Run from the package root: source("data-raw/readme_figures.R")
 
 devtools::load_all()
@@ -66,7 +67,8 @@ forest <- function(...) do.call(bayes_forest, utils::modifyList(forest_args, lis
 
 fig(forest(), "forest_plot_binary.png")
 fig(forest(model = model_bin_ce, add_pred = FALSE), "forest_plot_common_effect.png")
-fig(forest(plot_output = "boxplot"), "forest_plot_boxplot.png")
+fig(forest(study_output = "boxplot"), "forest_plot_boxplot.png")
+fig(forest(study_output = "sq_whisker"), "forest_plot_classic.png")
 fig(forest(subgroup = TRUE, subgroupvar = quote(Subgroup)),
     "forest_plot_subgroup.png", height = 12)
 fig(forest(add_rob = TRUE, rob_tool = "rob2"),
@@ -127,3 +129,13 @@ fig(ecdf_model_plot(model_bin, binary_es, priors = priors["weakreg"],
 fig(ecdf_prior_plot(model_bin, binary_es, priors = priors, measure = "OR",
                     xlim = c(0.25, 1.5), add_null_range = TRUE),
     "ecdf_prior_plot.png", width = 10, height = 6)
+
+fig(forest_sens_plot(
+      model = model_bin, data = binary_es, measure = "OR",
+      studyvar = Author, yearvar = Year,
+      n_ctrl = N_Control, n_int = N_Intervention,
+      event_ctrl = Event_Control, event_int = Event_Intervention,
+      priors = priors, primary_prior = "weakreg",
+      study_output = "sq_whisker", pooled_output = "diamond", pred_output = "diamond",
+      xlim = c(0.1, 3.5)),
+    "forest_sens_plot.png", height = 11)

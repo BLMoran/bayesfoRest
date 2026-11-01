@@ -6,7 +6,13 @@ forest_table_left_fn <- function(forest.data.summary,
                                  label_control = "Control",
                                  label_intervention = "Intervention",
                                  measure = "OR",
+                                 pooled_labels = "Pooled Effect",
+                                 pred_labels = "Prediction",
+                                 header_labels = character(0),
+                                 spacer_labels = character(0),
                                  font = NULL) {
+
+  summary_labels <- c(pooled_labels, pred_labels)
 
   is_continuous <- measure %in% c("MD", "SMD")
 
@@ -39,13 +45,13 @@ forest_table_left_fn <- function(forest.data.summary,
     )
   )
 
-  # Replace NA values with blanks for 'Pooled Effect' and 'Prediction' rows
+  # Replace NA values with blanks for pooled/prediction/header rows
   if (is_continuous) {
     df <- df |> dplyr::mutate(
-      int_mean_sd  = dplyr::if_else(Author %in% c("Pooled Effect", "Prediction"), NA_character_, int_mean_sd),
-      ctrl_mean_sd = dplyr::if_else(Author %in% c("Pooled Effect", "Prediction"), NA_character_, ctrl_mean_sd),
-      N_int  = dplyr::if_else(Author == "Prediction" | N_int  == "NA", NA_character_, N_int),
-      N_ctrl = dplyr::if_else(Author == "Prediction" | N_ctrl == "NA", NA_character_, N_ctrl)
+      int_mean_sd  = dplyr::if_else(Author %in% c(summary_labels, header_labels), NA_character_, int_mean_sd),
+      ctrl_mean_sd = dplyr::if_else(Author %in% c(summary_labels, header_labels), NA_character_, ctrl_mean_sd),
+      N_int  = dplyr::if_else(Author %in% c(pred_labels, header_labels) | N_int  == "NA", NA_character_, N_int),
+      N_ctrl = dplyr::if_else(Author %in% c(pred_labels, header_labels) | N_ctrl == "NA", NA_character_, N_ctrl)
     )
   }
 
@@ -57,7 +63,13 @@ forest_table_left_fn <- function(forest.data.summary,
       gt::cols_align(align = "left") |>
       gt::tab_style(
         style = gt::cell_text(style = "italic", weight = "bold"),
-        locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Prediction")))
+        locations = gt::cells_body(rows = Author %in% summary_labels)) |>
+      gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_body(rows = Author %in% header_labels)) |>
+      gt::tab_style(
+        style = gt::cell_text(indent = gt::px(10)),
+        locations = gt::cells_body(rows = Author %in% summary_labels, columns = Author))
   } else {
     forest.table.left <- df |>
       gt::gt(groupname_col = "Subgroup") |>
@@ -109,13 +121,25 @@ forest_table_left_fn <- function(forest.data.summary,
     gt::opt_table_lines(extent = "none") |>
     gt::tab_style(
       style = gt::cell_fill(color = "grey95"),
-      locations = gt::cells_body(rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"))
+      locations = gt::cells_body(rows = Author %in% c(summary_labels, "Overall Effect", header_labels))
     )
 
-  if (measure %in% c("MD", "SMD")) {
+  if (length(spacer_labels) > 0) {
     forest.table.left <- forest.table.left |>
-      gt::sub_missing(columns = c(int_mean_sd, ctrl_mean_sd, N_int, N_ctrl), missing_text = "")
+      gt::tab_style(
+        style = gt::cell_borders(sides = "top", color = "black", weight = gt::px(1)),
+        locations = gt::cells_body(rows = Author %in% spacer_labels))
   }
+
+  # A fully-empty-string cell collapses that row's rendered height in gt, so
+  # blank out missing study-data columns with a single space instead.
+  data_cols <- if (measure %in% c("MD", "SMD")) {
+    c("int_mean_sd", "ctrl_mean_sd", "N_int", "N_ctrl")
+  } else {
+    c("int_outcome_frac", "control_outcome_frac")
+  }
+  forest.table.left <- forest.table.left |>
+    gt::sub_missing(columns = dplyr::any_of(data_cols), missing_text = " ")
 
   return(forest.table.left)
 }
@@ -138,9 +162,14 @@ forest_table_right_fn <- function(df,
                                   spec = NULL,
                                   effect_label = NULL,
                                   font = NULL,
-                                  effect_type = "random_effect") {
+                                  effect_type = "random_effect",
+                                  pooled_labels = "Pooled Effect",
+                                  pred_labels = "Prediction",
+                                  header_labels = character(0),
+                                  spacer_labels = character(0)) {
   if (isFALSE(add_rob)) rob_cols <- character()
   effect_cols <- if (effect_type == "common_effect") "unweighted_effect" else c("weighted_effect", "unweighted_effect")
+  summary_labels <- c(pooled_labels, pred_labels)
 
   if (isFALSE(subgroup)) {
     forest.table.right <- df |>
@@ -152,7 +181,10 @@ forest_table_right_fn <- function(df,
             style = "italic",
             weight = "bold")),
         locations = gt::cells_body(
-          rows = Author %in% c("Pooled Effect", "Prediction")))
+          rows = Author %in% summary_labels)) |>
+      gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_body(rows = Author %in% header_labels))
 
   } else if (isTRUE(subgroup)) {
     forest.table.right <- df |>
@@ -203,8 +235,15 @@ forest_table_right_fn <- function(df,
     gt::tab_style(
       style = gt::cell_fill(color = "grey95"),
       locations = gt::cells_body(
-        rows = Author %in% c("Pooled Effect", "Overall Effect", "Prediction"),
+        rows = Author %in% c(summary_labels, "Overall Effect", header_labels),
         columns = dplyr::all_of(effect_cols)))
+
+  if (length(spacer_labels) > 0) {
+    forest.table.right <- forest.table.right |>
+      gt::tab_style(
+        style = gt::cell_borders(sides = "top", color = "black", weight = gt::px(1)),
+        locations = gt::cells_body(rows = Author %in% spacer_labels))
+  }
 
   if (length(rob_cols) > 0) {
     text_cols <- get_rob_text_columns(rob_cols)
@@ -230,7 +269,7 @@ forest_table_right_fn <- function(df,
         style = "padding-right:2px;",
         locations = gt::cells_body(
           columns = unweighted_effect,
-          rows = Author %in% c("Pooled Effect", "Prediction")))
+          rows = Author %in% summary_labels))
   }
 
   forest.table.right |>

@@ -12,11 +12,15 @@
 #' @param effect_type "random_effect" or "common_effect".
 #' @param subgroup Logical.
 #' @param subgroup_order Subgroup ordering vector.
-#' @param plot_output "density" or "boxplot". Boxplots are horizontal: the box
-#'   spans the interquartile range, the line marks the median, and the whiskers
-#'   span the 95% interval.
+#' @param study_output "density", "boxplot", or "sq_whisker" for the
+#'   per-study rows. Boxplots and square-whiskers are horizontal: the
+#'   interval spans the 95% interval; boxplots also show the interquartile
+#'   range as a box.
+#' @param pooled_output "density", "boxplot", "sq_whisker", or "diamond" for
+#'   the Pooled/Overall Effect row(s) -- independent of `study_output`.
 #' @param shrinkage_output "density" or "pointinterval".
-#' @param pred_output "density", "pointinterval", or "boxplot".
+#' @param pred_output "density", "pointinterval", "boxplot", "sq_whisker", or
+#'   "diamond".
 #' @param ... Additional colour and layout arguments.
 #'
 #' @noRd
@@ -41,11 +45,14 @@ study.density.plot_fn  <- function(df,
                                    label_intervention = "Intervention",
                                    add_arm_labels = TRUE,
                                    reverse_arm_labels = FALSE,
-                                   plot_output = "density",
+                                   study_output = "density",
+                                   pooled_output = "density",
+                                   pooled_labels = "Pooled Effect",
                                    shrinkage_output = "density",
                                    add_pred = FALSE,
                                    add_pred_subgroup = FALSE,
                                    pred_output = "density",
+                                   pred_labels = "Prediction",
                                    color_pred_posterior = "orange",
                                    color_pred_outline = "darkorange2",
                                    color_pred_pointinterval = "orange",
@@ -56,7 +63,10 @@ study.density.plot_fn  <- function(df,
                                    add_rope = FALSE,
                                    rope_value = NULL,
                                    rope_color = "grey50",
+                                   section_break_labels = character(0),
                                    font = NULL){
+
+  box_styles <- c("boxplot", "sq_whisker", "diamond")
 
   # Filter out "No Pooled Effect" rows at the beginning
   df <- df |> dplyr::filter(Author != "No Pooled Effect")
@@ -160,47 +170,80 @@ study.density.plot_fn  <- function(df,
         xdist = distributional::dist_normal(mean = yi, sd = sqrt(vi)))
   }
 
-  box_layers <- if (plot_output == "boxplot") {
+  # ---- Box-style glyph layer builder (boxplot / sq_whisker / diamond) -------
+  # Shared by study and pooled rows: expects a box_df with Author, xmin,
+  # xlower, xmiddle, xupper, xmax, and either a constant `.fill` colour column
+  # or (when split_color_by_null) an `.above_null` logical column. Each row's
+  # gridline sits at its baseline (matching where density slabs start), so
+  # every style is nudged up by half a row to sit centred between gridlines.
+  box_glyph_layer <- function(box_df, style, outline_color, width = 0.35) {
+    mapping <- if (isTRUE(split_color_by_null)) {
+      ggplot2::aes(y = Author, x = xmiddle, xmin = xmin, xlower = xlower,
+                   xmiddle = xmiddle, xupper = xupper, xmax = xmax, fill = .above_null)
+    } else {
+      ggplot2::aes(y = Author, x = xmiddle, xmin = xmin, xlower = xlower,
+                   xmiddle = xmiddle, xupper = xupper, xmax = xmax, fill = .fill)
+    }
+    position <- ggplot2::position_nudge(y = 0.5)
+    switch(style,
+      boxplot = ggplot2::geom_boxplot(
+        mapping, data = box_df, stat = "identity", orientation = "y", width = width,
+        position = position, alpha = 0.7,
+        colour = outline_color, linewidth = 0.5, inherit.aes = FALSE),
+      sq_whisker = ggplot2::geom_pointrange(
+        utils::modifyList(mapping, ggplot2::aes(colour = ggplot2::after_scale(fill))),
+        data = box_df, orientation = "y",
+        position = position, shape = 22, size = 0.7,
+        linewidth = 0.8, inherit.aes = FALSE),
+      diamond = geom_forest_diamond(
+        mapping, data = box_df, height = width * 0.7,
+        position = position,
+        colour = outline_color, linewidth = 0.5, inherit.aes = FALSE))
+  }
+
+  # ---- Study-row box_df (boxplot / sq_whisker) -------------------------------
+  study_box_layer <- if (study_output %in% box_styles) {
+    study_box_df <- study.effects |>
+      dplyr::filter(!is.na(yi), !is.na(vi)) |>
+      box_stats_normal() |>
+      box_stats_scale(log_scale = isTRUE(props$log_scale), xlim = calc_xlim) |>
+      dplyr::mutate(
+        .fill = color_study_posterior,
+        .above_null = xmiddle > null_value)
+    box_glyph_layer(study_box_df, study_output, color_study_posterior_outline)
+  }
+
+  # ---- Pooled-row box_df (boxplot / sq_whisker / diamond) --------------------
+  pooled_box_layer <- if (pooled_output %in% box_styles) {
     pooled_rows <- if (isTRUE(subgroup)) {
       posterior.draws |> dplyr::filter(Author_pooled %in% c("Pooled Effect", "Overall Effect"))
     } else {
-      posterior.draws |> dplyr::filter(Author == "Pooled Effect")
+      posterior.draws |> dplyr::filter(Author %in% pooled_labels)
     }
-    box_df <- dplyr::bind_rows(
-      study.effects |>
-        dplyr::filter(!is.na(yi), !is.na(vi)) |>
-        box_stats_normal() |>
-        dplyr::mutate(.fill = color_study_posterior),
-      pooled_rows |>
-        box_stats_draws(overall = if (isTRUE(subgroup)) Author_pooled == "Overall Effect" else FALSE) |>
-        dplyr::mutate(.fill = dplyr::if_else(.overall, color_overall_posterior, color_pooled_posterior)) |>
-        dplyr::select(-.overall)) |>
+    pooled_box_df <- pooled_rows |>
+      box_stats_draws(overall = if (isTRUE(subgroup)) Author_pooled == "Overall Effect" else FALSE) |>
       box_stats_scale(log_scale = isTRUE(props$log_scale), xlim = calc_xlim) |>
-      dplyr::mutate(.above_null = xmiddle > null_value)
-
-    if (isTRUE(split_color_by_null)) {
-      ggplot2::geom_boxplot(
-        ggplot2::aes(y = Author, xmin = xmin, xlower = xlower, xmiddle = xmiddle,
-                     xupper = xupper, xmax = xmax, fill = .above_null),
-        data = box_df, stat = "identity", orientation = "y", width = 0.35,
-        position = ggplot2::position_nudge(y = 0.3), alpha = 0.7,
-        colour = color_study_posterior_outline, linewidth = 0.5, inherit.aes = FALSE)
-    } else {
-      list(
-        ggplot2::geom_boxplot(
-          ggplot2::aes(y = Author, xmin = xmin, xlower = xlower, xmiddle = xmiddle,
-                       xupper = xupper, xmax = xmax, fill = .fill),
-          data = box_df, stat = "identity", orientation = "y", width = 0.35,
-          position = ggplot2::position_nudge(y = 0.3), alpha = 0.7,
-          colour = color_study_posterior_outline, linewidth = 0.5, inherit.aes = FALSE),
-        ggplot2::scale_fill_identity())
-    }
+      dplyr::mutate(
+        .fill = dplyr::if_else(.overall, color_overall_posterior, color_pooled_posterior),
+        .above_null = xmiddle > null_value) |>
+      dplyr::select(-.overall)
+    box_glyph_layer(pooled_box_df, pooled_output, color_study_posterior_outline)
   }
 
-  # Density slabs extend each row's range to n + 0.9; match it for boxplots
-  # so rows line up with the tables
-  box_ylim <- if (plot_output == "boxplot") {
+  # Density slabs extend each row's range to n + 0.9; match it when neither
+  # study nor pooled rows use a density slab, so rows line up with the tables.
+  box_ylim <- if (study_output != "density" && pooled_output != "density") {
     c(1, dplyr::n_distinct(posterior.draws$Author) + 0.9)
+  }
+
+  pooled_ref_lines <- if (isTRUE(props$log_scale)) {
+    list(
+      ggplot2::geom_vline(xintercept = exp(pooled_effect["estimate"]), color = "grey60", linewidth = 1),
+      ggplot2::geom_vline(xintercept = exp(pooled_effect[c("lower", "upper")]), color = "grey60", linetype = 2))
+  } else {
+    list(
+      ggplot2::geom_vline(xintercept = pooled_effect["estimate"], color = "grey60", linewidth = 1),
+      ggplot2::geom_vline(xintercept = pooled_effect[c("lower", "upper")], color = "grey60", linetype = 2))
   }
 
   study.density.plot <-
@@ -213,7 +256,9 @@ study.density.plot_fn  <- function(df,
                         fill = scales::alpha(rope_color, 0.3),
                         color = NA)
     }} +
-    {if (plot_output != "density") NULL else if (isTRUE(split_color_by_null)) {
+    # Median/CrI reference lines next, so every glyph layer draws on top of them
+    pooled_ref_lines +
+    {if (study_output != "density") NULL else if (isTRUE(split_color_by_null)) {
       list(
         ggdist::stat_slab(
           ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
@@ -226,7 +271,7 @@ study.density.plot_fn  <- function(df,
         data = study.effects, colour = color_study_posterior_outline,
         fill = color_study_posterior)
     }} +
-    {if (plot_output != "density") NULL else if (isTRUE(split_color_by_null)) {
+    {if (pooled_output != "density") NULL else if (isTRUE(split_color_by_null)) {
       list(
         ggdist::stat_slab(
           ggplot2::aes(
@@ -235,7 +280,7 @@ study.density.plot_fn  <- function(df,
             dplyr::filter(if (isTRUE(subgroup)) {
               Author_pooled == "Pooled Effect"
             } else {
-              Author == "Pooled Effect"
+              Author %in% pooled_labels
             }),
           height = 0.9, normalize = "groups", colour = color_study_posterior_outline,
           limits = calc_xlim))
@@ -246,13 +291,13 @@ study.density.plot_fn  <- function(df,
           dplyr::filter(if (isTRUE(subgroup)) {
             Author_pooled == "Pooled Effect"
           } else {
-            Author == "Pooled Effect"
+            Author %in% pooled_labels
           }),
         fill = color_pooled_posterior, height = 0.9, normalize = "groups",
         limits = calc_xlim)
     }} +
     # Add overall effect slab when subgroup = TRUE
-    {if (isTRUE(subgroup) && plot_output == "density") {
+    {if (isTRUE(subgroup) && pooled_output == "density") {
       if (isTRUE(split_color_by_null)) {
         list(
           ggdist::stat_slab(
@@ -267,13 +312,16 @@ study.density.plot_fn  <- function(df,
           fill = color_overall_posterior, height = 0.9, normalize = "groups")
       }
     }} +
-    {if (plot_output == "boxplot") box_layers} +
+    study_box_layer +
+    pooled_box_layer +
     {if (isTRUE(split_color_by_null)) {
       ggplot2::scale_fill_manual(
         values = c(
           "FALSE" = color_favours_intervention,
           "TRUE"  = color_favours_control),
         guide = "none")
+    } else if (study_output %in% box_styles || pooled_output %in% box_styles) {
+      ggplot2::scale_fill_identity()
     }} +
     # Add null value
     ggplot2::geom_vline(xintercept = null_value, color = "black", linewidth = 1) +
@@ -312,23 +360,37 @@ study.density.plot_fn  <- function(df,
     }} +
     ggplot2::labs(x = x_label %||% props$x_label) +
     ggplot2::ylab(NULL) +
-    ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75)
+    ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75) +
+    {if (length(section_break_labels) > 0) {
+      # scale_y_discrete(limits = rev) reverses level order -> screen position,
+      # so a level's y-coordinate (its row's baseline gridline) is
+      # (n_levels - level_index + 1); the row's upper border -- where the
+      # boundary line belongs -- is a full row above that. Row glyphs are
+      # nudged to the row's centre (baseline + 0.5), so the +1.5 offset used
+      # here previously put the line through the glyph instead of above it.
+      author_levels_all <- levels(posterior.draws$Author)
+      level_index <- match(section_break_labels, author_levels_all)
+      break_positions <- length(author_levels_all) - level_index + 2
+      purrr::map(break_positions[!is.na(break_positions)], ~ {
+        ggplot2::geom_hline(yintercept = .x, color = "black", linewidth = 0.4)
+      })
+    }}
 
-  # Pooled effect reference lines
   if (isTRUE(props$log_scale)){
     study.density.plot <- study.density.plot +
-      ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
-      ggplot2::geom_vline(xintercept = exp(pooled_effect["estimate"]), color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = exp(pooled_effect[c("lower", "upper")]), color = "grey60", linetype = 2)
+      ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0), limits = calc_xlim)
   } else {
     study.density.plot <- study.density.plot +
-      ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0), limits = calc_xlim) +
-      ggplot2::geom_vline(xintercept = pooled_effect["estimate"], color = "grey60", linewidth = 1) +
-      ggplot2::geom_vline(xintercept = pooled_effect[c("lower", "upper")], color = "grey60", linetype = 2)
+      ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0), limits = calc_xlim)
   }
 
   if(isFALSE(subgroup)){
-    study.density.plot <- study.density.plot + ggplot2::scale_y_discrete(expand = c(0, 0), limits = rev)
+    # Explicit reversed levels, not the `rev` function: layers pass their own
+    # subsetted `data=`, so the scale's dynamically-trained break order can
+    # drift from the factor's declared level order once there's more than one
+    # synthetic (non-study) row -- pinning it down avoids that drift.
+    study.density.plot <- study.density.plot +
+      ggplot2::scale_y_discrete(expand = c(0, 0), limits = rev(levels(posterior.draws$Author)))
   } else if (isTRUE(subgroup)){
     # Fix the rows explicitly so empty subgroup header rows are kept
     study.density.plot <- study.density.plot +
@@ -344,7 +406,7 @@ study.density.plot_fn  <- function(df,
         ggdist::stat_slab(
           ggplot2::aes(x = x_studies, y = Author),
           data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
-                                                  else {Author != "Pooled Effect" & Author != "Prediction"}),
+                                                  else {!Author %in% c(pooled_labels, pred_labels)}),
           linewidth = 0.5, scale = 0.6, normalize = "groups",
           color = color_shrinkage_outline, fill = color_shrinkage_fill, limits = calc_xlim)
     } else if (shrinkage_output == "pointinterval") {
@@ -352,19 +414,19 @@ study.density.plot_fn  <- function(df,
         ggdist::stat_pointinterval(
           ggplot2::aes(x = x_studies, y = Author),
           data = posterior.draws |> dplyr::filter(if (isTRUE(subgroup)) {Author_pooled != "Pooled Effect" & Author_pooled != "Overall Effect" & Author_pooled != "Prediction"}
-                                                  else {Author != "Pooled Effect" & Author != "Prediction"}),
+                                                  else {!Author %in% c(pooled_labels, pred_labels)}),
           linewidth = 1, size = 1, color = color_shrinkage_pointinterval, limits = calc_xlim)
     }
   }
   # For common-effects: no shrinkage layer at all (tau omitted entirely)
 
   # Prediction layer — only when add_pred = TRUE and prediction draws exist
-  if (isTRUE(add_pred)) {
+  if (isTRUE(add_pred) || !identical(pred_labels, "Prediction")) {
     pred_data <- posterior.draws |>
       dplyr::filter(if (isTRUE(subgroup)) {
         Author_pooled == "Prediction"
       } else {
-        Author == "Prediction"
+        Author %in% pred_labels
       })
 
     if (nrow(pred_data) > 0) {
@@ -382,19 +444,31 @@ study.density.plot_fn  <- function(df,
             ggplot2::aes(x = x_studies, y = Author),
             data = pred_data,
             linewidth = 1, size = 1, color = color_pred_pointinterval, limits = calc_xlim)
-      } else if (pred_output == "boxplot") {
+      } else if (pred_output %in% box_styles) {
         pred_box_df <- pred_data |>
           box_stats_draws() |>
           box_stats_scale(log_scale = isTRUE(props$log_scale), xlim = calc_xlim)
 
+        mapping <- ggplot2::aes(y = Author, x = xmiddle, xmin = xmin, xlower = xlower,
+                                xmiddle = xmiddle, xupper = xupper, xmax = xmax)
+        pred_position <- ggplot2::position_nudge(y = 0.5)
         study.density.plot <- study.density.plot +
-          ggplot2::geom_boxplot(
-            ggplot2::aes(y = Author, xmin = xmin, xlower = xlower, xmiddle = xmiddle,
-                         xupper = xupper, xmax = xmax),
-            data = pred_box_df, stat = "identity", orientation = "y", width = 0.35,
-            position = ggplot2::position_nudge(y = 0.3), alpha = 0.7,
-            fill = color_pred_posterior, colour = color_pred_outline, linewidth = 0.5,
-            inherit.aes = FALSE)
+          switch(pred_output,
+            boxplot = ggplot2::geom_boxplot(
+              mapping, data = pred_box_df, stat = "identity", orientation = "y", width = 0.35,
+              position = pred_position, alpha = 0.7,
+              fill = color_pred_posterior, colour = color_pred_outline, linewidth = 0.5,
+              inherit.aes = FALSE),
+            sq_whisker = ggplot2::geom_pointrange(
+              mapping, data = pred_box_df, orientation = "y",
+              position = pred_position, shape = 22, size = 0.7,
+              fill = color_pred_posterior, colour = color_pred_posterior, linewidth = 0.8,
+              inherit.aes = FALSE),
+            diamond = geom_forest_diamond(
+              mapping, data = pred_box_df, height = 0.35 * 0.7,
+              position = pred_position,
+              fill = color_pred_posterior, colour = color_pred_outline, linewidth = 0.5,
+              inherit.aes = FALSE))
       }
     }
   }
@@ -451,4 +525,50 @@ box_stats_scale <- function(box_df, log_scale = FALSE, xlim) {
     dplyr::mutate(dplyr::across(
       dplyr::all_of(box_cols),
       \(x) pmin(pmax(if (log_scale) exp(x) else x, xlim[1]), xlim[2])))
+}
+
+
+# ---- Diamond geom (classic meta-analysis pooled-effect glyph) ---------------
+# ggproto-based custom geom so discrete y positions (e.g. the Author factor)
+# resolve through ggplot2's normal scale pipeline before draw_panel() runs,
+# rather than needing to be computed by hand.
+
+#' @noRd
+GeomForestDiamond <- ggplot2::ggproto("GeomForestDiamond", ggplot2::Geom,
+  required_aes = c("x", "xmin", "xmax", "y"),
+  default_aes = ggplot2::aes(
+    colour = "black", fill = "grey20", linewidth = 0.5, linetype = 1,
+    height = 0.35, alpha = NA),
+  draw_key = ggplot2::draw_key_polygon,
+  setup_data = function(data, params) {
+    data$height <- data$height %||% params$height %||% 0.35
+    data
+  },
+  draw_panel = function(data, panel_params, coord, lineend = "butt") {
+    vertices <- purrr::map_dfr(seq_len(nrow(data)), function(i) {
+      row <- data[i, ]
+      tibble::tibble(
+        x = c(row$xmin, row$x, row$xmax, row$x),
+        y = c(row$y, row$y + row$height, row$y, row$y - row$height),
+        group = i,
+        colour = row$colour, fill = row$fill, linewidth = row$linewidth,
+        linetype = row$linetype, alpha = row$alpha)
+    })
+    ggplot2::GeomPolygon$draw_panel(vertices, panel_params, coord, lineend = lineend)
+  }
+)
+
+#' Meta-analysis diamond glyph
+#'
+#' A horizontal diamond spanning `xmin` to `xmax`, pointed at `x`, placed at
+#' `y`. Used for pooled-effect and prediction rows in [bayes_forest()].
+#'
+#' @noRd
+geom_forest_diamond <- function(mapping = NULL, data = NULL, stat = "identity",
+                                position = "identity", ..., na.rm = FALSE,
+                                show.legend = NA, inherit.aes = TRUE) {
+  ggplot2::layer(
+    data = data, mapping = mapping, stat = stat, geom = GeomForestDiamond,
+    position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+    params = rlang::list2(na.rm = na.rm, ...))
 }
