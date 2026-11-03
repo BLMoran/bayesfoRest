@@ -71,6 +71,7 @@ integrates RoBMA for bias-adjusted sensitivity analyses.</p>
 <span>  incl_selection_weight <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  incl_pet_peese <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  incl_robma <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  incl_robma_bma <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  robma_fit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  add_probs <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -161,8 +162,16 @@ Requires <code>robma_fit</code>.</p></dd>
 
 
 <dt id="arg-incl-robma">incl_robma<a class="anchor" aria-label="anchor" href="#arg-incl-robma"></a></dt>
-<dd><p>Logical. Include full RoBMA sensitivity rows (conditional
-and model-averaged). Default FALSE. Requires <code>robma_fit</code>.</p></dd>
+<dd><p>Logical. Include the RoBMA conditional row (the pooled
+effect given that an effect exists). Default FALSE. Requires
+<code>robma_fit</code>.</p></dd>
+
+
+<dt id="arg-incl-robma-bma">incl_robma_bma<a class="anchor" aria-label="anchor" href="#arg-incl-robma-bma"></a></dt>
+<dd><p>Logical. Include the RoBMA model-averaged row
+(averaged across all models, including null-effect ones – can show a
+point mass at the null). Independent of <code>incl_robma</code>. Default
+FALSE. Requires <code>robma_fit</code>.</p></dd>
 
 
 <dt id="arg-robma-fit">robma_fit<a class="anchor" aria-label="anchor" href="#arg-robma-fit"></a></dt>

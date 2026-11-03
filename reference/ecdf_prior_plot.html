@@ -135,10 +135,11 @@ needed only if the chosen <code>section_to_plot</code> requires them.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional section toggles (e.g. <code>exclude_high_rob</code>,
-<code>incl_pet_peese</code>, <code>incl_selection_weight</code>, <code>incl_robma</code>)
-passed on to <code>.build_ecdf_draws()</code>. Set the one corresponding to
-<code>section_to_plot</code> (other than "All studies") to TRUE so those draws
-are built.</p></dd>
+<code>incl_pet_peese</code>, <code>incl_selection_weight</code>, <code>incl_robma</code>,
+<code>incl_robma_bma</code>) passed on to <code>.build_ecdf_draws()</code>. Set the
+one corresponding to <code>section_to_plot</code> (other than "All studies")
+to TRUE so those draws are built. <code>incl_robma</code> and
+<code>incl_robma_bma</code> are independent (conditional vs. model-averaged).</p></dd>
 
 </dl></div>
     <div class="section level2">

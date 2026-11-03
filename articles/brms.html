@@ -132,14 +132,14 @@
 <span>  model <span class="op">=</span> <span class="va">model_re</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -165,8 +165,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_re</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  yi_col <span class="op">=</span> <span class="st">"yi"</span>,</span>
 <span>  sei_col <span class="op">=</span> <span class="st">"sei"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -228,7 +228,7 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<p>See <code><a href="../articles/sensitivity-analysis.html">vignette("sensitivity-analysis")</a></code> for publication-bias-adjusted sensitivity sections built from a RoBMA fit (<code>incl_robma</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>).</p>
+<p>See <code><a href="../articles/sensitivity-analysis.html">vignette("sensitivity-analysis")</a></code> for publication-bias-adjusted sensitivity sections built from a RoBMA fit (<code>incl_robma</code>, <code>incl_robma_bma</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>).</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
@@ -238,7 +238,8 @@
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -247,8 +248,69 @@
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -262,6 +324,7 @@
         interactiveBorder: 10,
         theme: 'light-border',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;

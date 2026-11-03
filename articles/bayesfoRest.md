@@ -48,8 +48,8 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
@@ -74,7 +74,7 @@ outcomes, use `time_ctrl` and `time_int`.
   square-whisker markers instead of densities for per-study rows.
 - `pooled_output = "diamond"`: a classic meta-analysis diamond for the
   Pooled/Overall Effect row(s), independent of `study_output`.
-- `subgroup = TRUE, subgroupvar = Subgroup`: one panel per subgroup.
+- `subgroup = TRUE, subgroup_var = Subgroup`: one panel per subgroup.
 - `re_min_k`: show a common-effect model when an analysis or subgroup
   has fewer than this many studies, because tau is poorly identified
   with so few.

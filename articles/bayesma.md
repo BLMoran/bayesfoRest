@@ -27,8 +27,8 @@ model_bayesma <- bayesma(
   data = cont_outcome,
   measure = "MD",
   model_type = "random_effect",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   mean_ctrl = Mean_Control,
   mean_int = Mean_Intervention,
   sd_ctrl = SD_Control,
@@ -52,8 +52,8 @@ bayes_forest(
   model = model_bayesma,
   data = cont_outcome,
   measure = "MD",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   mean_ctrl = Mean_Control,
   mean_int = Mean_Intervention,
   sd_ctrl = SD_Control,
@@ -68,7 +68,7 @@ bayes_forest(
 
 ## Subgroup analysis
 
-`subgroup = TRUE, subgroupvar = Subgroup` refits bayesma per subgroup
+`subgroup = TRUE, subgroup_var = Subgroup` refits bayesma per subgroup
 automatically, the same way it does for brms, bayesmeta, MetaStan, and
 RoBMA.
 

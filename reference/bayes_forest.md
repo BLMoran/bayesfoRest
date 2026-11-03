@@ -12,8 +12,8 @@ bayes_forest(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   n_ctrl = NULL,
   n_int = NULL,
   event_ctrl = NULL,
@@ -28,7 +28,7 @@ bayes_forest(
   model_type = c("random_effect", "common_effect"),
   re_min_k = NULL,
   subgroup = FALSE,
-  subgroupvar = NULL,
+  subgroup_var = NULL,
   sort_subgroup_by = "alphabetical",
   label_outcome = "Outcome",
   label_control = "Control",
@@ -96,11 +96,11 @@ bayes_forest(
   Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean
   Difference).
 
-- studyvar:
+- study_var:
 
   Column name containing study identifiers/authors.
 
-- yearvar:
+- year_var:
 
   Column name containing publication years. Default is NULL.
 
@@ -172,7 +172,7 @@ bayes_forest(
   Logical indicating whether to create subgroup analysis. Default is
   FALSE.
 
-- subgroupvar:
+- subgroup_var:
 
   Column name in `data` to use for subgroup analysis.
 

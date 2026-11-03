@@ -10,9 +10,8 @@ single prior. Colour represents the model strategy/section.
 ecdf_model_plot(
   model,
   data,
-  priors,
+  prior,
   measure,
-  prior_to_plot = NULL,
   study_var = NULL,
   rob_var = NULL,
   exclude_high_rob = FALSE,
@@ -21,6 +20,7 @@ ecdf_model_plot(
   incl_pet_peese = FALSE,
   incl_selection_weight = FALSE,
   incl_robma = FALSE,
+  incl_robma_bma = FALSE,
   robma_fit = NULL,
   pet_peese_direction = "negative",
   pet_peese_threshold = 0.1,
@@ -52,32 +52,33 @@ ecdf_model_plot(
 
   Study-level data used to fit `model`.
 
-- priors:
+- prior:
 
-  Named list of prior specs; each element a list with `name`,
-  `mu_prior`, `tau_prior`.
+  A single prior spec: a list with `name`, `mu_prior`, and optionally
+  `tau_prior`. To compare across multiple priors instead of model
+  strategies, use
+  [`ecdf_prior_plot`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md).
 
 - measure:
 
   Effect measure ("OR","RR","HR","IRR","MD","SMD").
-
-- prior_to_plot:
-
-  Name (in `priors`) of the prior to display. Defaults to the first
-  prior.
 
 - study_var, rob_var:
 
   Optional unquoted column names (study id / RoB).
 
 - exclude_high_rob, incl_common_effect, incl_random_effect,
-  incl_pet_peese, incl_selection_weight, incl_robma:
+  incl_pet_peese, incl_selection_weight, incl_robma, incl_robma_bma:
 
-  Logical section toggles.
+  Logical section toggles. `incl_robma` adds the RoBMA conditional row
+  (pooled effect given an effect exists); `incl_robma_bma` adds the
+  model-averaged row (can show a point mass at the null) – the two are
+  independent.
 
 - robma_fit:
 
-  A fitted RoBMA object (required if `incl_robma`).
+  A single fitted RoBMA object for this prior (required if `incl_robma`,
+  `incl_robma_bma`, `incl_pet_peese`, or `incl_selection_weight`).
 
 - pet_peese_direction, pet_peese_threshold:
 

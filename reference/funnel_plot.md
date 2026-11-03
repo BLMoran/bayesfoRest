@@ -17,8 +17,8 @@ funnel_plot(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   yi_col = NULL,
   sei_col = NULL,
   n_ctrl = NULL,
@@ -32,7 +32,7 @@ funnel_plot(
   time_ctrl = NULL,
   time_int = NULL,
   subgroup = FALSE,
-  subgroupvar = NULL,
+  subgroup_var = NULL,
   contour_lines = TRUE,
   contour_alpha = 0.15,
   pooled_line = c("posterior", "fixed", "none"),
@@ -75,11 +75,11 @@ funnel_plot(
   Character; effect measure. One of `"OR"`, `"RR"`, `"HR"`, `"IRR"`,
   `"MD"`, `"SMD"`.
 
-- studyvar:
+- study_var:
 
   Unquoted column with study identifiers.
 
-- yearvar:
+- year_var:
 
   Unquoted column with study year (optional, used in labels).
 
@@ -99,7 +99,7 @@ funnel_plot(
 
   Logical; colour points by subgroup.
 
-- subgroupvar:
+- subgroup_var:
 
   Unquoted subgroup column (when `subgroup = TRUE`).
 

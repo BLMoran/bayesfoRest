@@ -23,6 +23,7 @@ sensitivity_plot(
   incl_selection_weight = FALSE,
   incl_pet_peese = FALSE,
   incl_robma = FALSE,
+  incl_robma_bma = FALSE,
   robma_fit = NULL,
   seed = TRUE,
   add_probs = FALSE,
@@ -111,8 +112,15 @@ sensitivity_plot(
 
 - incl_robma:
 
-  Logical. Include full RoBMA sensitivity rows (conditional and
-  model-averaged). Default FALSE. Requires `robma_fit`.
+  Logical. Include the RoBMA conditional row (the pooled effect given
+  that an effect exists). Default FALSE. Requires `robma_fit`.
+
+- incl_robma_bma:
+
+  Logical. Include the RoBMA model-averaged row (averaged across all
+  models, including null-effect ones – can show a point mass at the
+  null). Independent of `incl_robma`. Default FALSE. Requires
+  `robma_fit`.
 
 - robma_fit:
 

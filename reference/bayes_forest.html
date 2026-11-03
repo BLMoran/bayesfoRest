@@ -58,8 +58,8 @@ random-effect models.</p>
 <span>  <span class="va">model</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">measure</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -74,7 +74,7 @@ random-effect models.</p>
 <span>  model_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"random_effect"</span>, <span class="st">"common_effect"</span><span class="op">)</span>,</span>
 <span>  re_min_k <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sort_subgroup_by <span class="op">=</span> <span class="st">"alphabetical"</span>,</span>
 <span>  label_outcome <span class="op">=</span> <span class="st">"Outcome"</span>,</span>
 <span>  label_control <span class="op">=</span> <span class="st">"Control"</span>,</span>
@@ -143,11 +143,11 @@ random-effect models.</p>
 "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).</p></dd>
 
 
-<dt id="arg-studyvar">studyvar<a class="anchor" aria-label="anchor" href="#arg-studyvar"></a></dt>
+<dt id="arg-study-var">study_var<a class="anchor" aria-label="anchor" href="#arg-study-var"></a></dt>
 <dd><p>Column name containing study identifiers/authors.</p></dd>
 
 
-<dt id="arg-yearvar">yearvar<a class="anchor" aria-label="anchor" href="#arg-yearvar"></a></dt>
+<dt id="arg-year-var">year_var<a class="anchor" aria-label="anchor" href="#arg-year-var"></a></dt>
 <dd><p>Column name containing publication years. Default is NULL.</p></dd>
 
 
@@ -217,7 +217,7 @@ keep <code>re_min_k = NULL</code> and fit the model with an informative prior on
 <dd><p>Logical indicating whether to create subgroup analysis. Default is FALSE.</p></dd>
 
 
-<dt id="arg-subgroupvar">subgroupvar<a class="anchor" aria-label="anchor" href="#arg-subgroupvar"></a></dt>
+<dt id="arg-subgroup-var">subgroup_var<a class="anchor" aria-label="anchor" href="#arg-subgroup-var"></a></dt>
 <dd><p>Column name in <code>data</code> to use for subgroup analysis.</p></dd>
 
 

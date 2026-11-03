@@ -113,8 +113,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_robma</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">cont_outcome</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"SMD"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  mean_ctrl <span class="op">=</span> <span class="va">Mean_Control</span>,</span>
 <span>  mean_int <span class="op">=</span> <span class="va">Mean_Intervention</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="va">SD_Control</span>,</span>
@@ -128,7 +128,7 @@
 <img src="../reference/figures/robma_forest.png"></p>
 </section><section class="level2"><h2 id="subgroup-analysis-and-funnel-plots">Subgroup analysis and funnel plots<a class="anchor" aria-label="anchor" href="#subgroup-analysis-and-funnel-plots"></a>
 </h2>
-<p>Subgroup refits work the same way as brms: <code>subgroup = TRUE, subgroupvar = Subgroup</code> refits RoBMA per subgroup automatically. <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code> also works directly with a RoBMA model.</p>
+<p>Subgroup refits work the same way as brms: <code>subgroup = TRUE, subgroup_var = Subgroup</code> refits RoBMA per subgroup automatically. <code><a href="../reference/funnel_plot.html">funnel_plot()</a></code> also works directly with a RoBMA model.</p>
 </section><section class="level2"><h2 id="prior-sensitivity-two-different-roles-for-robma">Prior sensitivity – two different roles for RoBMA<a class="anchor" aria-label="anchor" href="#prior-sensitivity-two-different-roles-for-robma"></a>
 </h2>
 <p><code>model_robma</code> here is a <code>brma</code> fit (<code><a href="https://fbartos.github.io/RoBMA/reference/brma.html" class="external-link">RoBMA::brma()</a></code>, a single model with <code>prior_effect</code>/<code>prior_heterogeneity</code>), not a <code><a href="https://fbartos.github.io/RoBMA/reference/RoBMA.html" class="external-link">RoBMA::RoBMA()</a></code> model-averaged ensemble, and it can be used as the primary <code>model</code> in <code><a href="../reference/forest_sens_plot.html">forest_sens_plot()</a></code>, <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>, <code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code>, and <code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> – each <code>bf_*()</code> prior in your <code>priors</code> list is translated to a <code><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">RoBMA::prior()</a></code> object and the model is refit under it, the same way brms, bayesmeta, and MetaStan do. <code><a href="../reference/bf_turner.html">bf_rhodes()</a></code>’s log-t prior has no RoBMA/BayesTools equivalent and is the one family it can’t fit exactly; see <code><a href="../reference/bf_priors.html">?bf_priors</a></code> for the full support table.</p>
@@ -151,6 +151,7 @@
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
 <span>  robma_fit <span class="op">=</span> <span class="va">model_robma</span>,</span>
 <span>  incl_robma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_robma_bma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  incl_pet_peese <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  incl_selection_weight <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -165,7 +166,8 @@
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -174,8 +176,69 @@
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -189,6 +252,7 @@
         interactiveBorder: 10,
         theme: 'light-border',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;

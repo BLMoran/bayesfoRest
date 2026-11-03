@@ -91,8 +91,8 @@
 <span>  data <span class="op">=</span> <span class="va">cont_outcome</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"MD"</span>,</span>
 <span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  mean_ctrl <span class="op">=</span> <span class="va">Mean_Control</span>,</span>
 <span>  mean_int <span class="op">=</span> <span class="va">Mean_Intervention</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="va">SD_Control</span>,</span>
@@ -109,8 +109,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_bayesma</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">cont_outcome</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"MD"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  mean_ctrl <span class="op">=</span> <span class="va">Mean_Control</span>,</span>
 <span>  mean_int <span class="op">=</span> <span class="va">Mean_Intervention</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="va">SD_Control</span>,</span>
@@ -124,7 +124,7 @@
 <img src="../reference/figures/bayesma_forest.png"></p>
 </section><section class="level2"><h2 id="subgroup-analysis">Subgroup analysis<a class="anchor" aria-label="anchor" href="#subgroup-analysis"></a>
 </h2>
-<p><code>subgroup = TRUE, subgroupvar = Subgroup</code> refits bayesma per subgroup automatically, the same way it does for brms, bayesmeta, MetaStan, and RoBMA.</p>
+<p><code>subgroup = TRUE, subgroup_var = Subgroup</code> refits bayesma per subgroup automatically, the same way it does for brms, bayesmeta, MetaStan, and RoBMA.</p>
 </section><section class="level2"><h2 id="no-bf_-prior-sensitivity-refit">No <code>bf_*()</code> prior-sensitivity refit<a class="anchor" aria-label="anchor" href="#no-bf_-prior-sensitivity-refit"></a>
 </h2>
 <p>bayesma doesn’t have a <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>/<code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> refit method – its priors are plain Stan expression strings rather than the single-distribution <code>bf_*()</code> objects those functions refit under, so passing a bayesma model as the base <code>model</code> there will error. If you want prior or model-type sensitivity for a bayesma analysis, compare fits directly: refit <code>bayesma()</code> under each prior/<code>model_type</code> you want to compare and build the comparison yourself, or fit your primary model with one of the other backends and use bayesma for its publication-bias-adjustment model types specifically.</p>
@@ -137,7 +137,8 @@
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -146,8 +147,69 @@
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -161,6 +223,7 @@
         interactiveBorder: 10,
         theme: 'light-border',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
