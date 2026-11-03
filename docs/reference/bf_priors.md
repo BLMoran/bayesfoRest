@@ -1,14 +1,10 @@
+------------------------------------------------------------------------
+
+editor_options: markdown: wrap: 72 ---
+
 # Prior Distribution Constructors for Sensitivity Analysis
 
-Backend-agnostic prior specification functions for use with
-[`sensitivity_plot`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md),
-[`ecdf_model_plot`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md),
-[`ecdf_prior_plot`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
-and
-[`overall_plot`](https://blmoran.github.io/bayesfoRest/reference/overall_plot.md).
-These create lightweight prior objects that are translated to the format
-each model backend expects. A prior a backend cannot fit exactly is an
-error, never a silent substitution.
+Backend-agnostic prior specification functions for use with [`sensitivity_plot`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md), [`ecdf_model_plot`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md), [`ecdf_prior_plot`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md) and [`overall_plot`](https://blmoran.github.io/bayesfoRest/reference/overall_plot.md). These create lightweight prior objects that are translated to the format each model backend expects. A prior a backend cannot fit exactly is an error, never a silent substitution.
 
 ## Usage
 
@@ -50,25 +46,21 @@ bf_uniform(lower = 0, upper = 1)
 
 - meanlog, sdlog:
 
-  Mean and standard deviation of \\\log(\tau)\\ (for `bf_lognormal`
-  only).
+  Mean and standard deviation of $\log(\tau)$ (for `bf_lognormal` only).
 
 - lower, upper:
 
-  Bounds of the uniform prior. For \\\tau\\, `lower` must be 0.
+  Bounds of the uniform prior. For $\tau$, `lower` must be 0.
 
 ## Value
 
-An object of class `"bf_prior"` containing the distribution family and
-parameters.
+An object of class `"bf_prior"` containing the distribution family and parameters.
 
 ## Details
 
-Priors for the pooled effect (\\\mu\\) are on the model scale (the log
-scale for OR, RR, HR and IRR). Priors for the heterogeneity (\\\tau\\)
-are on the standard deviation of the study effects.
+Priors for the pooled effect ($\mu$) are on the model scale (the log scale for OR, RR, HR and IRR). Priors for the heterogeneity ($\tau$) are on the standard deviation of the study effects.
 
-**Priors for \\\mu\\**
+**Priors for** $\mu$
 
 - `bf_normal(mean, sd)`:
 
@@ -76,10 +68,9 @@ are on the standard deviation of the study effects.
 
 - `bf_student_t(df, location, scale)`:
 
-  Student-t distribution: a heavier-tailed, weakly informative
-  alternative to the normal. `df = 1` is a Cauchy distribution.
+  Student-t distribution: a heavier-tailed, weakly informative alternative to the normal. `df = 1` is a Cauchy distribution.
 
-**Priors for \\\tau\\**
+**Priors for** $\tau$
 
 - `bf_half_normal(mean, sd)`:
 
@@ -99,9 +90,7 @@ are on the standard deviation of the study effects.
 
 - `bf_lognormal(meanlog, sdlog)`:
 
-  Log-normal distribution. Use
-  [`bf_turner`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)
-  for the empirical priors of Turner et al.
+  Log-normal distribution. Use [`bf_turner`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md) for the empirical priors of Turner et al.
 
 - `bf_uniform(0, upper)`:
 
@@ -113,14 +102,13 @@ are on the standard deviation of the study effects.
 
 **Backend support**
 
-Sensitivity refits stop with an error if the model's backend cannot fit
-a prior exactly:
+Sensitivity refits stop with an error if the model's backend cannot fit a prior exactly:
 
 |                             |      |           |                  |              |
-|-----------------------------|------|-----------|------------------|--------------|
+|---------------|---------------|---------------|---------------|---------------|
 | Prior                       | brms | bayesmeta | MetaStan         | RoBMA (brma) |
-| `bf_normal` (\\\mu\\)       | yes  | yes       | yes              | yes          |
-| `bf_student_t` (\\\mu\\)    | yes  | no        | no               | yes          |
+| `bf_normal` ($\mu$)         | yes  | yes       | yes              | yes          |
+| `bf_student_t` ($\mu$)      | yes  | no        | no               | yes          |
 | `bf_half_normal`            | yes  | yes       | yes (mean 0)     | yes          |
 | `bf_half_cauchy`            | yes  | yes       | yes (location 0) | yes          |
 | `bf_half_t`                 | yes  | yes       | no               | yes          |
@@ -129,9 +117,7 @@ a prior exactly:
 | `bf_uniform`                | yes  | yes       | yes              | yes          |
 | `bf_rhodes`                 | yes  | yes       | no               | no           |
 
-[`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)'s
-log-t prior has no RoBMA/BayesTools equivalent. Priors cannot be changed
-for rstan, cmdstanr, rstanarm, bayesma or JAGS models.
+[`bf_rhodes()`](https://blmoran.github.io/bayesfoRest/reference/bf_turner.md)'s log-t prior has no RoBMA/BayesTools equivalent. Priors cannot be changed for rstan, cmdstanr, rstanarm, bayesma or JAGS models.
 
 ## Examples
 

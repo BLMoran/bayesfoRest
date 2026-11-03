@@ -72,22 +72,18 @@
 #' \dontrun{
 #' priors <- list(
 #'   vague = list(
-#'     name      = "Vague",
-#'     mu_prior  = bf_normal(0, 10),
-#'     tau_prior = bf_half_cauchy(0, 1)
-#'   ),
+#'     name = "Vague",
+#'     mu_prior = bf_normal(0, 10),
+#'     tau_prior = bf_half_cauchy(0, 1)),
 #'   weakreg = list(
-#'     name      = "Weakly Regularising",
-#'     mu_prior  = bf_student_t(3, 0, 1),
-#'     tau_prior = bf_half_normal(0, 0.5)
-#'   ),
+#'     name = "Weakly Regularising",
+#'     mu_prior = bf_student_t(3, 0, 1),
+#'     tau_prior = bf_half_normal(0, 0.5)),
 #'   empirical = list(
-#'     name      = "Empirical (Turner)",
-#'     mu_prior  = bf_normal(0, 1),
+#'     name = "Empirical (Turner)",
+#'     mu_prior = bf_normal(0, 1),
 #'     tau_prior = bf_turner("all-cause mortality",
-#'                           "pharmacological", "placebo / control")
-#'   )
-#' )
+#'                           "pharmacological", "placebo / control")))
 #'
 #' sensitivity_plot(model, data, priors = priors, measure = "OR")
 #' }
@@ -224,9 +220,7 @@ print.bf_prior <- function(x, ...) {
 }
 
 
-# =========================================================================
 # Families, parameters and backend support
-# =========================================================================
 
 #' @keywords internal
 #' @noRd
@@ -234,7 +228,7 @@ new_bf_prior <- function(family, ...) {
   structure(list(family = family, ...), class = "bf_prior")
 }
 
-# Which parameter each family is a prior for
+# Parameters in each family
 .bf_mu_families  <- c("normal", "student_t")
 .bf_tau_families <- c("half_normal", "half_cauchy", "half_t", "exponential",
                       "lognormal", "log_t", "uniform")
@@ -263,8 +257,7 @@ check_bf_prior <- function(prior, param = c("mu", "tau"), backend = NULL) {
   if (is.null(prior)) return(invisible(prior))
   if (!inherits(prior, "bf_prior")) {
     cli::cli_abort(
-      "{.arg {param}_prior} must be a {.cls bf_prior}, e.g. from {.fn bf_normal}."
-    )
+      "{.arg {param}_prior} must be a {.cls bf_prior}, e.g. from {.fn bf_normal}.")
   }
   fam <- prior$family
   valid <- if (param == "mu") .bf_mu_families else .bf_tau_families
@@ -273,8 +266,7 @@ check_bf_prior <- function(prior, param = c("mu", "tau"), backend = NULL) {
     suggest <- if (param == "mu") "bf_normal()" else "bf_half_normal()"
     cli::cli_abort(c(
       "A {.val {fam}} prior is for {other}, not {param}.",
-      "i" = "For {param}, use e.g. {.code {suggest}}."
-    ))
+      "i" = "For {param}, use e.g. {.code {suggest}}."))
   }
   if (!is.null(backend)) {
     ok <- .bf_backend_support[[backend]][[param]]
@@ -282,15 +274,13 @@ check_bf_prior <- function(prior, param = c("mu", "tau"), backend = NULL) {
       cli::cli_abort(c(
         "{backend} cannot fit a {.val {fam}} prior for {param}.",
         "i" = "Priors {backend} supports for {param}: {.val {ok}}.",
-        "i" = "See {.help bayesfoRest::bf_priors} for the full table."
-      ))
+        "i" = "See {.help bayesfoRest::bf_priors} for the full table."))
     }
     if (backend == "MetaStan" && param == "tau") {
       shift <- prior$mean %||% prior$location %||% prior$lower %||% 0
       if (shift != 0) {
         cli::cli_abort(
-          "MetaStan tau priors must start at 0, so the mean, location or lower bound must be 0."
-        )
+          "MetaStan tau priors must start at 0, so the mean, location or lower bound must be 0.")
       }
     }
   }
@@ -299,11 +289,6 @@ check_bf_prior <- function(prior, param = c("mu", "tau"), backend = NULL) {
   }
   invisible(prior)
 }
-
-
-# =========================================================================
-# Densities (for plotting priors)
-# =========================================================================
 
 #' Density function for a bf_prior on the model scale
 #'
@@ -314,23 +299,20 @@ check_bf_prior <- function(prior, param = c("mu", "tau"), backend = NULL) {
 bf_prior_density <- function(prior) {
   switch(
     prior$family,
-    normal      = function(x) stats::dnorm(x, prior$mean, prior$sd),
-    student_t   = function(x) stats::dt((x - prior$location) / prior$scale,
+    normal = function(x) stats::dnorm(x, prior$mean, prior$sd),
+    student_t = function(x) stats::dt((x - prior$location) / prior$scale,
                                         prior$df) / prior$scale,
     half_normal = truncate_at_zero(function(x) stats::dnorm(x, prior$mean, prior$sd)),
     half_cauchy = truncate_at_zero(function(x) stats::dcauchy(x, prior$location, prior$scale)),
-    half_t      = truncate_at_zero(function(x) stats::dt((x - prior$location) / prior$scale,
+    half_t = truncate_at_zero(function(x) stats::dt((x - prior$location) / prior$scale,
                                                          prior$df) / prior$scale),
     exponential = function(x) stats::dexp(x, prior$rate),
-    lognormal   = function(x) stats::dlnorm(x, prior$meanlog, prior$sdlog),
-    log_t       = function(x) ifelse(
-      x > 0,
+    lognormal = function(x) stats::dlnorm(x, prior$meanlog, prior$sdlog),
+    log_t = function(x) ifelse(x > 0,
       stats::dt((log(pmax(x, 1e-300)) - prior$location) / prior$scale,
-                prior$df) / (prior$scale * pmax(x, 1e-300)),
-      0),
-    uniform     = function(x) stats::dunif(x, prior$lower, prior$upper),
-    cli::cli_abort("Unsupported prior family {.val {prior$family}}.")
-  )
+                prior$df) / (prior$scale * pmax(x, 1e-300)), 0),
+    uniform = function(x) stats::dunif(x, prior$lower, prior$upper),
+    cli::cli_abort("Unsupported prior family {.val {prior$family}}."))
 }
 
 #' Truncate a density at zero and renormalise it
@@ -342,10 +324,6 @@ truncate_at_zero <- function(f) {
   function(x) ifelse(x < 0, 0, f(x) / mass)
 }
 
-
-# =========================================================================
-# Translation to backend-specific formats
-# =========================================================================
 
 #' Translate bf_prior to a brms prior
 #'
@@ -359,31 +337,25 @@ truncate_at_zero <- function(f) {
 bf_prior_to_brms <- function(prior, class = "Intercept") {
   rlang::check_installed("brms")
 
-  # sd parameters are lower-bounded at 0 in brms, so half_* priors are the
-  # untruncated family on class "sd"
   str <- switch(
     prior$family,
-    normal      = ,
+    normal = ,
     half_normal = paste0("normal(", prior$mean, ", ", prior$sd, ")"),
     half_cauchy = paste0("cauchy(", prior$location, ", ", prior$scale, ")"),
-    student_t   = ,
-    half_t      = paste0("student_t(", prior$df, ", ", prior$location, ", ",
-                         prior$scale, ")"),
+    student_t = ,
+    half_t = paste0("student_t(", prior$df, ", ", prior$location, ", ", prior$scale, ")"),
     exponential = paste0("exponential(", prior$rate, ")"),
-    lognormal   = paste0("lognormal(", prior$meanlog, ", ", prior$sdlog, ")"),
-    uniform     = return(brms::prior_string(
+    lognormal = paste0("lognormal(", prior$meanlog, ", ", prior$sdlog, ")"),
+    uniform = return(brms::prior_string(
       paste0("uniform(", prior$lower, ", ", prior$upper, ")"),
       class = class, ub = prior$upper)),
-    # No log-t in Stan: flat sd prior plus the log-t density on log(sd) with
-    # the Jacobian. Meta-analysis models have one sd, sd_1[1].
-    log_t       = return(rbind(
+    
+    # No log-t in Stan
+    log_t = return(rbind(
       brms::prior_string("", class = "sd"),
-      brms::prior_string(paste0(
-        "target += student_t_lpdf(log(sd_1[1]) | ", prior$df, ", ",
-        prior$location, ", ", prior$scale, ") - log(sd_1[1])"),
-        check = FALSE))),
-    cli::cli_abort("Unknown prior family {.val {prior$family}}.")
-  )
+      brms::prior_string(paste0("target += student_t_lpdf(log(sd_1[1]) | ", prior$df, ", ",
+        prior$location, ", ", prior$scale, ") - log(sd_1[1])"), check = FALSE))),
+    cli::cli_abort("Unknown prior family {.val {prior$family}}."))
 
   brms::prior_string(str, class = class)
 }
@@ -401,19 +373,18 @@ bf_prior_to_robma <- function(prior) {
 
   switch(
     prior$family,
-    normal      = RoBMA::prior("normal", list(mean = prior$mean, sd = prior$sd)),
-    student_t   = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df)),
+    normal = RoBMA::prior("normal", list(mean = prior$mean, sd = prior$sd)),
+    student_t = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df)),
     half_normal = RoBMA::prior("normal", list(mean = prior$mean, sd = prior$sd),
                                truncation = list(lower = 0, upper = Inf)),
     half_cauchy = RoBMA::prior("cauchy", list(location = prior$location, scale = prior$scale),
                                truncation = list(lower = 0, upper = Inf)),
-    half_t      = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df),
+    half_t = RoBMA::prior("t", list(location = prior$location, scale = prior$scale, df = prior$df),
                                truncation = list(lower = 0, upper = Inf)),
     exponential = RoBMA::prior("exp", list(rate = prior$rate)),
-    lognormal   = RoBMA::prior("lognormal", list(meanlog = prior$meanlog, sdlog = prior$sdlog)),
-    uniform     = RoBMA::prior("uniform", list(a = prior$lower, b = prior$upper)),
-    cli::cli_abort("Unknown prior family {.val {prior$family}}.")
-  )
+    lognormal = RoBMA::prior("lognormal", list(meanlog = prior$meanlog, sdlog = prior$sdlog)),
+    uniform = RoBMA::prior("uniform", list(a = prior$lower, b = prior$upper)),
+    cli::cli_abort("Unknown prior family {.val {prior$family}}."))
 }
 
 #' Build Backend-Specific Prior Set from bf_prior Specifications
@@ -433,7 +404,7 @@ bf_prior_to_robma <- function(prior) {
 #' @noRd
 translate_priors_for_backend <- function(prior_spec, model) {
 
-  mu_prior  <- prior_spec$mu_prior
+  mu_prior <- prior_spec$mu_prior
   tau_prior <- prior_spec$tau_prior
   backend <- prior_backend(model)
 
@@ -444,19 +415,16 @@ translate_priors_for_backend <- function(prior_spec, model) {
     if (identical(tau_prior$family, "log_t") &&
         sum(grepl("^sd_", brms::variables(model))) != 1) {
       cli::cli_abort(
-        "A log-t tau prior needs a brms model with a single study-level SD."
-      )
+        "A log-t tau prior needs a brms model with a single study-level SD.")
     }
     rbind(
       if (!is.null(mu_prior)) bf_prior_to_brms(mu_prior, class = "Intercept"),
-      if (!is.null(tau_prior)) bf_prior_to_brms(tau_prior, class = "sd")
-    )
+      if (!is.null(tau_prior)) bf_prior_to_brms(tau_prior, class = "sd"))
 
   } else if (identical(backend, "bayesmeta")) {
     list(
       mu_prior  = if (!is.null(mu_prior)) c(mu_prior$mean, mu_prior$sd),
-      tau_prior = if (!is.null(tau_prior)) bf_prior_density(tau_prior)
-    )
+      tau_prior = if (!is.null(tau_prior)) bf_prior_density(tau_prior))
 
   } else if (identical(backend, "MetaStan")) {
     list(
@@ -466,27 +434,22 @@ translate_priors_for_backend <- function(prior_spec, model) {
         tau_prior$family,
         half_normal = tau_prior$sd,
         half_cauchy = tau_prior$scale,
-        uniform     = tau_prior$upper
-      ),
+        uniform = tau_prior$upper),
       tau_prior_dist = if (!is.null(tau_prior)) switch(
         tau_prior$family,
         half_normal = "half-normal",
         half_cauchy = "half-cauchy",
-        uniform     = "uniform"
-      )
-    )
+        uniform = "uniform"))
 
   } else if (identical(backend, "RoBMA")) {
     list(
-      prior_effect        = if (!is.null(mu_prior)) bf_prior_to_robma(mu_prior),
-      prior_heterogeneity = if (!is.null(tau_prior)) bf_prior_to_robma(tau_prior)
-    )
+      prior_effect = if (!is.null(mu_prior)) bf_prior_to_robma(mu_prior),
+      prior_heterogeneity = if (!is.null(tau_prior)) bf_prior_to_robma(tau_prior))
 
   } else {
     cli::cli_abort(c(
       "Priors cannot be changed for {.cls {class(model)[1]}} models.",
-      "i" = "Prior sensitivity refits support brms, bayesmeta, MetaStan and RoBMA (brma) models."
-    ))
+      "i" = "Prior sensitivity refits support brms, bayesmeta, MetaStan and RoBMA (brma) models."))
   }
 }
 
@@ -502,10 +465,6 @@ prior_backend <- function(model) {
   else NULL
 }
 
-
-# =========================================================================
-# Formatting for display
-# =========================================================================
 
 #' Format bf_prior as Unicode String
 #'
@@ -528,17 +487,15 @@ format_bf_prior <- function(prior) {
   script_U <- "\U0001D4B0"  # script U
   superscript_plus <- "\U207A"  # superscript plus
 
-  # Trailing thin space (U+2009) prevents STIX Two Math font from
-  # rendering a doubled closing parenthesis in gt tables.
+  # Prevention of double )) in gt table
   thin <- "\U2009"
 
-  # Subscript degrees of freedom for single-digit df
+  # Subscript df for single-digit df
   sub_df <- function(df) {
     sub_digits <- c(
       "0" = "\U2080", "1" = "\U2081", "2" = "\U2082", "3" = "\U2083",
       "4" = "\U2084", "5" = "\U2085", "6" = "\U2086", "7" = "\U2087",
-      "8" = "\U2088", "9" = "\U2089"
-    )
+      "8" = "\U2088", "9" = "\U2089")
     if (grepl("^[0-9]$", df)) sub_digits[[as.character(df)]] else as.character(df)
   }
   num <- function(x) format(signif(x, 3))
@@ -547,31 +504,22 @@ format_bf_prior <- function(prior) {
     prior$family,
 
     normal = paste0(script_N, "(", prior$mean, ",", prior$sd, ")"),
-
     student_t = paste0(script_t, sub_df(prior$df),
                        "(", prior$location, ",", prior$scale, ")"),
-
     half_normal = paste0(script_N, superscript_plus,
                          "(", prior$mean, ",", prior$sd, ")"),
-
     half_cauchy = paste0(script_C, superscript_plus,
                          "(", prior$location, ",", prior$scale, ")"),
-
     half_t = paste0(script_t, sub_df(prior$df), superscript_plus,
                     "(", prior$location, ",", prior$scale, ")"),
-
     exponential = paste0(script_E, "(", prior$rate, ")"),
-
     lognormal = paste0("log", script_N, "(", num(prior$meanlog), ",",
                        num(prior$sdlog), ")"),
-
     log_t = paste0("log", script_t, sub_df(prior$df), "(", num(prior$location),
                    ",", num(prior$scale), ")"),
-
     uniform = paste0(script_U, "(", prior$lower, ",", prior$upper, ")"),
 
-    paste0("Unknown(", prior$family, ")")
-  )
+    paste0("Unknown(", prior$family, ")"))
 
   if (!is.null(prior$source)) label <- paste0(prior$source, " ", label)
   paste0(label, thin)

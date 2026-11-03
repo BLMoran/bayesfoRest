@@ -15,8 +15,7 @@
 sensitivity_table_left <- function(
     df,
     font = NULL,
-    math_font = "STIX Two Math"
-) {
+    math_font = "STIX Two Math") {
 
   math_cols <- c("mu_prior_unicode", "tau_prior_unicode")
 
@@ -28,28 +27,24 @@ sensitivity_table_left <- function(
     gt::gt(groupname_col = "section_label") |>
     gt::tab_stubhead(label = "Meta-analysis") |>
     gt::cols_label(
-      prior_label       = "Prior type",
-      mu_prior_unicode  = paste0("\u03BC", " Prior"),
-      tau_prior_unicode = paste0("\u03C4", " Prior")
-    ) |>
+      prior_label = "Prior type",
+      mu_prior_unicode = paste0("\u03BC", " Prior"),
+      tau_prior_unicode = paste0("\u03C4", " Prior")) |>
     gt::sub_missing(missing_text = "\u2014") |>
     gt::cols_align(align = "left") |>
     gt::tab_options(
-      row_group.as_column           = TRUE,
-      row_group.font.weight         = "bold",
-      column_labels.font.weight     = "bold",
+      row_group.as_column  = TRUE,
+      row_group.font.weight = "bold",
+      column_labels.font.weight = "bold",
       column_labels.border.bottom.color = "grey60",
       column_labels.border.bottom.width = gt::px(2),
-      table.border.top.color        = "white",
-      table.border.bottom.color     = "grey60",
-      table.border.bottom.width     = gt::px(2)
-    ) |>
+      table.border.top.color = "white",
+      table.border.bottom.color = "grey60",
+      table.border.bottom.width = gt::px(2)) |>
     gt::tab_style(
       style = gt::cell_borders(
-        sides = "bottom", color = "grey60", weight = gt::px(2)
-      ),
-      locations = gt::cells_body(rows = .last_in_group)
-    )
+        sides = "bottom", color = "grey60", weight = gt::px(2)),
+      locations = gt::cells_body(rows = .last_in_group))
 
   if (!is.null(font)) {
     gt_tbl <- gt_tbl |>
@@ -59,16 +54,13 @@ sensitivity_table_left <- function(
           gt::cells_body(columns = -dplyr::all_of(math_cols)),
           gt::cells_column_labels(columns = -dplyr::all_of(math_cols)),
           gt::cells_stub(),
-          gt::cells_row_groups()
-        )
-      )
+          gt::cells_row_groups()))
   }
 
   gt_tbl |>
     gt::tab_style(
       style = gt::cell_text(font = math_font),
-      locations = gt::cells_body(columns = dplyr::all_of(math_cols))
-    ) |>
+      locations = gt::cells_body(columns = dplyr::all_of(math_cols))) |>
     gt::cols_hide(columns = ".last_in_group")
 }
 
@@ -94,18 +86,15 @@ sensitivity_table_right <- function(
     measure,
     add_probs = FALSE,
     null_range = NULL,
-    font = NULL
-) {
+    font = NULL) {
 
   pr_cols <- c(
     "pr_benefit", "pr_no_benefit",
-    "pr_benefit_null_range", "pr_no_benefit_null_range"
-  )
+    "pr_benefit_null_range", "pr_no_benefit_null_range")
 
   df <- df |>
     dplyr::mutate(
-      estimate = sprintf("%.3f  [%.3f, %.3f]", median, l95, u95)
-    ) |>
+      estimate = sprintf("%.3f  [%.3f, %.3f]", median, l95, u95)) |>
     dplyr::select(section_label, prior_label, estimate, dplyr::all_of(pr_cols)) |>
     dplyr::group_by(section_label) |>
     dplyr::mutate(.last_in_group = dplyr::row_number() == dplyr::n()) |>
@@ -114,40 +103,34 @@ sensitivity_table_right <- function(
   table_right <- df |>
     gt::gt() |>
     gt::cols_label(
-      estimate                 = paste(measure, "[95% CrI]"),
-      pr_benefit               = "Pr(Benefit)",
-      pr_no_benefit            = "Pr(Harm)",
-      pr_benefit_null_range    = paste("Pr(Benefit>", "\u03B4", ")"),
-      pr_no_benefit_null_range = paste("Pr(Harm>", "\u03B4", ")")
-    ) |>
+      estimate = paste(measure, "[95% CrI]"),
+      pr_benefit = "Pr(Benefit)",
+      pr_no_benefit = "Pr(Harm)",
+      pr_benefit_null_range = paste("Pr(Benefit>", "\u03B4", ")"),
+      pr_no_benefit_null_range = paste("Pr(Harm>", "\u03B4", ")")) |>
     gt::cols_align(align = "center", columns = gt::everything()) |>
     gt::tab_options(
-      table.font.names                  = font,
-      column_labels.font.weight         = "bold",
+      table.font.names = font,
+      column_labels.font.weight = "bold",
       column_labels.border.bottom.color = "grey60",
       column_labels.border.bottom.width = gt::px(2),
-      row_group.font.weight             = "bold",
-      row_group.font.size               = gt::px(13),
-      table.border.top.color            = "white",
-      table.border.bottom.color         = "grey60",
-      table.border.bottom.width         = gt::px(2)
-    ) |>
+      row_group.font.weight = "bold",
+      row_group.font.size = gt::px(13),
+      table.border.top.color = "white",
+      table.border.bottom.color = "grey60",
+      table.border.bottom.width = gt::px(2)) |>
     gt::fmt(
       columns = dplyr::all_of(pr_cols),
       fns = function(x) {
         dplyr::case_when(
           is.na(x) ~ NA_character_,
           x >= 100 ~ ">99%",
-          TRUE     ~ paste0(sprintf("%.1f", x), "%")
-        )
-      }
-    ) |>
+          TRUE ~ paste0(sprintf("%.1f", x), "%"))
+      }) |>
     gt::tab_style(
       style = gt::cell_borders(
-        sides = "bottom", color = "grey60", weight = gt::px(2)
-      ),
-      locations = gt::cells_body(rows = .last_in_group)
-    ) |>
+        sides = "bottom", color = "grey60", weight = gt::px(2)),
+      locations = gt::cells_body(rows = .last_in_group)) |>
     gt::cols_hide(columns = c("section_label", "prior_label", ".last_in_group"))
 
   # Hide probability columns if not requested

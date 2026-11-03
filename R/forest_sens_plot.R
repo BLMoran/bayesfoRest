@@ -103,34 +103,29 @@
 #' \dontrun{
 #' priors <- list(
 #'   vague = list(
-#'     name      = "Vague",
-#'     mu_prior  = bf_normal(0, 10),
-#'     tau_prior = bf_half_cauchy(0, 1)
-#'   ),
+#'     name = "Vague",
+#'     mu_prior = bf_normal(0, 10),
+#'     tau_prior = bf_half_cauchy(0, 1)),
 #'   weakreg = list(
-#'     name      = "Weakly Regularising",
-#'     mu_prior  = bf_normal(0, 1),
-#'     tau_prior = bf_half_cauchy(0, 0.5)
-#'   ),
+#'     name = "Weakly Regularising",
+#'     mu_prior = bf_normal(0, 1),
+#'     tau_prior = bf_half_cauchy(0, 0.5)),
 #'   informative = list(
-#'     name      = "Informative",
-#'     mu_prior  = bf_normal(0, 0.5),
-#'     tau_prior = bf_half_cauchy(0, 0.3)
-#'   )
-#' )
+#'     name = "Informative",
+#'     mu_prior = bf_normal(0, 0.5),
+#'     tau_prior = bf_half_cauchy(0, 0.3)))
 #'
 #' forest_sens_plot(
-#'   model         = fit,
-#'   data          = dat,
-#'   measure       = "OR",
-#'   study_var      = Author,
-#'   n_ctrl        = N_Control,
-#'   n_int         = N_Intervention,
-#'   event_ctrl    = Event_Control,
-#'   event_int     = Event_Intervention,
-#'   priors        = priors,
-#'   primary_prior = "weakreg"
-#' )
+#'   model = fit,
+#'   data = dat,
+#'   measure = "OR",
+#'   study_var = Author,
+#'   n_ctrl = N_Control,
+#'   n_int = N_Intervention,
+#'   event_ctrl = Event_Control,
+#'   event_int = Event_Intervention,
+#'   priors = priors,
+#'   primary_prior = "weakreg")
 #' }
 #'
 #' @export
@@ -192,11 +187,11 @@ forest_sens_plot <- function(model,
     subgroup = FALSE, subgroup_var = NULL,
     sort_studies_by = sort_studies_by)
 
-  study_output  <- rlang::arg_match(study_output)
+  study_output <- rlang::arg_match(study_output)
   pooled_output <- rlang::arg_match(pooled_output)
-  pred_output   <- rlang::arg_match(pred_output)
+  pred_output <- rlang::arg_match(pred_output)
 
-  # Rename data columns based on measure type (mirrors bayes_forest())
+  # Rename data columns based on measure type
   if (measure %in% c("OR", "RR")) {
     data <- data |>
       dplyr::rename(
@@ -223,8 +218,7 @@ forest_sens_plot <- function(model,
         Event_Control = {{event_ctrl}}, Event_Intervention = {{event_int}})
   }
 
-  # Disambiguate duplicate Author names (and same-Author/same-Year combos,
-  # e.g. multi-arm trials, which otherwise display as identical rows)
+  # Disambiguate duplicate Author names
   data <- make_authors_unique(data, year = "Year")
   data <- compute_yi_vi(data, measure)
 
@@ -246,8 +240,7 @@ forest_sens_plot <- function(model,
 
   pooled_effect <- extract_pooled_summary(model)
 
-  # Study rows only -- the model's own native Pooled Effect row is dropped;
-  # it's replaced by the multi-prior block built below.
+  # Study rows only
   study.effect.draws <- forest_data_fn(
     data = data, model = model, subgroup = FALSE,
     sort_studies_by = sort_studies_by, effect_type = effect_type,
@@ -261,7 +254,7 @@ forest_sens_plot <- function(model,
 
   study_levels <- levels(droplevels(study.effect.draws$Author))
 
-  # One row per prior, via the same refit machinery sensitivity_plot() uses
+  # One row per prior, via the same refit machinery as sensitivity_plot()
   prior_labels <- purrr::imap_chr(priors, function(spec, key) {
     label <- paste0(spec$name %||% key, " Prior")
     if (!is.null(primary_prior) && identical(key, primary_prior)) {
@@ -301,7 +294,7 @@ forest_sens_plot <- function(model,
         weighted_effect
       })
 
-  # Prediction interval, derived from the base model's own pooled estimate + tau
+  # Prediction interval, derived from pooled estimate + tau
   pred_label <- "Prediction Interval"
   if (isTRUE(show_prediction)) {
     pred_draws <- extract_forest_draws(model, data) |>

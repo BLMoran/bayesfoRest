@@ -9,17 +9,16 @@ validate_inputs <- function(
     year_var,
     subgroup,
     subgroup_var,
-    sort_studies_by
-) {
-  # Accept any supported model class (not just brmsfit)
+    sort_studies_by) {
+  
+  # Supported models
   supported <- c("brmsfit", "meta_stan", "bayesmeta",
                   "stanreg", "stanfit", "CmdStanMCMC",
                   "bayesma", "brma", "rjags")
   if (!inherits(model, supported)) {
     rlang::abort(paste0(
       "`model` must be one of: ", paste(supported, collapse = ", "),
-      ". Got: '", class(model)[1], "'"
-    ))
+      ". Got: '", class(model)[1], "'"))
   }
   if (!is.data.frame(data)) {
     rlang::abort("`data` must be a data frame.")
@@ -80,15 +79,14 @@ validate_inputs_sens_plot <- function(
     model,
     data,
     priors,
-    measure
-) {
+    measure) {
+  
   supported <- c("brmsfit", "meta_stan", "bayesmeta",
                   "stanreg", "stanfit", "CmdStanMCMC")
   if (!inherits(model, supported)) {
     rlang::abort(paste0(
       "`model` must be one of: ", paste(supported, collapse = ", "),
-      ". Got: '", class(model)[1], "'"
-    ))
+      ". Got: '", class(model)[1], "'"))
   }
 
   if (!is.data.frame(data)) {
@@ -123,8 +121,7 @@ validate_priors <- function(priors) {
 
   if (!is.list(priors) || is.null(names(priors))) {
     rlang::abort(
-      "`priors` must be a named list. See `?bf_normal` for the expected format."
-    )
+      "`priors` must be a named list. See `?bf_normal` for the expected format.")
   }
 
   for (nm in names(priors)) {
@@ -133,8 +130,7 @@ validate_priors <- function(priors) {
     if (!is.list(spec)) {
       rlang::abort(paste0(
         "Prior '", nm, "' must be a list with `name`, `mu_prior`, ",
-        "and optionally `tau_prior`."
-      ))
+        "and optionally `tau_prior`."))
     }
 
     if (is.null(spec$name)) {
@@ -144,15 +140,13 @@ validate_priors <- function(priors) {
     if (!is.null(spec$mu_prior) && !inherits(spec$mu_prior, "bf_prior")) {
       rlang::abort(paste0(
         "Prior '", nm, "': `mu_prior` must be a bf_prior object ",
-        "(e.g. bf_normal(0, 1)). Got: '", class(spec$mu_prior)[1], "'"
-      ))
+        "(e.g. bf_normal(0, 1)). Got: '", class(spec$mu_prior)[1], "'"))
     }
 
     if (!is.null(spec$tau_prior) && !inherits(spec$tau_prior, "bf_prior")) {
       rlang::abort(paste0(
         "Prior '", nm, "': `tau_prior` must be a bf_prior object ",
-        "(e.g. bf_half_cauchy(0, 0.5)). Got: '", class(spec$tau_prior)[1], "'"
-      ))
+        "(e.g. bf_half_cauchy(0, 0.5)). Got: '", class(spec$tau_prior)[1], "'"))
     }
   }
 

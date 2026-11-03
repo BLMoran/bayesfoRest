@@ -1,4 +1,4 @@
-#' Extract Pooled Effect Draws (Backend-Agnostic)
+#' Extract Pooled Effect Draws
 #'
 #' @description
 #' Extracts posterior draws for the pooled effect (mu) from any supported model
@@ -24,35 +24,32 @@ extract_pooled_draws <- function(model, data, measure) {
   if (measure %in% c("OR", "RR", "HR", "IRR")) {
     pooled <- exp(pooled)
   }
-
   pooled
 }
 
-#' Does the fitted model include a random (between-study) effect?
+#' Does the model have a RE?
 #' @keywords internal
 #' @noRd
 model_has_re <- function(model) UseMethod("model_has_re")
 
 #' @exportS3Method
 model_has_re.default <- function(model) {
-  # MetaStan / meta_stan objects carry it in stanDat
+  # MetaStan objects carry it in stanDat
   if (!is.null(model$stanDat) && !is.null(model$stanDat$re))
     return(isTRUE(as.logical(model$stanDat$re)))
-  NA   # unknown backend
+  NA 
 }
 
 #' @exportS3Method
 model_has_re.brmsfit <- function(model) {
-  any(grepl("^sd_", brms::variables(model)))     # a study-level SD term => random effects
+  any(grepl("^sd_", brms::variables(model)))
 }
 
 #' @exportS3Method
-model_has_re.bayesmeta <- function(model) TRUE   # bayesmeta is always random-effects
+model_has_re.bayesmeta <- function(model) TRUE 
 
 #' @exportS3Method
 model_has_re.brma <- function(model) {
-  # Mirrors detect_model_info.brma(): a tau column means prior_heterogeneity
-  # was fit, i.e. a random-effects model.
   if (!requireNamespace("posterior", quietly = TRUE)) return(NA)
   "tau" %in% names(posterior::as_draws_df(model$fit$mcmc))
 }
@@ -83,17 +80,16 @@ update_model_prior.default <- function(model, data, new_prior, ...) {
 
   rlang::abort(paste0(
     "Prior updating not supported for model class '", class(model)[1], "'.\n",
-    "Supported backends: brmsfit, bayesmeta, meta_stan, brma."
-  ))
+    "Supported backends: brmsfit, bayesmeta, meta_stan, brma."))
 }
 
 #' @exportS3Method
 update_model_prior.brmsfit <- function(model, data, new_prior, ...) {
-  dots     <- list(...)
+  dots <- list(...)
   force_re <- dots$force_re
 
-  has_re   <- any(grepl("^sd_", brms::variables(model)))
-  want_re  <- if (is.null(force_re)) has_re else isTRUE(force_re)
+  has_re <- any(grepl("^sd_", brms::variables(model)))
+  want_re <- if (is.null(force_re)) has_re else isTRUE(force_re)
 
   form <- model$formula
   if (!want_re && has_re) {
@@ -101,24 +97,18 @@ update_model_prior.brmsfit <- function(model, data, new_prior, ...) {
   }
 
   prior <- new_prior
-  # A common-effect refit has no sd, so drop tau priors (including a raw
-  # log-t prior written against sd_1)
   if (!want_re) {
     prior <- prior[prior$class != "sd" & !grepl("sd_1", prior$prior, fixed = TRUE), ,
                    drop = FALSE]
   }
 
-  # brms writes prior values into the Stan code, so a new prior changes the
-  # model. Leave recompile = NULL so brms rebuilds whenever the code differs;
-  # recompile = FALSE would silently sample with the original prior.
   stats::update(
     model,
-    formula.  = form,
-    newdata   = data,
-    prior     = prior,
-    refresh   = 0,
-    silent    = 2
-  )
+    formula = form,
+    newdata = data,
+    prior = prior,
+    refresh = 0,
+    silent = 2)
 }
 
 #' @exportS3Method
@@ -136,12 +126,11 @@ update_model_prior.bayesmeta <- function(model, data, new_prior, ...) {
   }
 
   bayesmeta::bayesmeta(
-    y         = data[[y_col]],
-    sigma     = data[[se_col]],
-    labels    = data$Author,
-    mu.prior  = new_prior$mu_prior  %||% model$mu.prior,
-    tau.prior = new_prior$tau_prior %||% model$tau.prior
-  )
+    y = data[[y_col]],
+    sigma = data[[se_col]],
+    labels = data$Author,
+    mu.prior = new_prior$mu_prior  %||% model$mu.prior,
+    tau.prior = new_prior$tau_prior %||% model$tau.prior)
 }
 
 #' @exportS3Method
@@ -153,16 +142,13 @@ update_model_prior.meta_stan <- function(model, data, new_prior, ...) {
   dots <- list(...)
   force_re <- dots$force_re  # NULL = use original, TRUE/FALSE = override
 
-  # Map link number to likelihood string
   likelihood <- switch(
     as.character(model$stanDat$link),
     "1" = "normal",
     "2" = "binomial",
     "3" = "Poisson",
-    "binomial"
-  )
+    "binomial")
 
-  # Determine armVars based on likelihood
   arm_vars <- if (likelihood == "binomial") {
     c(responders = "r", sampleSize = "n")
   } else if (likelihood == "normal") {
@@ -178,37 +164,32 @@ update_model_prior.meta_stan <- function(model, data, new_prior, ...) {
   }
 
   stan_dat <- MetaStan::create_MetaStan_dat(
-    dat      = data_wide,
-    armVars  = arm_vars,
-    nArmsVar = "nd"
-  )
+    dat = data_wide,
+    armVars = arm_vars,
+    nArmsVar = "nd")
 
-  # Determine RE flag: force_re overrides, otherwise use original
   re <- if (!is.null(force_re)) force_re else as.logical(model$stanDat$re)
 
-  # Common-effect models (re = FALSE) declare tau_prior as a scalar in Stan;
-  # only override tau_prior when the model actually has random effects.
   if (re) {
-    tau_prior_val  <- new_prior$tau_prior      %||% model$stanDat$tau_prior
-    tau_prior_dist <- new_prior$tau_prior_dist  %||% model$tau_prior_dist
+    tau_prior_val <- new_prior$tau_prior %||% model$stanDat$tau_prior
+    tau_prior_dist <- new_prior$tau_prior_dist %||% model$tau_prior_dist
   } else {
     tau_prior_val  <- model$stanDat$tau_prior
     tau_prior_dist <- model$tau_prior_dist
   }
 
   MetaStan::meta_stan(
-    data           = stan_dat,
-    likelihood     = likelihood,
-    mu_prior       = new_prior$mu_prior  %||% model$stanDat$mu_prior,
-    theta_prior    = model$stanDat$theta_prior,
-    tau_prior      = tau_prior_val,
+    data = stan_dat,
+    likelihood = likelihood,
+    mu_prior = new_prior$mu_prior  %||% model$stanDat$mu_prior,
+    theta_prior = model$stanDat$theta_prior,
+    tau_prior = tau_prior_val,
     tau_prior_dist = tau_prior_dist,
-    beta_prior     = model$stanDat$beta_prior,
-    re             = re,
-    ncp            = as.logical(model$stanDat$ncp),
+    beta_prior = model$stanDat$beta_prior,
+    re = re,
+    ncp = as.logical(model$stanDat$ncp),
     interval.type  = model$interval.type,
-    mreg           = as.logical(model$stanDat$mreg)
-  )
+    mreg = as.logical(model$stanDat$mreg))
 }
 
 #' @exportS3Method
@@ -221,23 +202,22 @@ update_model_prior.brma <- function(model, data, new_prior, ...) {
   }
 
   fit_ctrl <- model$fit_control
-  measure  <- attr(model$data, "measure")
+  measure <- attr(model$data, "measure")
 
   RoBMA::brma(
-    yi                  = data$yi,
-    sei                 = sqrt(data$vi),
-    slab                = as.character(data$Author),
-    measure             = measure,
-    prior_effect        = new_prior$prior_effect        %||% model$priors$outcome$mu,
+    yi = data$yi,
+    sei = sqrt(data$vi),
+    slab = as.character(data$Author),
+    measure = measure,
+    prior_effect = new_prior$prior_effect        %||% model$priors$outcome$mu,
     prior_heterogeneity = new_prior$prior_heterogeneity %||% model$priors$outcome$tau,
-    sample              = fit_ctrl$sample %||% 5000L,
-    burnin              = fit_ctrl$burnin %||% 2000L,
-    adapt               = fit_ctrl$adapt  %||% 500L,
-    chains              = fit_ctrl$chains %||% 3L,
-    thin                = fit_ctrl$thin   %||% 1L,
-    seed                = fit_ctrl$seed,
-    silent              = TRUE
-  )
+    sample = fit_ctrl$sample %||% 5000L,
+    burnin = fit_ctrl$burnin %||% 2000L,
+    adapt = fit_ctrl$adapt  %||% 500L,
+    chains = fit_ctrl$chains %||% 3L,
+    thin = fit_ctrl$thin   %||% 1L,
+    seed = fit_ctrl$seed,
+    silent = TRUE)
 }
 
 
@@ -284,35 +264,31 @@ update_prior_sensitivity <- function(model,
       backend_prior <- translate_priors_for_backend(prior_spec, model)
 
       updated_model <- update_model_prior(
-        model     = model,
-        data      = data,
+        model = model,
+        data = data,
         new_prior = backend_prior,
-        force_re  = force_re
-      )
+        force_re = force_re)
 
       tibble::tibble(
         section_label = section_label,
-        prior         = prior_name,
-        prior_label   = prior_label,
-        re            = re_flag,
-        x             = extract_pooled_draws(updated_model, data, measure),
-        tau           = extract_forest_draws(updated_model, data) |>
+        prior = prior_name,
+        prior_label = prior_label,
+        re = re_flag,
+        x = extract_pooled_draws(updated_model, data, measure),
+        tau = extract_forest_draws(updated_model, data) |>
           dplyr::filter(Author == "Pooled Effect") |>
-          dplyr::pull(tau)
-      )
+          dplyr::pull(tau))
     }, error = function(e) {
       rlang::warn(paste0(
         "Failed prior sensitivity for '", prior_name, "' in '",
-        section_label, "': ", e$message
-      ))
+        section_label, "': ", e$message))
       tibble::tibble(
         section_label = character(),
-        prior         = character(),
-        prior_label   = character(),
-        re            = logical(),
-        x             = numeric(),
-        tau           = numeric()
-      )
+        prior = character(),
+        prior_label = character(),
+        re = logical(),
+        x = numeric(),
+        tau = numeric())
     })
   })
 }
@@ -335,20 +311,19 @@ update_prior_sensitivity <- function(model,
 summarise_sensitivity_posteriors <- function(draws, null_value, null_range) {
 
   section_levels <- unique(draws$section_label)
-  prior_levels   <- unique(draws$prior)
+  prior_levels <- unique(draws$prior)
 
   draws |>
     dplyr::mutate(
       section_label = factor(section_label, levels = section_levels),
-      prior         = factor(prior, levels = prior_levels)
-    ) |>
+      prior = factor(prior, levels = prior_levels)) |>
     dplyr::group_by(section_label, prior, prior_label, re) |>
     dplyr::summarise(
       median = stats::median(x),
-      l95    = stats::quantile(x, 0.025),
-      u95    = stats::quantile(x, 0.975),
+      l95 = stats::quantile(x, 0.025),
+      u95 = stats::quantile(x, 0.975),
 
-      pr_benefit    = round(mean(x < null_value) * 100, 1),
+      pr_benefit = round(mean(x < null_value) * 100, 1),
       pr_no_benefit = round(mean(x > null_value) * 100, 1),
 
       pr_benefit_null_range =
@@ -356,8 +331,7 @@ summarise_sensitivity_posteriors <- function(draws, null_value, null_range) {
       pr_no_benefit_null_range =
         if (!is.null(null_range)) round(mean(x > null_range[2]) * 100, 1) else NA_real_,
 
-      .groups = "drop"
-    ) |>
+      .groups = "drop") |>
     dplyr::arrange(section_label, prior)
 }
 
@@ -379,11 +353,10 @@ summarise_sensitivity_posteriors <- function(draws, null_value, null_range) {
 run_ma_sensitivity <- function(spec, priors, measure) {
 
   update_prior_sensitivity(
-    model         = spec$model,
-    data          = spec$data,
-    priors        = priors,
-    measure       = measure,
+    model = spec$model,
+    data = spec$data,
+    priors = priors,
+    measure = measure,
     section_label = spec$section_label,
-    force_re      = spec$force_re  # NULL unless explicitly set
-  )
+    force_re = spec$force_re)
 }

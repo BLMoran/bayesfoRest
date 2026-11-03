@@ -9,9 +9,9 @@ sort_studies_fn <- function(.data, sort_studies_by = NULL) {
 
   # Separate pooled effect and prediction rows
   special_rows <- c("Pooled Effect", "Prediction")
-  pooled     <- .data |> dplyr::filter(Author == "Pooled Effect")
+  pooled <- .data |> dplyr::filter(Author == "Pooled Effect")
   prediction <- .data |> dplyr::filter(Author == "Prediction")
-  studies    <- .data |> dplyr::filter(!Author %in% special_rows)
+  studies <- .data |> dplyr::filter(!Author %in% special_rows)
 
   # Arrange studies
   studies <- switch(
@@ -19,16 +19,13 @@ sort_studies_fn <- function(.data, sort_studies_by = NULL) {
     "author" = studies |> dplyr::arrange(dplyr::across(any_of("Subgroup")), Author),
     "year" = studies |> dplyr::arrange(dplyr::across(any_of("Subgroup")), Year, Author),
     "effect" = studies |> dplyr::arrange(dplyr::across(any_of("Subgroup")), yi, Author),
-    stop("Invalid value for `sort_studies_by`. Must be one of 'author', 'year', or 'effect'.")
-  )
+    stop("Invalid value for `sort_studies_by`. Must be one of 'author', 'year', or 'effect'."))
 
   # Recombine: studies, then Pooled Effect, then Prediction
   full <- dplyr::bind_rows(studies, pooled, prediction)
 
   full <- full |>
-    dplyr::mutate(
-      Author = factor(Author, levels = unique(Author))
-    )
+    dplyr::mutate(Author = factor(Author, levels = unique(Author)))
 
   return(full)
 }
@@ -61,25 +58,21 @@ get_subgroup_order <- function(data, sort_subgroup_by) {
         },
         rlang::abort(
           paste0("Invalid sort_subgroup_by value: '", sort_subgroup_by,
-                 "'. Must be 'alphabetical', 'effect', or a character vector of subgroup names.")
-        )
-      )
+                 "'. Must be 'alphabetical', 'effect', or a character vector of subgroup names.")))
     } else {
       # Multiple strings: custom order provided by user
       missing_groups <- setdiff(sort_subgroup_by, unique_subgroups)
       if (length(missing_groups) > 0) {
         rlang::warn(
           paste0("These subgroups in sort_subgroup_by were not found in data: ",
-                 paste(missing_groups, collapse = ", "))
-        )
+                 paste(missing_groups, collapse = ", ")))
       }
       subgroup_order <- sort_subgroup_by
     }
   } else {
     rlang::abort(
       "sort_subgroup_by must be a character vector. ",
-      "Use 'alphabetical', 'effect', or provide a vector of subgroup names."
-    )
+      "Use 'alphabetical', 'effect', or provide a vector of subgroup names.")
   }
 
   # Always append "Overall" at the end
@@ -116,7 +109,7 @@ get_subgroup_order <- function(data, sort_subgroup_by) {
 make_authors_unique <- function(data, study_var = "Author", year = NULL) {
   # resolve column names (accept bare or string)
   study_col <- rlang::as_name(rlang::ensym(study_var))
-  year_col  <- if (!is.null(year)) rlang::as_name(rlang::ensym(year)) else NULL
+  year_col <- if (!is.null(year)) rlang::as_name(rlang::ensym(year)) else NULL
 
   if (!study_col %in% names(data)) {
     cli::cli_abort("Column {.field {study_col}} not found in data.")
@@ -161,8 +154,7 @@ enforce_re_min_k <- function(model_type, re_min_k, data, study_var) {
   if (!is.numeric(re_min_k) || length(re_min_k) != 1 || re_min_k < 1) {
     cli::cli_abort(
       "{.arg re_min_k} must be a single positive number.",
-      call = rlang::caller_env()
-    )
+      call = rlang::caller_env())
   }
 
   resolved <- if (length(model_type) > 1) model_type[1] else model_type
@@ -174,7 +166,6 @@ enforce_re_min_k <- function(model_type, re_min_k, data, study_var) {
   cli::cli_warn(c(
     "!" = "Switching to {.val common_effect}: only {k} stud{?y/ies} \\
            (< {.arg re_min_k} = {re_min_k}).",
-    "i" = "Random-effects estimation is unstable below {re_min_k} studies."
-  ))
+    "i" = "Random-effects estimation is unstable below {re_min_k} studies."))
   "common_effect"
 }

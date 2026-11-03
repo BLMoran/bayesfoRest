@@ -54,10 +54,8 @@ sensitivity_density_plot_fn <- function(df,
       section_label = factor(section_label, levels = section_levels),
       plot_row = factor(
         paste(section_label, "-", prior_label),
-        levels = unique(paste(section_label, "-", prior_label))
-      ),
-      plot_row = forcats::fct_rev(plot_row)
-    )
+        levels = unique(paste(section_label, "-", prior_label))),
+      plot_row = forcats::fct_rev(plot_row))
 
   # Compute section separator positions
   all_levels <- levels(df$plot_row)
@@ -68,8 +66,7 @@ sensitivity_density_plot_fn <- function(df,
     dplyr::arrange(plot_row) |>
     dplyr::mutate(
       level_num = match(plot_row, all_levels),
-      section_changes = section_label != dplyr::lag(section_label, default = dplyr::first(section_label))
-    )
+      section_changes = section_label != dplyr::lag(section_label, default = dplyr::first(section_label)))
 
   section_breaks <- section_info |>
     dplyr::group_by(section_label) |>
@@ -81,13 +78,10 @@ sensitivity_density_plot_fn <- function(df,
   top_line_pos <- max(level_positions) + 0.5
   calc_xlim <- if (!is.null(xlim)) xlim else range(df$x, na.rm = TRUE)
 
-  # Rows from model-averaged draws can carry a point mass at the null value
-  # (e.g. RoBMA's null-effect models) -- see jitter_null_draws() for why that
-  # needs special handling instead of a plain KDE over all draws.
+  # RoBMA has mass at null value
   df <- jitter_null_draws(
     df, group_col = "plot_row", x_col = "x",
-    null_value = null_value, log_scale = props$log_scale
-  )
+    null_value = null_value, log_scale = props$log_scale)
 
   p <- ggplot2::ggplot(df, ggplot2::aes(y = plot_row)) +
     {if (isTRUE(add_null_range)) {
@@ -105,99 +99,60 @@ sensitivity_density_plot_fn <- function(df,
         colour = color_overall_posterior_outline,
         linewidth = 0.5,
         alpha = 0.7,
-        position = ggplot2::position_nudge(y = -0.5)
-      )
+        position = ggplot2::position_nudge(y = -0.5))
     } else {
       ggdist::stat_slab(
         ggplot2::aes(x = x),
-        normalize = "groups",
-        height = 0.9,
-        fill = color_overall_posterior,
-        colour = color_overall_posterior_outline,
-        linewidth = 0.5,
-        alpha = 0.7,
-        position = ggplot2::position_nudge(y = -0.5)
-      )
+        normalize = "groups", height = 0.9, fill = color_overall_posterior,
+        colour = color_overall_posterior_outline, linewidth = 0.5, alpha = 0.7,
+        position = ggplot2::position_nudge(y = -0.5))
     }} +
     {if (isTRUE(split_color_by_null)) {
-      ggplot2::scale_fill_manual(
-        values = c("FALSE" = color_favours_intervention,
-                   "TRUE"  = color_favours_control),
-        guide = "none"
-      )
+      ggplot2::scale_fill_manual(values = c("FALSE" = color_favours_intervention, 
+                                             "TRUE"  = color_favours_control),
+                                 guide = "none")
     }} +
-
-    # Null line
     ggplot2::geom_vline(
-      xintercept = null_value,
-      linewidth = 1,
-      color = "black"
-    ) +
-
-    # Horizontal section separators
+      xintercept = null_value, linewidth = 1, color = "black") +
     {if (length(section_breaks) > 0) {
       purrr::map(section_breaks, ~ {
         ggplot2::geom_hline(yintercept = .x, color = "grey85", linewidth = 0.3)
       })
     }} +
-
     ggplot2::geom_hline(yintercept = top_line_pos, color = "grey60", linewidth = 0.5) +
     ggplot2::geom_hline(yintercept = 0.5, color = "grey60", linewidth = 0.5) +
-
     ggplot2::scale_y_discrete(expand = c(0, 0), limits = all_levels) +
-
-    # Favours labels
     ggplot2::annotation_custom(
-      grid::textGrob(
-        label = paste(" Favours\n", label_control),
-        x = grid::unit(0.97, "npc"),
-        y = grid::unit(1.02, "npc"),
-        just = c("right", "bottom"),
-        gp = grid::gpar(col = "grey30", fontsize = 9, fontfamily = font)
-      ),
-      xmin = calc_xlim[1], xmax = calc_xlim[2] - 0.01, ymin = -Inf, ymax = Inf
-    ) +
-
+      grid::textGrob(label = paste(" Favours\n", label_control),
+        x = grid::unit(0.97, "npc"), y = grid::unit(1.02, "npc"),
+        just = c("right", "bottom"), gp = grid::gpar(col = "grey30", fontsize = 9, fontfamily = font)),
+      xmin = calc_xlim[1], xmax = calc_xlim[2] - 0.01, ymin = -Inf, ymax = Inf) +
     ggplot2::annotation_custom(
-      grid::textGrob(
-        label = paste(" Favours\n", label_intervention),
-        x = grid::unit(0.05, "npc"),
-        y = grid::unit(1.02, "npc"),
-        just = c("left", "bottom"),
-        gp = grid::gpar(col = "grey30", fontsize = 9, fontfamily = font)
-      ),
-      xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf
-    ) +
-
-    ggplot2::coord_cartesian(
-      xlim = calc_xlim,
-      ylim = c(0.5, max(level_positions) + 0.5),
-      clip = "off"
-    ) +
-
+      grid::textGrob(label = paste(" Favours\n", label_intervention),
+        x = grid::unit(0.05, "npc"), y = grid::unit(1.02, "npc"),
+        just = c("left", "bottom"), gp = grid::gpar(col = "grey30", fontsize = 9, fontfamily = font)),
+      xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf) +
+    ggplot2::coord_cartesian(xlim = calc_xlim,  ylim = c(0.5, max(level_positions) + 0.5), clip = "off") +
     ggplot2::theme_light() +
     ggplot2::theme(
-      axis.text.y    = ggplot2::element_blank(),
-      axis.ticks.y   = ggplot2::element_blank(),
-      axis.title.y   = ggplot2::element_blank(),
-      axis.title.x   = ggplot2::element_text(vjust = -0.5, family = font),
-      panel.grid     = ggplot2::element_blank(),
-      panel.border   = ggplot2::element_blank(),
-      plot.margin    = ggplot2::margin(0, 0, 0, 0),
+      axis.text.y = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_text(vjust = -0.5, family = font),
+      panel.grid = ggplot2::element_blank(),
+      panel.border = ggplot2::element_blank(),
+      plot.margin = ggplot2::margin(0, 0, 0, 0),
       axis.line.x.bottom = ggplot2::element_line(linewidth = 0.5, color = "grey60"),
-      axis.line.x.top    = ggplot2::element_line(linewidth = 0.5, color = "grey60"),
-    ) +
+      axis.line.x.top = ggplot2::element_line(linewidth = 0.5, color = "grey60")) +
     ggplot2::labs(x = props$x_label)
 
   # Apply appropriate scale
   if (isTRUE(props$log_scale)) {
     p <- p + ggplot2::scale_x_log10(
-      breaks = breaks, limits = calc_xlim, expand = c(0, 0)
-    )
+      breaks = breaks, limits = calc_xlim, expand = c(0, 0))
   } else {
     p <- p + ggplot2::scale_x_continuous(
-      breaks = breaks, limits = calc_xlim, expand = c(0, 0)
-    )
+      breaks = breaks, limits = calc_xlim, expand = c(0, 0))
   }
 
   p

@@ -1,6 +1,4 @@
-# Risk of bias internals, vendored from the robbR package
-# (https://github.com/BLMoran/robbR). Keep in sync with robbR/R/rob_spec.R,
-# rob_tools.R, rob_judgement.R and rob_table_fn.R.
+# Risk of bias internals from the robbR package (https://github.com/BLMoran/robbR).
 
 #' Risk of bias tool specification
 #'
@@ -504,7 +502,7 @@ add_rob_titles <- function(plot, title = NULL, subtitle = NULL, title_align = "l
 }
 
 
-# ---- bayesfoRest-specific helpers (forest plot RoB columns) ----
+# bayesfoRest-specific helpers (forest plot RoB columns)
 
 #' Judgements treated as "high" risk of bias when `exclude_high_rob = TRUE`
 #'
@@ -537,8 +535,7 @@ create_rob_labels <- function(rob_cols, measure, effect_label = NULL, effect_typ
 
   base_labels <- list(
     weighted_effect = gt::md(paste("Shrinkage", effect_label, "\n", "[95% CrI]")),
-    unweighted_effect = gt::md(paste("Observed", effect_label, "\n", "[95% CI]"))
-  )
+    unweighted_effect = gt::md(paste("Observed", effect_label, "\n", "[95% CI]")))
   if (effect_type == "common_effect") base_labels$weighted_effect <- NULL
 
   text_cols <- get_rob_text_columns(rob_cols)

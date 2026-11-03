@@ -14,23 +14,15 @@
 NULL
 
 
-# =============================================================================
 # CANONICAL DRAWS FORMAT
-# =============================================================================
-#
 # Every extract_forest_draws() method must return a tibble with columns:
 #
-#   .draw        : integer draw index
-#   Author       : character study name (includes "Pooled Effect" rows)
-#   theta_study  : numeric study-level effect on model scale
-#   eta          : numeric random deviation from pooled (NA for pooled / CE)
-#   tau          : numeric between-study heterogeneity SD (NA for CE models)
-#
+#   .draw: integer draw index
+#   Author: character study name (includes "Pooled Effect" rows)
+#   theta_study: numeric study-level effect on model scale
+#   eta: numeric random deviation from pooled (NA for pooled / CE)
+#   tau: numeric between-study heterogeneity SD (NA for CE models)
 
-
-# =============================================================================
-# detect_model_info
-# =============================================================================
 
 #' Detect Model Backend and Pooling Type
 #'
@@ -58,9 +50,7 @@ detect_model_info.default <- function(model, ...) {
   rlang::abort(
     c(
       paste0("Unsupported model class: '", class(model)[1], "'"),
-      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"
-    )
-  )
+      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"))
 }
 
 #' @export
@@ -113,11 +103,6 @@ detect_model_info.CmdStanMCMC <- function(model, tau_par = "tau", ...) {
        pooling = if (has_tau) "random_effect" else "common_effect")
 }
 
-
-# =============================================================================
-# extract_pooled_summary
-# =============================================================================
-
 #' Extract Pooled Effect Summary
 #'
 #' @description
@@ -141,9 +126,7 @@ extract_pooled_summary.default <- function(model, prob = 0.95, ...) {
   rlang::abort(
     c(
       paste0("No extract_pooled_summary method for class '", class(model)[1], "'"),
-      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"
-    )
-  )
+      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"))
 }
 
 #' @export
@@ -155,8 +138,8 @@ extract_pooled_summary.brmsfit <- function(model, prob = 0.95, ...) {
   }
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
 #' @export
@@ -164,8 +147,8 @@ extract_pooled_summary.meta_stan <- function(model, prob = 0.95, ...) {
   theta <- as.data.frame(model$fit)[["theta"]]
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
 #' @export
@@ -173,8 +156,8 @@ extract_pooled_summary.bayesmeta <- function(model, prob = 0.95, ...) {
   # Use qposterior to get quantiles of mu directly (no MCMC draws)
   alpha <- (1 - prob) / 2
   c(estimate = model$qposterior(mu.p = 0.5),
-    lower    = model$qposterior(mu.p = alpha),
-    upper    = model$qposterior(mu.p = 1 - alpha))
+    lower = model$qposterior(mu.p = alpha),
+    upper = model$qposterior(mu.p = 1 - alpha))
 }
 
 #' @export
@@ -187,8 +170,8 @@ extract_pooled_summary.stanreg <- function(model, prob = 0.95, ...) {
   theta <- posterior_df[[int_col[1]]]
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
 #' @export
@@ -199,8 +182,8 @@ extract_pooled_summary.stanfit <- function(model, prob = 0.95,
   theta <- posterior_df[[theta_col]]
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
 #' @export
@@ -214,14 +197,10 @@ extract_pooled_summary.CmdStanMCMC <- function(model, prob = 0.95,
   theta <- posterior_df[[theta_col]]
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
-
-# =============================================================================
-# extract_forest_draws
-# =============================================================================
 
 #' Extract Posterior Draws in Canonical Format
 #'
@@ -250,9 +229,7 @@ extract_forest_draws.default <- function(model, data, ...) {
   rlang::abort(
     c(
       paste0("No extract_forest_draws method for class '", class(model)[1], "'"),
-      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"
-    )
-  )
+      "i" = "Supported types: brmsfit, meta_stan, bayesmeta, stanreg, stanfit, CmdStanMCMC, bayesma, brma, rjags"))
 }
 
 #' @export
@@ -261,11 +238,11 @@ extract_forest_draws.brmsfit <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  n_studies    <- nrow(data)
-  study_names  <- as.character(data$Author)
+  n_studies <- nrow(data)
+  study_names <- as.character(data$Author)
   posterior_df <- as.data.frame(model)
-  n_draws      <- nrow(posterior_df)
-  draw_ids     <- seq_len(n_draws)
+  n_draws <- nrow(posterior_df)
+  draw_ids <- seq_len(n_draws)
 
   intercept <- posterior_df[["b_Intercept"]]
   if (is.null(intercept)) {
@@ -284,21 +261,19 @@ extract_forest_draws.brmsfit <- function(model, data, ...) {
     deviation <- if (length(re_col) > 0) posterior_df[[re_col[1]]] else rep(0, n_draws)
 
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = intercept + deviation,
-      eta         = deviation,
-      tau         = tau_vec
-    )
+      eta = deviation,
+      tau = tau_vec)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = intercept,
-    eta         = NA_real_,
-    tau         = tau_vec
-  )
+    eta = NA_real_,
+    tau = tau_vec)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
@@ -310,11 +285,11 @@ extract_forest_draws.meta_stan <- function(model, data, ...) {
   }
 
   posterior_df <- as.data.frame(model$fit)
-  n_draws     <- nrow(posterior_df)
-  n_studies   <- nrow(data)
+  n_draws <- nrow(posterior_df)
+  n_studies <- nrow(data)
   study_names <- as.character(data$Author)
-  theta       <- posterior_df[["theta"]]
-  draw_ids    <- seq_len(n_draws)
+  theta <- posterior_df[["theta"]]
+  draw_ids <- seq_len(n_draws)
 
   tau_col <- grep("^tau\\[1\\]$|^tau$", names(posterior_df), value = TRUE)
   tau_vec <- if (length(tau_col) > 0) posterior_df[[tau_col[1]]] else rep(NA_real_, n_draws)
@@ -323,11 +298,9 @@ extract_forest_draws.meta_stan <- function(model, data, ...) {
   has_d <- any(grepl("^d\\[\\d+\\]$", names(posterior_df)))
 
   # Detect arm-level vs study-level d indexing
-  # MetaStan uses arm-level: 2 arms per study → n_d = 2 * n_studies
-  # Control arms at odd indices d[1], d[3], ...; treatment at even d[2], d[4], ...
   if (has_d) {
     d_cols <- grep("^d\\[\\d+\\]$", names(posterior_df), value = TRUE)
-    n_d    <- length(d_cols)
+    n_d <- length(d_cols)
     arm_level_d <- (n_d >= 2 * n_studies)
   }
 
@@ -337,10 +310,10 @@ extract_forest_draws.meta_stan <- function(model, data, ...) {
       # Study-specific treatment effect = theta + u[1,i] * tau
       u_col <- paste0("u[1,", i, "]")
       if (u_col %in% names(posterior_df)) {
-        deviation    <- posterior_df[[u_col]] * tau_vec
+        deviation <- posterior_df[[u_col]] * tau_vec
         study_effect <- theta + deviation
       } else {
-        deviation    <- rep(0, n_draws)
+        deviation <- rep(0, n_draws)
         study_effect <- theta
       }
     } else if (has_d) {
@@ -351,44 +324,41 @@ extract_forest_draws.meta_stan <- function(model, data, ...) {
         d_trt  <- paste0("d[", 2 * i, "]")
         if (d_trt %in% names(posterior_df) && d_ctrl %in% names(posterior_df)) {
           study_effect <- posterior_df[[d_trt]] - posterior_df[[d_ctrl]]
-          deviation    <- study_effect - theta
+          deviation <- study_effect - theta
         } else {
           study_effect <- theta
-          deviation    <- rep(0, n_draws)
+          deviation <- rep(0, n_draws)
         }
       } else {
-        # Study-level indexing (rare, but handle it)
         d_col <- paste0("d[", i, "]")
         if (d_col %in% names(posterior_df)) {
           study_effect <- posterior_df[[d_col]]
-          deviation    <- study_effect - theta
+          deviation <- study_effect - theta
         } else {
           study_effect <- theta
-          deviation    <- rep(0, n_draws)
+          deviation <- rep(0, n_draws)
         }
       }
     } else {
       # No study-level parameters: common-effects, use theta for all
-      deviation    <- rep(0, n_draws)
+      deviation <- rep(0, n_draws)
       study_effect <- theta
     }
 
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = study_effect,
-      eta         = deviation,
-      tau         = tau_vec
-    )
+      eta = deviation,
+      tau = tau_vec)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = theta,
-    eta         = NA_real_,
-    tau         = tau_vec
-  )
+    eta = NA_real_,
+    tau = tau_vec)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
@@ -399,41 +369,29 @@ extract_forest_draws.bayesmeta <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  n_draws     <- 4000L
-  n_studies   <- model$k
+  n_draws <- 4000L
+  n_studies <- model$k
   study_names <- as.character(data$Author)
-  draw_ids    <- seq_len(n_draws)
-
-  # Fast grid-based sampling of (mu, tau) from the joint posterior.
-  # bayesmeta's rposterior() uses inverse-CDF sampling (uniroot + integrate
-
-  # per draw) which is extremely slow. Instead:
-  #   1. Sample tau from its marginal posterior via a fine grid
-  #   2. Sample mu | tau analytically (conjugate Normal)
-  y_obs     <- model$y
+  draw_ids <- seq_len(n_draws)
+  y_obs <- model$y
   sigma_obs <- model$sigma
 
   # Build grid for marginal posterior of tau
   tau_upper <- model$qposterior(tau.p = 0.9999)
-  tau_grid  <- seq(0, tau_upper, length.out = 2000L)
-  tau_dens  <- model$dposterior(tau = tau_grid)
+  tau_grid <- seq(0, tau_upper, length.out = 2000L)
+  tau_dens <- model$dposterior(tau = tau_grid)
   tau_dens[is.na(tau_dens) | tau_dens < 0] <- 0
 
-  # Sample tau from grid via inverse-CDF (vectorised, instant)
-  tau_cdf   <- cumsum(tau_dens)
-  tau_cdf   <- tau_cdf / tau_cdf[length(tau_cdf)]
-  u         <- stats::runif(n_draws)
-  tau_idx   <- findInterval(u, tau_cdf) + 1L
-  tau_idx   <- pmin(tau_idx, length(tau_grid))
+  # Sample tau from grid via inverse-CDF
+  tau_cdf <- cumsum(tau_dens)
+  tau_cdf <- tau_cdf / tau_cdf[length(tau_cdf)]
+  u <- stats::runif(n_draws)
+  tau_idx <- findInterval(u, tau_cdf) + 1L
+  tau_idx <- pmin(tau_idx, length(tau_grid))
   tau_draws <- tau_grid[tau_idx]
 
-  # Sample mu | tau analytically: mu | tau, y ~ N(mu_hat, 1/prec_mu). The
-  # model is jointly normal (y ~ N(theta,sigma^2), theta ~ N(mu,tau^2), and
-  # a normal or improper-flat prior on mu), so this conjugate update is
-  # exact, not an approximation -- but it must include the fitted model's
-  # own mu.prior (mean, sd), or an informative prior silently has zero
-  # effect on the draws regardless of what the model was actually fit with.
-  mu_prior_sd   <- model$mu.prior["sd"]
+  # Sample mu | tau analytically: mu | tau, y ~ N(mu_hat, 1/prec_mu)
+  mu_prior_sd <- model$mu.prior["sd"]
   mu_prior_prec <- if (!is.na(mu_prior_sd) && is.finite(mu_prior_sd)) 1 / mu_prior_sd^2 else 0
   mu_prior_contrib <- if (mu_prior_prec > 0) mu_prior_prec * model$mu.prior["mean"] else 0
 
@@ -445,36 +403,31 @@ extract_forest_draws.bayesmeta <- function(model, data, ...) {
   }, numeric(1))
   mu_draws <- stats::rnorm(n_draws, mean = mu_hat, sd = sqrt(1 / prec_mu))
 
-  # Compute study-specific theta_i analytically from posterior conditional:
-  #   theta_i | y_i, sigma_i, mu, tau ~ N(w_i, v_i)
-  #   v_i = 1 / (1/sigma_i^2 + 1/tau^2)
-  #   w_i = v_i * (y_i/sigma_i^2 + mu/tau^2)
+  # Compute study-specific theta_i analytically from posterior conditional
   study_draws <- purrr::map_dfr(seq_len(n_studies), function(i) {
     prec_data  <- 1 / sigma_obs[i]^2
     # When tau = 0, the study effect equals the pooled effect (no heterogeneity)
-    tau_safe   <- pmax(tau_draws, .Machine$double.eps)
+    tau_safe <- pmax(tau_draws, .Machine$double.eps)
     prec_prior <- 1 / tau_safe^2
-    v_i        <- 1 / (prec_data + prec_prior)
-    w_i        <- v_i * (y_obs[i] * prec_data + mu_draws * prec_prior)
-    theta_i    <- stats::rnorm(n_draws, mean = w_i, sd = sqrt(v_i))
+    v_i <- 1 / (prec_data + prec_prior)
+    w_i <- v_i * (y_obs[i] * prec_data + mu_draws * prec_prior)
+    theta_i <- stats::rnorm(n_draws, mean = w_i, sd = sqrt(v_i))
     # For tau = 0 draws, theta_i should equal mu (complete shrinkage)
     theta_i[tau_draws == 0] <- mu_draws[tau_draws == 0]
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = theta_i,
-      eta         = theta_i - mu_draws,
-      tau         = tau_draws
-    )
+      eta = theta_i - mu_draws,
+      tau = tau_draws)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = mu_draws,
-    eta         = NA_real_,
-    tau         = tau_draws
-  )
+    eta = NA_real_,
+    tau = tau_draws)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
@@ -485,11 +438,11 @@ extract_forest_draws.stanreg <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  n_studies    <- nrow(data)
+  n_studies <- nrow(data)
   study_names  <- as.character(data$Author)
   posterior_df <- as.data.frame(model)
-  n_draws      <- nrow(posterior_df)
-  draw_ids     <- seq_len(n_draws)
+  n_draws <- nrow(posterior_df)
+  draw_ids <- seq_len(n_draws)
 
   int_col <- grep("^\\(Intercept\\)$|^Intercept$", names(posterior_df), value = TRUE)
   if (length(int_col) == 0) {
@@ -514,21 +467,19 @@ extract_forest_draws.stanreg <- function(model, data, ...) {
     deviation <- if (length(re_col) > 0) posterior_df[[re_col[1]]] else rep(0, n_draws)
 
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = intercept + deviation,
-      eta         = deviation,
-      tau         = tau_vec
-    )
+      eta = deviation,
+      tau = tau_vec)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = intercept,
-    eta         = NA_real_,
-    tau         = tau_vec
-  )
+    eta = NA_real_,
+    tau = tau_vec)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
@@ -561,15 +512,7 @@ extract_forest_draws.CmdStanMCMC <- function(model, data,
 }
 
 
-# =============================================================================
-# REFIT FOR SUBGROUPS
-# =============================================================================
-
 #' Refit Model for Subgroup Data
-#'
-#' Attempts to refit a model on a subset of data for subgroup analysis.
-#' Returns the refitted model on success, or NULL if the backend does not
-#' support automatic refitting.
 #'
 #' @param model A fitted model object.
 #' @param data Subset of data for this subgroup.
@@ -589,24 +532,21 @@ refit_for_subgroup.default <- function(model, data, ...) {
     c(
       paste0("Cannot automatically refit '", class(model)[1],
              "' models for subgroup analysis."),
-      "i" = "Subgroup pooled effects will be approximated from the overall model."
-    ),
+      "i" = "Subgroup pooled effects will be approximated from the overall model."),
     .frequency = "once",
-    .frequency_id = paste0("refit_subgroup_", class(model)[1])
-  )
+    .frequency_id = paste0("refit_subgroup_", class(model)[1]))
   NULL
 }
 
 #' @export
 refit_for_subgroup.brmsfit <- function(model, data, ...) {
-  md   <- model$data                              # yi, sei, Author
-  keep <- as.character(data$Author)               # the studies IN THIS SUBGROUP (already split by age_group upstream)
-  sub  <- md[as.character(md$Author) %in% keep, , drop = FALSE]
+  md <- model$data
+  keep <- as.character(data$Author)
+  sub <- md[as.character(md$Author) %in% keep, , drop = FALSE]
   if (nrow(sub) < 1) return(NULL)
   tryCatch(
     stats::update(model, newdata = sub, recompile = FALSE, refresh = 0),
-    error = function(e) { rlang::warn(conditionMessage(e)); NULL }
-  )
+    error = function(e) { rlang::warn(conditionMessage(e)); NULL })
 }
 
 #' @export
@@ -614,18 +554,14 @@ refit_for_subgroup.bayesmeta <- function(model, data, ...) {
   if (!requireNamespace("bayesmeta", quietly = TRUE)) {
     rlang::abort("Package 'bayesmeta' is required.")
   }
-  y_col  <- if ("y" %in% names(data)) "y" else if ("yi" %in% names(data)) "yi" else NULL
+  y_col <- if ("y" %in% names(data)) "y" else if ("yi" %in% names(data)) "yi" else NULL
   se_col <- if ("se" %in% names(data)) "se" else if ("sei" %in% names(data)) "sei" else NULL
   if (is.null(y_col) || is.null(se_col)) {
     rlang::warn("Cannot refit bayesmeta for subgroup: missing y/se columns.")
     return(NULL)
   }
-  # Use the original model's tau prior for subgroup refits. When the
-  # original prior is proper this preserves the user's specification.
-  # When it is improper (the bayesmeta default), few studies per
-  # subgroup leave tau unidentified, producing extreme posterior draws
-  # (tau > 1000) that make density slabs invisible. In that case we
-  # fall back to a vague but proper half-normal(0, 1) prior.
+  
+  # Use the original model's tau prior for subgroup refits
   if (isTRUE(model$tau.prior.proper)) {
     tau_prior <- model$tau.prior
   } else {
@@ -639,8 +575,7 @@ refit_for_subgroup.bayesmeta <- function(model, data, ...) {
     error = function(e) {
       rlang::warn(paste0("bayesmeta subgroup refit failed: ", e$message))
       NULL
-    }
-  )
+    })
 }
 
 #' @export
@@ -649,38 +584,22 @@ refit_for_subgroup.meta_stan <- function(model, data, ...) {
     rlang::abort("Package 'MetaStan' is required.")
   }
 
-  # Map study names to row indices in the original data_wide
-  # data_wide$study is 1:n_studies, matching the row order of the user's data
-  # The 'data' argument here is the subgroup subset of the user's data frame
   sg_authors <- as.character(data$Author)
-
-  # We need the full original data to find which row indices the subgroup studies are
-  # The model stores data_wide with numeric study IDs matching the original data order
-  # We need to identify which rows of data_wide correspond to the subgroup
-  # The caller passes the subgroup subset, so we match by the row indices
-  # stored in the ... or by matching Author names to the original data order
 
   # Get original study count and subgroup indices
   n_orig <- nrow(model$data_wide)
-  n_sg   <- nrow(data)
+  n_sg <- nrow(data)
 
-  # The subgroup data rows must map to data_wide rows
-
-  # We rely on the original_data passed via ... to find indices
   original_data <- list(...)$original_data
   if (!is.null(original_data)) {
     all_authors <- as.character(original_data$Author)
     sg_indices  <- which(all_authors %in% sg_authors)
   } else {
-    # Fallback: assume data rows are in same order as data_wide
-    # This works when forest_data.R passes the nested subgroup data
-    # which preserves row ordering from the original data
     sg_indices <- seq_len(n_sg)
     rlang::warn(
       "Subgroup study indices inferred by position. Pass original_data for exact matching.",
       .frequency = "once",
-      .frequency_id = "metastan_subgroup_index"
-    )
+      .frequency_id = "metastan_subgroup_index")
   }
 
   # Filter data_wide to subgroup rows and renumber
@@ -693,8 +612,7 @@ refit_for_subgroup.meta_stan <- function(model, data, ...) {
     "1" = "normal",
     "2" = "binomial",
     "3" = "Poisson",
-    "binomial"  # fallback
-  )
+    "binomial")
 
   # Determine armVars based on likelihood
   arm_vars <- if (likelihood == "binomial") {
@@ -709,22 +627,20 @@ refit_for_subgroup.meta_stan <- function(model, data, ...) {
     sg_stan_dat <- MetaStan::create_MetaStan_dat(
       dat = sg_data_wide,
       armVars = arm_vars,
-      nArmsVar = "nd"
-    )
+      nArmsVar = "nd")
 
     MetaStan::meta_stan(
-      data         = sg_stan_dat,
-      likelihood   = likelihood,
-      mu_prior     = model$stanDat$mu_prior,
-      theta_prior  = model$stanDat$theta_prior,
-      tau_prior    = model$stanDat$tau_prior,
+      data = sg_stan_dat,
+      likelihood = likelihood,
+      mu_prior = model$stanDat$mu_prior,
+      theta_prior = model$stanDat$theta_prior,
+      tau_prior = model$stanDat$tau_prior,
       tau_prior_dist = model$tau_prior_dist,
-      beta_prior   = model$stanDat$beta_prior,
-      re           = as.logical(model$stanDat$re),
-      ncp          = as.logical(model$stanDat$ncp),
+      beta_prior = model$stanDat$beta_prior,
+      re = as.logical(model$stanDat$re),
+      ncp = as.logical(model$stanDat$ncp),
       interval.type = model$interval.type,
-      mreg         = as.logical(model$stanDat$mreg)
-    )
+      mreg = as.logical(model$stanDat$mreg))
   }, error = function(e) {
     rlang::warn(paste0("MetaStan subgroup refit failed: ", e$message))
     NULL
@@ -738,16 +654,11 @@ refit_for_subgroup.stanreg <- function(model, data, ...) {
     error = function(e) {
       rlang::warn(paste0("rstanarm subgroup refit failed: ", e$message))
       NULL
-    }
-  )
+    })
 }
 
 
-#' Add prediction draws to a canonical draws tibble
-#'
-#' Generates a predictive distribution for a hypothetical new study by
-#' sampling theta_pred = theta_pooled + N(0, tau) for each posterior draw.
-#' Works with any backend since it operates on the canonical format.
+#' Add prediction draws to draws tibble
 #'
 #' @param draws Canonical draws tibble (output of extract_forest_draws).
 #' @return The draws tibble with an added "Prediction" Author.
@@ -755,7 +666,7 @@ refit_for_subgroup.stanreg <- function(model, data, ...) {
 add_prediction_draws <- function(draws) {
   pooled <- draws |> dplyr::filter(Author == "Pooled Effect")
 
-  # Need tau for prediction; skip if CE model (all tau = NA)
+  # Need tau for prediction; skip if CE model
   if (all(is.na(pooled$tau))) {
     rlang::warn("Cannot add prediction interval for common-effects models (no tau).")
     return(draws)
@@ -764,20 +675,17 @@ add_prediction_draws <- function(draws) {
   set.seed(12345)
   pred_draws <- pooled |>
     dplyr::transmute(
-      .draw       = .draw,
-      Author      = "Prediction",
+      .draw = .draw,
+      Author = "Prediction",
       theta_study = theta_study + stats::rnorm(dplyr::n(), mean = 0, sd = tau),
-      eta         = NA_real_,
-      tau         = tau
-    )
+      eta = NA_real_,
+      tau = tau)
 
   dplyr::bind_rows(draws, pred_draws)
 }
 
 
-# =============================================================================
-# bayesma METHODS
-# =============================================================================
+# bayesma
 
 #' @export
 detect_model_info.bayesma <- function(model, ...) {
@@ -791,8 +699,8 @@ extract_pooled_summary.bayesma <- function(model, prob = 0.95, ...) {
   mu_draws <- as.numeric(model$draws$mu$mu)
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(mu_draws),
-    lower    = unname(stats::quantile(mu_draws, alpha)),
-    upper    = unname(stats::quantile(mu_draws, 1 - alpha)))
+    lower = unname(stats::quantile(mu_draws, alpha)),
+    upper = unname(stats::quantile(mu_draws, 1 - alpha)))
 }
 
 #' @export
@@ -801,7 +709,7 @@ extract_forest_draws.bayesma <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  is_re    <- model$meta$model_type != "common_effect"
+  is_re <- model$meta$model_type != "common_effect"
   mu_draws <- as.numeric(model$draws$mu$mu)
   n_draws  <- length(mu_draws)
   draw_ids <- seq_len(n_draws)
@@ -812,43 +720,38 @@ extract_forest_draws.bayesma <- function(model, data, ...) {
 
     study_draws <- model$draws$study |>
       dplyr::transmute(
-        .draw       = .draw,
-        Author      = as.character(.data[[study_col]]),
+        .draw = .draw,
+        Author = as.character(.data[[study_col]]),
         theta_study = theta,
-        eta         = theta - mu,
-        tau         = tau
-      )
+        eta = theta - mu,
+        tau = tau)
+    
   } else {
-    tau_draws   <- rep(NA_real_, n_draws)
+    tau_draws <- rep(NA_real_, n_draws)
     study_names <- as.character(data$Author)
 
     study_draws <- purrr::map_dfr(study_names, function(nm) {
       tibble::tibble(
-        .draw       = draw_ids,
-        Author      = nm,
+        .draw = draw_ids,
+        Author = nm,
         theta_study = mu_draws,
-        eta         = 0,
-        tau         = tau_draws
-      )
+        eta = 0,
+        tau = tau_draws)
     })
   }
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = mu_draws,
-    eta         = NA_real_,
-    tau         = tau_draws
-  )
+    eta = NA_real_,
+    tau = tau_draws)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
 
 #' @export
 refit_for_subgroup.bayesma <- function(model, data, ..., re_min_k = NULL) {
-  # bayesma isn't a CRAN dependency, so the package name is kept out of a
-  # literal requireNamespace()/"::" call -- both are flagged by R CMD check
-  # as undeclared dependencies even when guarded like this.
   pkg <- "bayesma"
   if (!requireNamespace(pkg, quietly = TRUE)) {
     rlang::abort(paste0("Package '", pkg, "' is required."))
@@ -862,22 +765,20 @@ refit_for_subgroup.bayesma <- function(model, data, ..., re_min_k = NULL) {
     # bayes_forest() renames data columns to its own canonical names; point
     # the stored call's column arguments (tidy-eval symbols) at those names
     forest_col_map <- list(
-      study_var   = quote(Author),
-      year_var    = quote(Year),
-      n_ctrl     = quote(N_Control),
-      n_int      = quote(N_Intervention),
+      study_var = quote(Author),
+      year_var = quote(Year),
+      n_ctrl = quote(N_Control),
+      n_int = quote(N_Intervention),
       mean_ctrl  = quote(Mean_Control),
-      mean_int   = quote(Mean_Intervention),
-      sd_ctrl    = quote(SD_Control),
-      sd_int     = quote(SD_Intervention),
+      mean_int = quote(Mean_Intervention),
+      sd_ctrl = quote(SD_Control),
+      sd_int = quote(SD_Intervention),
       event_ctrl = quote(Event_Control),
-      event_int  = quote(Event_Intervention)
-    )
+      event_int = quote(Event_Intervention))
     call_args <- as.list(model$call)[-1]
     present <- names(forest_col_map)[
       names(forest_col_map) %in% names(call_args) &
-        purrr::map_lgl(forest_col_map, ~ as.character(.x) %in% names(data))
-    ]
+        purrr::map_lgl(forest_col_map, ~ as.character(.x) %in% names(data))]
     new_call <- rlang::call_modify(model$call, !!!forest_col_map[present], data = data)
     eval(new_call, asNamespace(pkg))
   }, error = function(e) {
@@ -886,10 +787,7 @@ refit_for_subgroup.bayesma <- function(model, data, ..., re_min_k = NULL) {
   })
 }
 
-
-# =============================================================================
-# brma (RoBMA) METHODS
-# =============================================================================
+# RoBMA::brma
 
 #' @export
 detect_model_info.brma <- function(model, ...) {
@@ -911,8 +809,8 @@ extract_pooled_summary.brma <- function(model, prob = 0.95, ...) {
   mu <- as.numeric(draws_df[["mu"]])
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(mu),
-    lower    = unname(stats::quantile(mu, alpha)),
-    upper    = unname(stats::quantile(mu, 1 - alpha)))
+    lower = unname(stats::quantile(mu, alpha)),
+    upper = unname(stats::quantile(mu, 1 - alpha)))
 }
 
 #' @export
@@ -927,13 +825,13 @@ extract_forest_draws.brma <- function(model, data, ...) {
     rlang::abort("Data must contain an 'Author' column.")
   }
 
-  draws_df    <- posterior::as_draws_df(model$fit$mcmc)
-  mu_draws    <- as.numeric(draws_df[["mu"]])
-  n_draws     <- length(mu_draws)
-  draw_ids    <- seq_len(n_draws)
+  draws_df <- posterior::as_draws_df(model$fit$mcmc)
+  mu_draws <- as.numeric(draws_df[["mu"]])
+  n_draws <- length(mu_draws)
+  draw_ids <- seq_len(n_draws)
   study_names <- as.character(data$Author)
-  n_studies   <- length(study_names)
-  has_tau     <- "tau" %in% names(draws_df)
+  n_studies <- length(study_names)
+  has_tau <- "tau" %in% names(draws_df)
 
   tau_vec <- if (has_tau) {
     as.numeric(draws_df[["tau"]])
@@ -941,12 +839,6 @@ extract_forest_draws.brma <- function(model, data, ...) {
     rep(NA_real_, n_draws)
   }
 
-  # predict(type = "estimate") returns each study's conditional posterior
-  # *mean* E[theta_i | mu, tau, y_i] per draw, not an actual draw from that
-  # conditional distribution (verified: identical to the analytic mean to
-  # floating-point precision) -- so its own sampling variance v_i must be
-  # added back in, the same way extract_forest_draws.bayesmeta() does, or
-  # every per-study shrinkage interval comes out too narrow.
   blup_mat <- tryCatch({
     unclass(stats::predict(model, newdata = NULL, type = "estimate", quiet = TRUE))
   }, error = function(e) NULL)
@@ -961,26 +853,24 @@ extract_forest_draws.brma <- function(model, data, ...) {
     }
 
     if (has_tau && !is.na(sigma_obs[i])) {
-      v_i     <- 1 / (1 / sigma_obs[i]^2 + 1 / tau_vec^2)
+      v_i <- 1 / (1 / sigma_obs[i]^2 + 1 / tau_vec^2)
       theta_i <- stats::rnorm(n_draws, mean = theta_i, sd = sqrt(v_i))
     }
 
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = theta_i,
-      eta         = theta_i - mu_draws,
-      tau         = tau_vec
-    )
+      eta = theta_i - mu_draws,
+      tau = tau_vec)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = mu_draws,
-    eta         = NA_real_,
-    tau         = tau_vec
-  )
+    eta = NA_real_,
+    tau = tau_vec)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }
@@ -993,34 +883,32 @@ refit_for_subgroup.brma <- function(model, data, ...) {
 
   tryCatch({
     outcome_priors <- model$priors$outcome
-    fit_ctrl       <- model$fit_control
-    measure        <- attr(model$data, "measure")
+    fit_ctrl <- model$fit_control
+    measure <- attr(model$data, "measure")
 
     if (!all(c("yi", "vi") %in% names(data))) {
       rlang::abort("Data must contain 'yi' and 'vi' columns for brma refit.")
     }
 
     sg_data <- data.frame(
-      yi   = data$yi,
-      sei  = sqrt(data$vi),
-      slab = as.character(data$Author)
-    )
+      yi = data$yi,
+      sei = sqrt(data$vi),
+      slab = as.character(data$Author))
 
     refit_fn <- if (inherits(model, "RoBMA")) RoBMA::RoBMA else RoBMA::brma
 
     args <- list(
-      yi      = sg_data$yi,
-      sei     = sg_data$sei,
-      slab    = sg_data$slab,
+      yi = sg_data$yi,
+      sei = sg_data$sei,
+      slab = sg_data$slab,
       measure = measure,
-      sample  = fit_ctrl$sample  %||% 5000L,
-      burnin  = fit_ctrl$burnin  %||% 2000L,
-      adapt   = fit_ctrl$adapt   %||% 500L,
-      chains  = fit_ctrl$chains  %||% 3L,
-      thin    = fit_ctrl$thin    %||% 1L,
-      seed    = fit_ctrl$seed,
-      silent  = TRUE
-    )
+      sample = fit_ctrl$sample  %||% 5000L,
+      burnin = fit_ctrl$burnin  %||% 2000L,
+      adapt = fit_ctrl$adapt   %||% 500L,
+      chains = fit_ctrl$chains  %||% 3L,
+      thin = fit_ctrl$thin    %||% 1L,
+      seed = fit_ctrl$seed,
+      silent = TRUE)
 
     if (!is.null(outcome_priors$mu)) {
       args$prior_effect <- outcome_priors$mu
@@ -1036,27 +924,21 @@ refit_for_subgroup.brma <- function(model, data, ...) {
     do.call(refit_fn, args)
   }, error = function(e) {
     rlang::warn(
-      c(
-        paste0("brma subgroup refit failed: ", e$message),
-        "i" = "Subgroup pooled effects will be approximated from the overall model."
-      )
-    )
+      c(paste0("brma subgroup refit failed: ", e$message),
+        "i" = "Subgroup pooled effects will be approximated from the overall model."))
     NULL
   })
 }
 
 
-# =============================================================================
-# JAGS (R2jags / rjags) METHODS
-# =============================================================================
+# JAGS
 
 #' @export
 detect_model_info.rjags <- function(model, tau_par = "tau", ...) {
   sims <- model$BUGSoutput$sims.matrix
   tau_found <- any(grepl(
     paste0("^", tau_par, "$|^sigma$|^sd$|^tau$"),
-    colnames(sims)
-  ))
+    colnames(sims)))
   list(backend = "jags",
        pooling = if (tau_found) "random_effect" else "common_effect")
 }
@@ -1070,8 +952,8 @@ extract_pooled_summary.rjags <- function(model, prob = 0.95,
   theta <- sims[, theta_col]
   alpha <- (1 - prob) / 2
   c(estimate = stats::median(theta),
-    lower    = unname(stats::quantile(theta, alpha)),
-    upper    = unname(stats::quantile(theta, 1 - alpha)))
+    lower = unname(stats::quantile(theta, alpha)),
+    upper = unname(stats::quantile(theta, 1 - alpha)))
 }
 
 #' @export
@@ -1098,32 +980,26 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
 
   tryCatch({
     R2jags::jags(
-      data               = new_data,
+      data = new_data,
       parameters.to.save = model$parameters.to.save,
-      model.file         = model$model.file,
-      n.iter             = model$BUGSoutput$n.iter,
-      n.burnin           = model$BUGSoutput$n.burnin,
-      n.thin             = model$BUGSoutput$n.thin,
-      n.chains           = model$BUGSoutput$n.chains
-    )
+      model.file = model$model.file,
+      n.iter = model$BUGSoutput$n.iter,
+      n.burnin = model$BUGSoutput$n.burnin,
+      n.thin = model$BUGSoutput$n.thin,
+      n.chains = model$BUGSoutput$n.chains)
   },
   error = function(e) {
     rlang::warn(
       c("JAGS refit failed for subgroup.",
         "i" = conditionMessage(e)),
       .frequency = "once",
-      .frequency_id = "refit_jags_error"
-    )
+      .frequency_id = "refit_jags_error")
     NULL
   })
 }
 
 
 #' Rebuild JAGS data list for a subgroup
-#'
-#' Subsets array/vector elements in the original JAGS data list to match the
-#' rows present in `data`. Scalars and matrices without a study dimension are
-#' kept as-is.
 #'
 #' @noRd
 .rebuild_jags_data <- function(old_data, data, original_data) {
@@ -1133,8 +1009,7 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
       c("Cannot detect study count variable in JAGS data.",
         "i" = "Expected 'S', 'N', or 'n.studies' in the data list."),
       .frequency = "once",
-      .frequency_id = "refit_jags_no_S"
-    )
+      .frequency_id = "refit_jags_no_S")
     return(NULL)
   }
 
@@ -1163,9 +1038,7 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
 }
 
 
-# =============================================================================
-# INTERNAL HELPERS
-# =============================================================================
+# Internal Helpers
 
 #' Find a parameter column in a posterior data frame
 #' @noRd
@@ -1181,25 +1054,22 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
   }
 
   rlang::abort(
-    c(
-      paste0("Could not find parameter '", primary, "' in posterior samples."),
+    c(paste0("Could not find parameter '", primary, "' in posterior samples."),
       "i" = paste0("Available: ",
-                    paste(head(names(posterior_df), 20), collapse = ", "))
-    )
-  )
+                    paste(head(names(posterior_df), 20), collapse = ", "))))
 }
 
 #' Shared Stan draw extraction for stanfit and CmdStanMCMC
 #' @noRd
 .extract_stan_draws <- function(posterior_df, data,
                                 theta_par, tau_par, study_par) {
-  n_studies   <- nrow(data)
+  n_studies <- nrow(data)
   study_names <- as.character(data$Author)
-  n_draws     <- nrow(posterior_df)
-  draw_ids    <- seq_len(n_draws)
+  n_draws <- nrow(posterior_df)
+  draw_ids <- seq_len(n_draws)
 
   theta_col <- .find_parameter(posterior_df, theta_par, c("mu", "beta", "d"))
-  theta     <- posterior_df[[theta_col]]
+  theta <- posterior_df[[theta_col]]
 
   tau_col <- grep(paste0("^", tau_par, "$|^", tau_par, "\\[1\\]$"),
                   names(posterior_df), value = TRUE)
@@ -1211,11 +1081,13 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
   # Auto-detect study-level parameterisation
   effect_type <- "none"
   if (is.null(study_par)) {
-    candidates <- c(eta = "deviation", u = "deviation",
-                    mu = "absolute", d = "absolute")
+    candidates <- c(eta = "deviation", 
+                    u = "deviation",
+                    mu = "absolute", 
+                    d = "absolute")
     for (nm in names(candidates)) {
       if (any(grepl(paste0("^", nm, "\\["), names(posterior_df)))) {
-        study_par   <- nm
+        study_par <- nm
         effect_type <- candidates[[nm]]
         break
       }
@@ -1230,40 +1102,38 @@ refit_for_subgroup.rjags <- function(model, data, original_data = NULL, ...) {
 
   study_draws <- purrr::map_dfr(seq_len(n_studies), function(i) {
     if (effect_type == "none" || is.null(study_par)) {
-      deviation    <- rep(0, n_draws)
+      deviation <- rep(0, n_draws)
       study_effect <- theta
     } else {
       effect_col <- paste0(study_par, "[", i, "]")
       if (effect_col %in% names(posterior_df)) {
         if (effect_type == "deviation") {
-          deviation    <- posterior_df[[effect_col]]
+          deviation <- posterior_df[[effect_col]]
           study_effect <- theta + deviation
         } else {
           study_effect <- posterior_df[[effect_col]]
-          deviation    <- study_effect - theta
+          deviation <- study_effect - theta
         }
       } else {
-        deviation    <- rep(0, n_draws)
+        deviation <- rep(0, n_draws)
         study_effect <- theta
       }
     }
 
     tibble::tibble(
-      .draw       = draw_ids,
-      Author      = study_names[i],
+      .draw = draw_ids,
+      Author = study_names[i],
       theta_study = study_effect,
-      eta         = deviation,
-      tau         = tau_vec
-    )
+      eta = deviation,
+      tau = tau_vec)
   })
 
   pooled_draws <- tibble::tibble(
-    .draw       = draw_ids,
-    Author      = "Pooled Effect",
+    .draw = draw_ids,
+    Author = "Pooled Effect",
     theta_study = theta,
-    eta         = NA_real_,
-    tau         = tau_vec
-  )
+    eta = NA_real_,
+    tau = tau_vec)
 
   dplyr::bind_rows(study_draws, pooled_draws)
 }

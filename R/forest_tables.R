@@ -41,9 +41,7 @@ forest_table_left_fn <- function(forest.data.summary,
     Author = dplyr::if_else(
       is.na(Year),
       Author,
-      paste0(Author, " (", Year, ")")
-    )
-  )
+      paste0(Author, " (", Year, ")")))
 
   # Replace NA values with blanks for pooled/prediction/header rows
   if (is_continuous) {
@@ -51,8 +49,7 @@ forest_table_left_fn <- function(forest.data.summary,
       int_mean_sd  = dplyr::if_else(Author %in% c(summary_labels, header_labels), NA_character_, int_mean_sd),
       ctrl_mean_sd = dplyr::if_else(Author %in% c(summary_labels, header_labels), NA_character_, ctrl_mean_sd),
       N_int  = dplyr::if_else(Author %in% c(pred_labels, header_labels) | N_int  == "NA", NA_character_, N_int),
-      N_ctrl = dplyr::if_else(Author %in% c(pred_labels, header_labels) | N_ctrl == "NA", NA_character_, N_ctrl)
-    )
+      N_ctrl = dplyr::if_else(Author %in% c(pred_labels, header_labels) | N_ctrl == "NA", NA_character_, N_ctrl))
   }
 
   # Base gt table
@@ -121,8 +118,7 @@ forest_table_left_fn <- function(forest.data.summary,
     gt::opt_table_lines(extent = "none") |>
     gt::tab_style(
       style = gt::cell_fill(color = "grey95"),
-      locations = gt::cells_body(rows = Author %in% c(summary_labels, "Overall Effect", header_labels))
-    )
+      locations = gt::cells_body(rows = Author %in% c(summary_labels, "Overall Effect", header_labels)))
 
   if (length(spacer_labels) > 0) {
     forest.table.left <- forest.table.left |>
@@ -131,8 +127,6 @@ forest_table_left_fn <- function(forest.data.summary,
         locations = gt::cells_body(rows = Author %in% spacer_labels))
   }
 
-  # A fully-empty-string cell collapses that row's rendered height in gt, so
-  # blank out missing study-data columns with a single space instead.
   data_cols <- if (measure %in% c("MD", "SMD")) {
     c("int_mean_sd", "ctrl_mean_sd", "N_int", "N_ctrl")
   } else {

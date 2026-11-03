@@ -170,12 +170,7 @@ study.density.plot_fn  <- function(df,
         xdist = distributional::dist_normal(mean = yi, sd = sqrt(vi)))
   }
 
-  # ---- Box-style glyph layer builder (boxplot / sq_whisker / diamond) -------
-  # Shared by study and pooled rows: expects a box_df with Author, xmin,
-  # xlower, xmiddle, xupper, xmax, and either a constant `.fill` colour column
-  # or (when split_color_by_null) an `.above_null` logical column. Each row's
-  # gridline sits at its baseline (matching where density slabs start), so
-  # every style is nudged up by half a row to sit centred between gridlines.
+  # Box-style glyph layer builder (boxplot / sq_whisker / diamond)
   box_glyph_layer <- function(box_df, style, outline_color, width = 0.35) {
     mapping <- if (isTRUE(split_color_by_null)) {
       ggplot2::aes(y = Author, x = xmiddle, xmin = xmin, xlower = xlower,
@@ -201,7 +196,7 @@ study.density.plot_fn  <- function(df,
         colour = outline_color, linewidth = 0.5, inherit.aes = FALSE))
   }
 
-  # ---- Study-row box_df (boxplot / sq_whisker) -------------------------------
+  # Study-row box_df (boxplot / sq_whisker)
   study_box_layer <- if (study_output %in% box_styles) {
     study_box_df <- study.effects |>
       dplyr::filter(!is.na(yi), !is.na(vi)) |>
@@ -213,7 +208,7 @@ study.density.plot_fn  <- function(df,
     box_glyph_layer(study_box_df, study_output, color_study_posterior_outline)
   }
 
-  # ---- Pooled-row box_df (boxplot / sq_whisker / diamond) --------------------
+  # Pooled-row box_df (boxplot / sq_whisker / diamond)
   pooled_box_layer <- if (pooled_output %in% box_styles) {
     pooled_rows <- if (isTRUE(subgroup)) {
       posterior.draws |> dplyr::filter(Author_pooled %in% c("Pooled Effect", "Overall Effect"))
@@ -230,8 +225,6 @@ study.density.plot_fn  <- function(df,
     box_glyph_layer(pooled_box_df, pooled_output, color_study_posterior_outline)
   }
 
-  # Density slabs extend each row's range to n + 0.9; match it when neither
-  # study nor pooled rows use a density slab, so rows line up with the tables.
   box_ylim <- if (study_output != "density" && pooled_output != "density") {
     c(1, dplyr::n_distinct(posterior.draws$Author) + 0.9)
   }
@@ -248,7 +241,7 @@ study.density.plot_fn  <- function(df,
 
   study.density.plot <-
     ggplot2::ggplot(ggplot2::aes(y = Author), data = posterior.draws) +
-    # Add ROPE shading first (so it appears behind other elements)
+    # Add ROPE shading first
     {if (isTRUE(add_rope)) {
       ggplot2::annotate("rect",
                         xmin = rope_range[1], xmax = rope_range[2],
@@ -256,7 +249,7 @@ study.density.plot_fn  <- function(df,
                         fill = scales::alpha(rope_color, 0.3),
                         color = NA)
     }} +
-    # Median/CrI reference lines next, so every glyph layer draws on top of them
+    # Median/CrI reference lines next
     pooled_ref_lines +
     {if (study_output != "density") NULL else if (isTRUE(split_color_by_null)) {
       list(
@@ -357,19 +350,12 @@ study.density.plot_fn  <- function(df,
           label = paste(" Favours\n", left_label),
           x = grid::unit(0, "npc"), y = grid::unit(1.02, "npc"), just = c("left", "bottom"),
           gp = grid::gpar(col = "grey30", fontsize = 10, fontfamily = font)),
-          xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf)
-      )
+          xmin = calc_xlim[1] - 0.01, xmax = calc_xlim[2], ymin = -Inf, ymax = Inf))
     }} +
     ggplot2::labs(x = x_label %||% props$x_label) +
     ggplot2::ylab(NULL) +
     ggplot2::geom_hline(yintercept = 1, color = "black", linewidth = 0.75) +
     {if (length(section_break_labels) > 0) {
-      # scale_y_discrete(limits = rev) reverses level order -> screen position,
-      # so a level's y-coordinate (its row's baseline gridline) is
-      # (n_levels - level_index + 1); the row's upper border -- where the
-      # boundary line belongs -- is a full row above that. Row glyphs are
-      # nudged to the row's centre (baseline + 0.5), so the +1.5 offset used
-      # here previously put the line through the glyph instead of above it.
       author_levels_all <- levels(posterior.draws$Author)
       level_index <- match(section_break_labels, author_levels_all)
       break_positions <- length(author_levels_all) - level_index + 2
@@ -387,10 +373,6 @@ study.density.plot_fn  <- function(df,
   }
 
   if(isFALSE(subgroup)){
-    # Explicit reversed levels, not the `rev` function: layers pass their own
-    # subsetted `data=`, so the scale's dynamically-trained break order can
-    # drift from the factor's declared level order once there's more than one
-    # synthetic (non-study) row -- pinning it down avoids that drift.
     study.density.plot <- study.density.plot +
       ggplot2::scale_y_discrete(expand = c(0, 0), limits = rev(levels(posterior.draws$Author)))
   } else if (isTRUE(subgroup)){
@@ -401,7 +383,7 @@ study.density.plot_fn  <- function(df,
 
   if(is.null(shrinkage_output))"density" else shrinkage_output
 
-  # Shrinkage layer — only for random-effects models
+  # Shrinkage layer
   if (effect_type == "random_effect") {
     if (shrinkage_output == "density") {
       study.density.plot <- study.density.plot +
@@ -420,9 +402,8 @@ study.density.plot_fn  <- function(df,
           linewidth = 1, size = 1, color = color_shrinkage_pointinterval, limits = calc_xlim)
     }
   }
-  # For common-effects: no shrinkage layer at all (tau omitted entirely)
 
-  # Prediction layer — only when add_pred = TRUE and prediction draws exist
+  # Prediction layer
   if (isTRUE(add_pred) || !identical(pred_labels, "Prediction")) {
     pred_data <- posterior.draws |>
       dplyr::filter(if (isTRUE(subgroup)) {
@@ -491,15 +472,15 @@ box_stats_normal <- function(study.effects) {
     dplyr::mutate(se = sqrt(vi)) |>
     dplyr::transmute(
       Author,
-      xmin    = yi + stats::qnorm(0.025) * se,
-      xlower  = yi + stats::qnorm(0.25) * se,
+      xmin = yi + stats::qnorm(0.025) * se,
+      xlower = yi + stats::qnorm(0.25) * se,
       xmiddle = yi,
-      xupper  = yi + stats::qnorm(0.75) * se,
-      xmax    = yi + stats::qnorm(0.975) * se)
+      xupper = yi + stats::qnorm(0.75) * se,
+      xmax = yi + stats::qnorm(0.975) * se)
 }
 
 
-#' Boxplot statistics from posterior draws (model scale)
+#' Boxplot statistics from posterior draws
 #'
 #' @noRd
 box_stats_draws <- function(draws, overall = FALSE) {
@@ -507,11 +488,11 @@ box_stats_draws <- function(draws, overall = FALSE) {
     dplyr::ungroup() |>
     dplyr::mutate(.overall = {{ overall }}) |>
     dplyr::summarise(
-      xmin    = stats::quantile(theta_study, 0.025, names = FALSE),
-      xlower  = stats::quantile(theta_study, 0.25, names = FALSE),
+      xmin = stats::quantile(theta_study, 0.025, names = FALSE),
+      xlower = stats::quantile(theta_study, 0.25, names = FALSE),
       xmiddle = stats::median(theta_study),
-      xupper  = stats::quantile(theta_study, 0.75, names = FALSE),
-      xmax    = stats::quantile(theta_study, 0.975, names = FALSE),
+      xupper= stats::quantile(theta_study, 0.75, names = FALSE),
+      xmax = stats::quantile(theta_study, 0.975, names = FALSE),
       .by = c(Author, .overall))
 }
 
@@ -530,10 +511,7 @@ box_stats_scale <- function(box_df, log_scale = FALSE, xlim) {
 }
 
 
-# ---- Diamond geom (classic meta-analysis pooled-effect glyph) ---------------
-# ggproto-based custom geom so discrete y positions (e.g. the Author factor)
-# resolve through ggplot2's normal scale pipeline before draw_panel() runs,
-# rather than needing to be computed by hand.
+# Diamond geom
 
 #' @noRd
 GeomForestDiamond <- ggplot2::ggproto("GeomForestDiamond", ggplot2::Geom,

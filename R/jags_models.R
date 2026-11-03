@@ -60,8 +60,7 @@ jags_prior_halfnormal <- function(scale = 0.5) {
   tau_val <- 1 / scale^2
   paste0(
     "  sigma ~ dnorm(0, ", tau_val, ") T(0,)\n",
-    "  tau <- pow(sigma, -2)\n"
-  )
+    "  tau <- pow(sigma, -2)\n")
 }
 
 #' @describeIn jags_model_file Half-Cauchy prior on sigma via the
@@ -75,8 +74,7 @@ jags_prior_halfcauchy <- function(scale = 0.5) {
     "  epsilon.sigma ~ dgamma(0.5, 0.5)\n",
     "  tau.z.sigma <- pow(B.sigma, -2)\n",
     "  B.sigma <- ", scale, "\n",
-    "  tau <- pow(sigma, -2)\n"
-  )
+    "  tau <- pow(sigma, -2)\n")
 }
 
 #' @describeIn jags_model_file Uniform prior on sigma.
@@ -85,12 +83,11 @@ jags_prior_halfcauchy <- function(scale = 0.5) {
 jags_prior_uniform <- function(upper = 5) {
   paste0(
     "  sigma ~ dunif(0, ", upper, ")\n",
-    "  tau <- pow(sigma, -2)\n"
-  )
+    "  tau <- pow(sigma, -2)\n")
 }
 
 
-# ── Internal: likelihood blocks ──────────────────────────────────────────────
+# Likelihood Blocks
 
 .jags_likelihood <- function(outcome, model, type) {
   is_re <- identical(type, "ran")
@@ -99,8 +96,7 @@ jags_prior_uniform <- function(upper = 5) {
   switch(outcome,
     bin = .jags_lik_bin(is_re, is_reg),
     ctns = .jags_lik_ctns(model, is_re, is_reg),
-    count = .jags_lik_count(is_re, is_reg)
-  )
+    count = .jags_lik_count(is_re, is_reg))
 }
 
 
@@ -108,13 +104,11 @@ jags_prior_uniform <- function(upper = 5) {
   reg_block <- if (is_reg) {
     paste0(
       "    logit(pi0[s]) <- alpha[s] + Z0[s,] %*% beta0\n",
-      "    logit(pi1[s]) <- alpha[s] + Z0[s,] %*% beta0 + delta[s]\n"
-    )
+      "    logit(pi1[s]) <- alpha[s] + Z0[s,] %*% beta0 + delta[s]\n")
   } else {
     paste0(
       "    logit(pi0[s]) <- alpha[s]\n",
-      "    logit(pi1[s]) <- alpha[s] + delta[s]\n"
-    )
+      "    logit(pi1[s]) <- alpha[s] + delta[s]\n")
   }
 
   delta_line <- if (is_re) {
@@ -131,8 +125,7 @@ jags_prior_uniform <- function(upper = 5) {
     "    alpha[s] ~ dnorm(0, 0.0001)\n",
     delta_line,
     "    gamma[s] <- exp(delta[s])\n",
-    "  }\n"
-  )
+    "  }\n")
 }
 
 
@@ -153,8 +146,7 @@ jags_prior_uniform <- function(upper = 5) {
     reg_block <- if (is_reg) {
       paste0(
         "    alpha0[s] <- gamma0[s] + Z0[s,] %*% beta0\n",
-        "    gamma0[s] ~ dnorm(0, 0.0001)\n"
-      )
+        "    gamma0[s] ~ dnorm(0, 0.0001)\n")
     } else {
       "    alpha0[s] ~ dnorm(0, 0.0001)\n"
     }
@@ -168,8 +160,7 @@ jags_prior_uniform <- function(upper = 5) {
       "    prec1[s] <- pow(se1[s], -2)\n",
       reg_block,
       delta_line,
-      "  }\n"
-    )
+      "  }\n")
   } else {
     if (is_reg) {
       paste0(
@@ -177,15 +168,13 @@ jags_prior_uniform <- function(upper = 5) {
         "    y[s] ~ dnorm(delta[s], prec[s])\n",
         "    delta[s] <- alpha[s] + Z0[s,] %*% beta0\n",
         delta_line,
-        "  }\n"
-      )
+        "  }\n")
     } else {
       paste0(
         "  for (s in 1:S) {\n",
         "    y[s] ~ dnorm(delta[s], prec[s])\n",
         delta_line,
-        "  }\n"
-      )
+        "  }\n")
     }
   }
 }
@@ -195,13 +184,11 @@ jags_prior_uniform <- function(upper = 5) {
   reg_block <- if (is_reg) {
     paste0(
       "    log(lambda0[s]) <- xi0[s] + Z0[s,] %*% beta0 + log(p0[s])\n",
-      "    log(lambda1[s]) <- xi1[s] + log(p1[s])\n"
-    )
+      "    log(lambda1[s]) <- xi1[s] + log(p1[s])\n")
   } else {
     paste0(
       "    log(lambda0[s]) <- xi0[s] + log(p0[s])\n",
-      "    log(lambda1[s]) <- xi1[s] + log(p1[s])\n"
-    )
+      "    log(lambda1[s]) <- xi1[s] + log(p1[s])\n")
   }
 
   delta_line <- if (is_re) {
@@ -219,12 +206,11 @@ jags_prior_uniform <- function(upper = 5) {
     "    xi1[s] <- xi0[s] + delta[s]\n",
     delta_line,
     "    gamma[s] <- exp(delta[s])\n",
-    "  }\n"
-  )
+    "  }\n")
 }
 
 
-# ── Internal: mu prior and derived quantities ────────────────────────────────
+# mu prior and derived quantities
 
 .jags_mu_prior <- function(outcome, model) {
   is_reg <- grepl("^reg", model)
@@ -239,8 +225,7 @@ jags_prior_uniform <- function(upper = 5) {
   mu_line <- if (is_dt) {
     paste0(
       "  mu ~ dt(0, 0.5, v)\n",
-      "  v ~ dunif(0, 8)\n"
-    )
+      "  v ~ dunif(0, 8)\n")
   } else {
     "  mu ~ dnorm(0, 0.0001)\n"
   }
@@ -253,6 +238,5 @@ jags_prior_uniform <- function(upper = 5) {
   switch(outcome,
     bin   = "  rho <- exp(mu)\n",
     count = "  IRR <- exp(mu)\n",
-    ctns  = ""
-  )
+    ctns  = "")
 }

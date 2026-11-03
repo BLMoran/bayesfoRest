@@ -43,14 +43,13 @@ forest_data_fn <- function(data,
 
   } else {
     # With subgroup
-    full_data <- data  # capture before nesting shadows the name
+    full_data <- data
     subgroup_df <- data |>
       dplyr::group_by(Subgroup) |>
       tidyr::nest() |>
       dplyr::mutate(
         subgroup_model = purrr::map(data, ~ refit_for_subgroup(model, .x, original_data = full_data, re_min_k = re_min_k)),
-        study_count = purrr::map_int(data, nrow)
-      )
+        study_count = purrr::map_int(data, nrow))
 
     # Overall effect draws
     overall_draws <- extract_forest_draws(model, data)
@@ -59,13 +58,12 @@ forest_data_fn <- function(data,
     overall.effect.draws <- overall_draws |>
       dplyr::filter(Author %in% c("Pooled Effect", "Prediction")) |>
       dplyr::mutate(
-        Author    = dplyr::if_else(Author == "Pooled Effect", "Overall Effect", Author),
+        Author = dplyr::if_else(Author == "Pooled Effect", "Overall Effect", Author),
         Subgroup  = "Overall",
         Author_original = NA_character_,
-        Year      = NA_integer_,
-        yi        = NA_real_,
-        vi        = NA_real_
-      )
+        Year = NA_integer_,
+        yi = NA_real_,
+        vi = NA_real_)
 
     # Extract draws for each subgroup model
     study.effect.draws <- subgroup_df |>
@@ -85,8 +83,8 @@ forest_data_fn <- function(data,
                 dplyr::group_by(.draw) |>
                 dplyr::summarise(
                   theta_study = mean(theta_study),
-                  eta         = NA_real_,
-                  tau         = mean(tau, na.rm = TRUE),
+                  eta = NA_real_,
+                  tau = mean(tau, na.rm = TRUE),
                   .groups     = "drop") |>
                 dplyr::mutate(Author = pooled_label)
 
@@ -110,11 +108,9 @@ forest_data_fn <- function(data,
               dplyr::ungroup() |>
               dplyr::left_join(
                 dplyr::select(sg_data, Author, dplyr::any_of(c("Author_original", "Year", "yi", "vi"))),
-                by = "Author"
-              ) |>
+                by = "Author") |>
               sort_studies_fn(sort_studies_by)
-          })
-      ) |>
+          })) |>
       tidyr::unnest(effect_draws) |>
       dplyr::select(-data, -subgroup_model, -study_count)
 
@@ -127,8 +123,7 @@ forest_data_fn <- function(data,
         dplyr::arrange(Subgroup) |>
         dplyr::mutate(Subgroup = dplyr::case_when(
           is.na(Subgroup) & Author == "Overall Effect" ~ "Overall",
-          .default = Subgroup
-        ))
+          .default = Subgroup))
     }
   }
   return(effect.draws)
@@ -215,12 +210,10 @@ forest_data_summary_fn <- function(spread_df,
           unweighted_effect == "NA [NA, NA]",
           paste0("\u03c4 = ", sprintf("%.2f", tau),
                  " [", sprintf("%.2f", .lower_tau), ", ", sprintf("%.2f", .upper_tau), "]"),
-          unweighted_effect
-        ),
+          unweighted_effect),
         # Blank out unweighted_effect for Prediction rows (no tau to display)
         unweighted_effect = dplyr::if_else(
-          as.character(Author) == "Prediction", "", unweighted_effect
-        ))
+          as.character(Author) == "Prediction", "", unweighted_effect))
   } else {
     # Common-effects: no tau and no shrinkage
     forest.data.summary <- forest.data.summary |>
@@ -231,11 +224,9 @@ forest_data_summary_fn <- function(spread_df,
           paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
         },
         unweighted_effect = ifelse(
-          unweighted_effect == "NA [NA, NA]", weighted_effect, unweighted_effect
-        ),
+          unweighted_effect == "NA [NA, NA]", weighted_effect, unweighted_effect),
         unweighted_effect = dplyr::if_else(
-          as.character(Author) == "Prediction", "", unweighted_effect
-        ))
+          as.character(Author) == "Prediction", "", unweighted_effect))
   }
 
   # Add study group summary columns depending on measure type
@@ -255,8 +246,7 @@ forest_data_summary_fn <- function(spread_df,
           TRUE ~ as.character(N_Control)),
         ctrl_mean_sd = dplyr::case_when(
           Author %in% c("Pooled Effect", "Prediction") ~ NA_character_,
-          TRUE ~ paste0(sprintf("%.2f", Mean_Control), " (", sprintf("%.2f", SD_Control), ")"))
-      )
+          TRUE ~ paste0(sprintf("%.2f", Mean_Control), " (", sprintf("%.2f", SD_Control), ")")))
   } else {
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(

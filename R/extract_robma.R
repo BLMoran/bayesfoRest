@@ -46,8 +46,7 @@
 extract_robma_sensitivity_draws <- function(
     robma_fit,
     type = c("model_averaged", "conditional", "pet_peese", "selection"),
-    measure
-) {
+    measure) {
 
   type <- match.arg(type)
 
@@ -57,42 +56,34 @@ extract_robma_sensitivity_draws <- function(
 
   draws <- switch(
     type,
-
     model_averaged = {
       tryCatch(
         as.numeric(RoBMA::pooled_effect(robma_fit, conditional = FALSE)),
         error = function(e) {
           rlang::warn(paste0("RoBMA model-averaged extraction failed: ", e$message))
           NULL
-        }
-      )
+        })
     },
-
     conditional = {
       tryCatch(
         as.numeric(RoBMA::pooled_effect(robma_fit, conditional = TRUE)),
         error = function(e) {
           rlang::warn(paste0("RoBMA conditional extraction failed: ", e$message))
           NULL
-        }
-      )
+        })
     },
-
     pet_peese = {
       .extract_robma_component_draws(robma_fit, component = "PETPEESE")
     },
-
     selection = {
       .extract_robma_component_draws(robma_fit, component = "omega")
-    }
-  )
+    })
 
   if (is.null(draws)) return(NULL)
 
   if (measure %in% c("OR", "RR", "HR", "IRR")) {
     draws <- exp(draws)
   }
-
   draws
 }
 
@@ -100,11 +91,7 @@ extract_robma_sensitivity_draws <- function(
 #' Extract Component-Conditional Draws from RoBMA Product-Space Model
 #'
 #' @description
-#' Internal helper that extracts mu posterior draws from the product-space JAGS
-#' fit, conditional on a specific publication-bias component being active AND
-#' on the effect itself being present (non-null) -- otherwise draws from the
-#' null-effect models are mixed in as an unrelated spike at zero, since the
-#' effect and bias component indicators are independent in RoBMA's ensemble.
+#' Internal helper that extracts mu posterior draws from  JAGS fit
 #' Uses the indicator variable approach in \code{BayesTools::as_mixed_posteriors()}.
 #'
 #' @param robma_fit A fitted RoBMA object.
@@ -122,9 +109,6 @@ extract_robma_sensitivity_draws <- function(
   if (!requireNamespace("BayesTools", quietly = TRUE)) {
     rlang::abort("Package 'BayesTools' is required for component-level RoBMA extraction.")
   }
-  # RoBMA itself (not just BayesTools) must be loaded -- BayesTools::as_mixed_posteriors()
-  # mis-reads the fit's MCMC array dimensions otherwise, failing with an opaque
-  # "length of 'dimnames' [2] not equal to array extent" error.
   if (!requireNamespace("RoBMA", quietly = TRUE)) {
     rlang::abort("Package 'RoBMA' is required for component-level RoBMA extraction.")
   }
@@ -139,15 +123,13 @@ extract_robma_sensitivity_draws <- function(
 
   tryCatch({
     mixed <- BayesTools::as_mixed_posteriors(
-      model      = fit,
+      model = fit,
       parameters = mu_par,
-      conditional = c(mu_par, component)
-    )
+      conditional = c(mu_par, component))
     as.numeric(mixed[[mu_par]])
   }, error = function(e) {
     rlang::warn(paste0(
-      "Failed to extract ", component, "-conditional draws: ", e$message
-    ))
+      "Failed to extract ", component, "-conditional draws: ", e$message))
     NULL
   })
 }
@@ -189,30 +171,26 @@ robma_to_sensitivity_draws <- function(
     measure,
     prior,
     prior_label,
-    section_label
-) {
+    section_label) {
 
   draws <- extract_robma_sensitivity_draws(
     robma_fit = robma_fit,
-    type      = type,
-    measure   = measure
-  )
+    type = type,
+    measure = measure)
 
   if (is.null(draws)) {
     return(tibble::tibble(
-      x             = numeric(),
-      prior         = character(),
-      prior_label   = character(),
-      section_label = character()
-    ))
+      x = numeric(),
+      prior = character(),
+      prior_label = character(),
+      section_label = character()))
   }
 
   tibble::tibble(
-    x             = draws,
-    prior         = prior,
-    prior_label   = prior_label,
-    section_label = section_label
-  )
+    x = draws,
+    prior = prior,
+    prior_label = prior_label,
+    section_label = section_label)
 }
 
 
@@ -240,37 +218,32 @@ build_robma_sensitivity_draws <- function(
     measure,
     types = c("pet_peese", "selection", "conditional", "model_averaged"),
     section_labels = c(
-      pet_peese      = "PET-PEESE",
-      selection      = "Selection Model (Weight)",
-      conditional    = "RoBMA (Conditional)",
-      model_averaged = "RoBMA (Model-Averaged)"
-    )
-) {
+      pet_peese = "PET-PEESE",
+      selection = "Selection Model (Weight)",
+      conditional = "RoBMA (Conditional)",
+      model_averaged = "RoBMA (Model-Averaged)")) {
 
   if (length(robma_fits) > 1 && (is.null(names(robma_fits)) || any(names(robma_fits) == ""))) {
     cli::cli_abort(c(
       "{.arg robma_fit} must be a named list when supplying multiple RoBMA fits.",
-      "i" = "Name each element to match the corresponding {.arg priors} key, e.g. {.code list(vague = fit1, weakreg = fit2)}."
-    ))
+      "i" = "Name each element to match the corresponding {.arg priors} key, e.g. {.code list(vague = fit1, weakreg = fit2)}."))
   }
 
   prior_labels <- c(
-    vague       = "Vague",
-    weakreg     = "Weakly Regularising",
+    vague = "Vague",
+    weakreg = "Weakly Regularising",
     informative = "Informative",
-    single      = ""
-  )
+    single = "")
 
   purrr::map(types, function(type) {
     purrr::imap(robma_fits, function(fit, prior_name) {
       robma_to_sensitivity_draws(
-        robma_fit     = fit,
-        type          = type,
-        measure       = measure,
-        prior         = prior_name,
-        prior_label   = prior_labels[[prior_name]] %||% prior_name,
-        section_label = section_labels[[type]] %||% type
-      )
+        robma_fit = fit,
+        type = type,
+        measure = measure,
+        prior = prior_name,
+        prior_label = prior_labels[[prior_name]] %||% prior_name,
+        section_label = section_labels[[type]] %||% type)
     }) |> purrr::list_rbind()
   }) |> purrr::list_rbind()
 }

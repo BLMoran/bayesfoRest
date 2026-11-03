@@ -70,31 +70,26 @@
 #' \dontrun{
 #' priors <- list(
 #'   vague = list(
-#'     name      = "Vague",
-#'     mu_prior  = bf_normal(0, 10),
-#'     tau_prior = bf_half_cauchy(0, 1)
-#'   ),
+#'     name = "Vague",
+#'     mu_prior = bf_normal(0, 10),
+#'     tau_prior = bf_half_cauchy(0, 1)),
 #'   weakreg = list(
-#'     name      = "Weakly Regularising",
-#'     mu_prior  = bf_normal(0, 1),
-#'     tau_prior = bf_half_cauchy(0, 0.5)
-#'   ),
+#'     name = "Weakly Regularising",
+#'     mu_prior = bf_normal(0, 1),
+#'     tau_prior = bf_half_cauchy(0, 0.5)),
 #'   informative = list(
-#'     name      = "Informative",
-#'     mu_prior  = bf_normal(0, 0.5),
-#'     tau_prior = bf_half_cauchy(0, 0.3)
-#'   )
-#' )
+#'     name = "Informative",
+#'     mu_prior = bf_normal(0, 0.5),
+#'     tau_prior = bf_half_cauchy(0, 0.3)))
 #'
 #' sensitivity_plot(
-#'   model   = fit,
-#'   data    = dat,
-#'   priors  = priors,
+#'   model = fit,
+#'   data = dat,
+#'   priors = priors,
 #'   measure = "OR",
 #'   incl_common_effect = TRUE,
-#'   exclude_high_rob   = TRUE,
-#'   rob_var            = rob_rating
-#' )
+#'   exclude_high_rob = TRUE,
+#'   rob_var = Overall)
 #' }
 #'
 #' @keywords internal
@@ -136,15 +131,12 @@ sensitivity_plot <- function(model,
                              plot_width = 4,
                              font = NULL) {
 
-  # ===========================
-  # 1. Validation
-  # ===========================
+# Validation
   validate_inputs_sens_plot(
-    model   = model,
-    data    = data,
+    model = model,
+    data = data,
     measure = measure,
-    priors  = priors
-  )
+    priors = priors)
 
   # Check RoBMA availability
   needs_robma <- isTRUE(incl_robma) || isTRUE(incl_robma_bma) ||
@@ -153,8 +145,7 @@ sensitivity_plot <- function(model,
     stop(
       "`robma_fit` must be supplied when any RoBMA option is TRUE ",
       "(incl_robma, incl_robma_bma, incl_pet_peese, incl_selection_weight).",
-      call. = FALSE
-    )
+      call. = FALSE)
   }
 
   rob_var <- rlang::enquo(rob_var)
@@ -162,19 +153,16 @@ sensitivity_plot <- function(model,
     cli::cli_abort("`exclude_high_rob = TRUE` requires `rob_var` to name the RoB column.")
   }
 
-  props      <- get_measure_properties(measure)
+  props <- get_measure_properties(measure)
   null_value <- null_value %||% props$null_value
 
-  # ===========================
-  # 2. Null range handling
-  # ===========================
+  # NULL range handling
   if (is.null(null_range) && isTRUE(add_null_range)) {
     null_range <- switch(
       measure,
       OR = c(0.9, 1.1), RR = c(0.9, 1.1), HR = c(0.9, 1.1), IRR = c(0.9, 1.1),
       SMD = c(-0.1, 0.1),
-      stop("For MD, `null_range` must be supplied.", call. = FALSE)
-    )
+      stop("For MD, `null_range` must be supplied.", call. = FALSE))
   } else if (!is.null(null_range)) {
     null_range <- if (length(null_range) == 1) {
       c(null_value - null_range, null_value + null_range)
@@ -183,48 +171,40 @@ sensitivity_plot <- function(model,
     }
   }
 
-  # ===========================
-  # 3. Prior order
-  # ===========================
+  # Prior order
   if (!is.null(prior_order)) {
     priors <- priors[prior_order]
   }
 
-  # ===========================
-  # 4. Build MA draws (standard sections)
-  # ===========================
+  # Build MA draws (standard sections)
   model_info <- detect_model_info(model)
 
   sens_specs <- list(
     # Common-effect section
     list(
-      id            = "common_effect",
-      include       = isTRUE(incl_common_effect),
-      model         = model,
-      data          = data,
+      id = "common_effect",
+      include = isTRUE(incl_common_effect),
+      model = model,
+      data = data,
       section_label = "Common Effect",
-      force_re      = FALSE
-    ),
-
+      force_re = FALSE),
     # Random-effects section
     list(
-      id            = "random_effect",
-      include       = isTRUE(incl_random_effect),
-      model         = model,
-      data          = data,
+      id = "random_effect",
+      include = isTRUE(incl_random_effect),
+      model = model,
+      data = data,
       section_label = "Random Effects",
-      force_re      = TRUE
-    ),
+      force_re = TRUE),
 
     # Excluding high RoB
     list(
-      id            = "excl_high_rob",
+      id = "excl_high_rob",
       include = isTRUE(exclude_high_rob),
-      data    = if (isTRUE(exclude_high_rob))
+      data = if (isTRUE(exclude_high_rob))
         dplyr::filter(data, !!rob_var != "High" | is.na(!!rob_var)) else data,
-      model         = model,
-      section_label = "Excluding High RoB"
-    ))
+      model = model,
+      section_label = "Excluding High RoB"))
 
   draws_ma <- sens_specs |>
     purrr::keep(~ .x$include) |>
@@ -232,9 +212,7 @@ sensitivity_plot <- function(model,
                    priors  = priors,
                    measure = measure)
 
-  # ===========================
-  # 5. Build RoBMA draws
-  # ===========================
+  # Build RoBMA draws
   draws_robma <- NULL
 
   if (needs_robma && !is.null(robma_fit)) {
@@ -250,80 +228,67 @@ sensitivity_plot <- function(model,
 
     # Determine which RoBMA types to include
     robma_types <- character()
-    if (isTRUE(incl_pet_peese))        robma_types <- c(robma_types, "pet_peese")
+    if (isTRUE(incl_pet_peese)) robma_types <- c(robma_types, "pet_peese")
     if (isTRUE(incl_selection_weight)) robma_types <- c(robma_types, "selection")
-    if (isTRUE(incl_robma))            robma_types <- c(robma_types, "conditional")
-    if (isTRUE(incl_robma_bma))        robma_types <- c(robma_types, "model_averaged")
+    if (isTRUE(incl_robma)) robma_types <- c(robma_types, "conditional")
+    if (isTRUE(incl_robma_bma)) robma_types <- c(robma_types, "model_averaged")
 
     section_labels <- c(
-      pet_peese      = "PET-PEESE",
-      selection      = "Selection Model (Weight)",
-      conditional    = "RoBMA (Conditional)",
-      model_averaged = "RoBMA (Model-Averaged)"
-    )
+      pet_peese = "PET-PEESE",
+      selection = "Selection Model (Weight)",
+      conditional = "RoBMA (Conditional)",
+      model_averaged = "RoBMA (Model-Averaged)")
 
     draws_robma <- build_robma_sensitivity_draws(
-      robma_fits     = robma_fits,
-      measure        = measure,
-      types          = robma_types,
-      section_labels = section_labels
-    )
+      robma_fits = robma_fits,
+      measure = measure,
+      types = robma_types,
+      section_labels = section_labels)
   }
 
   draws <- dplyr::bind_rows(draws_ma, draws_robma)
 
-  # ===========================
-  # 6. Apply model_order
-  # ===========================
+  # Model order
   if (!is.null(model_order)) {
     draws <- draws |>
       dplyr::mutate(
-        section_label = factor(section_label, levels = model_order)
-      ) |>
+        section_label = factor(section_label, levels = model_order)) |>
       dplyr::filter(!is.na(section_label))
   }
 
-  # ===========================
-  # 7. Prior table
-  # ===========================
+  # Prior table
   prior_table_ma <- extract_mu_tau_priors(priors = priors, model = model)
 
   prior_table_robma <- tibble::tibble(
     prior = character(), prior_label = character(),
-    mu_prior_unicode = character(), tau_prior_unicode = character()
-  )
+    mu_prior_unicode = character(), tau_prior_unicode = character())
 
   if (!is.null(draws_robma) && nrow(draws_robma) > 0) {
     prior_table_robma <- purrr::imap_dfr(robma_fits, function(fit, prior_name) {
       tryCatch({
         priors_info <- extract_priors_from_robma_fit(fit)
         tibble::tibble(
-          prior             = prior_name,
-          prior_label       = if (is_single_robma) "" else (priors[[prior_name]]$name %||% prior_name),
-          mu_prior_unicode  = priors_info$mu_prior_unicode,
-          tau_prior_unicode = priors_info$tau_prior_unicode
-        )
+          prior = prior_name,
+          prior_label = if (is_single_robma) "" else (priors[[prior_name]]$name %||% prior_name),
+          mu_prior_unicode = priors_info$mu_prior_unicode,
+          tau_prior_unicode = priors_info$tau_prior_unicode)
       }, error = function(e) {
         tibble::tibble(
           prior = prior_name,
           prior_label = if (is_single_robma) "" else (priors[[prior_name]]$name %||% prior_name),
           mu_prior_unicode = NA_character_,
-          tau_prior_unicode = NA_character_
-        )
+          tau_prior_unicode = NA_character_)
       })
     })
   }
 
   prior_table <- dplyr::bind_rows(prior_table_ma, prior_table_robma)
 
-  # ===========================
-  # 8. Posterior summary
-  # ===========================
+  # Posterior summary
   summary_df <- draws |>
     summarise_sensitivity_posteriors(
       null_value = null_value,
-      null_range = null_range
-    )
+      null_range = null_range)
 
   # Determine which sections are RoBMA vs MA for prior matching
   robma_sections <- if (!is.null(draws_robma) && nrow(draws_robma) > 0) {
@@ -338,81 +303,60 @@ sensitivity_plot <- function(model,
         section_label %in% robma_sections,
         prior_table_robma$mu_prior_unicode[
           match(paste(prior, prior_label),
-                paste(prior_table_robma$prior, prior_table_robma$prior_label))
-        ],
+                paste(prior_table_robma$prior, prior_table_robma$prior_label))],
         prior_table_ma$mu_prior_unicode[
           match(paste(prior, prior_label),
-                paste(prior_table_ma$prior, prior_table_ma$prior_label))
-        ]
-      ),
+                paste(prior_table_ma$prior, prior_table_ma$prior_label))]),
       tau_prior_unicode = dplyr::if_else(
         section_label %in% robma_sections,
         prior_table_robma$tau_prior_unicode[
           match(paste(prior, prior_label),
-                paste(prior_table_robma$prior, prior_table_robma$prior_label))
-        ],
+                paste(prior_table_robma$prior, prior_table_robma$prior_label))],
         prior_table_ma$tau_prior_unicode[
           match(paste(prior, prior_label),
-                paste(prior_table_ma$prior, prior_table_ma$prior_label))
-        ]
-      )
-    ) |>
+                paste(prior_table_ma$prior, prior_table_ma$prior_label))])) |>
     dplyr::mutate(
-      # The re flag only gates MA sections (Common/Random Effects, etc.), which
-      # may or may not have a heterogeneity parameter; RoBMA's ensemble always
-      # has one, and draws_robma never carries an `re` column to check.
       tau_prior_unicode = dplyr::if_else(
         section_label %in% robma_sections,
         tau_prior_unicode,
-        dplyr::if_else(!is.na(re) & re, tau_prior_unicode, NA_character_)
-      )
-    )
+        dplyr::if_else(!is.na(re) & re, tau_prior_unicode, NA_character_)))
 
-  # ===========================
-  # 9. Tables
-  # ===========================
+  # Tables
   table_left <- sensitivity_table_left(summary_df, font = font)
   table_right <- sensitivity_table_right(
     summary_df,
-    measure    = measure,
-    add_probs  = add_probs,
+    measure = measure,
+    add_probs = add_probs,
     null_range = null_range,
-    font       = font
-  )
+    font = font)
 
-  # ===========================
-  # 10. Density plot
-  # ===========================
+  # Density plot
   sens_plot <- sensitivity_density_plot_fn(
-    df                             = draws,
-    measure                        = measure,
-    split_color_by_null            = split_color_by_null,
-    color_overall_posterior         = color_overall_posterior,
+    df = draws,
+    measure = measure,
+    split_color_by_null = split_color_by_null,
+    color_overall_posterior = color_overall_posterior,
     color_overall_posterior_outline = color_overall_posterior_outline,
-    color_favours_control          = color_favours_control,
-    color_favours_intervention     = color_favours_intervention,
-    label_control                  = label_control,
-    label_intervention             = label_intervention,
-    xlim                           = xlim,
-    x_breaks                       = x_breaks,
-    null_value                     = null_value,
-    null_range                     = null_range,
-    color_null_range               = color_null_range,
-    add_null_range                 = add_null_range,
-    font                           = font
-  )
+    color_favours_control = color_favours_control,
+    color_favours_intervention = color_favours_intervention,
+    label_control = label_control,
+    label_intervention = label_intervention,
+    xlim = xlim,
+    x_breaks = x_breaks,
+    null_value = null_value,
+    null_range = null_range,
+    color_null_range = color_null_range,
+    add_null_range  = add_null_range,
+    font = font)
 
-  # ===========================
-  # 11. Patchwork assembly
-  # ===========================
+  # Assemble
   patchwork_fn(
-    table.left         = table_left,
+    table.left = table_left,
     study.density.plot = sens_plot,
-    table.right        = table_right,
-    plot_width         = plot_width,
-    title              = title,
-    subtitle           = subtitle,
-    title_align        = title_align,
-    font               = font
-  )
+    table.right = table_right,
+    plot_width = plot_width,
+    title = title,
+    subtitle = subtitle,
+    title_align = title_align,
+    font = font)
 }

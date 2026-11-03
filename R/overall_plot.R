@@ -139,17 +139,14 @@ overall_plot <- function(model,
                          plot_arrangement = "vertical",
                          ...) {
 
-  # ========================================================================
   # Validate inputs
-  # ========================================================================
 
   supported <- c("brmsfit", "meta_stan", "bayesmeta", "stanreg",
                  "stanfit", "CmdStanMCMC")
   if (!any(class(model) %in% supported)) {
     cli::cli_abort(
       c("{.arg model} must be one of: {.cls {supported}}.",
-        "i" = "Received class: {.cls {class(model)[1]}}")
-    )
+        "i" = "Received class: {.cls {class(model)[1]}}"))
   }
 
   if (!"Author" %in% names(data)) {
@@ -180,23 +177,17 @@ overall_plot <- function(model,
       pmax(0, tau_rgb[1] * 0.5),
       pmax(0, tau_rgb[2] * 0.5),
       pmax(0, tau_rgb[3] * 0.5),
-      maxColorValue = 255
-    )
+      maxColorValue = 255)
   }
 
-  # ========================================================================
-  # Extract posterior draws via the backend-agnostic S3 generic
-  # ========================================================================
-
+  # Extract posterior draws
   model_info <- detect_model_info(model, ...)
   is_re <- model_info$pooling == "random_effect"
 
-  # extract_forest_draws returns canonical tibble with:
-  #   .draw, Author, theta_study, eta, tau
+  # extract_forest_draws returns canonical tibble
   draws <- extract_forest_draws(model, data, ...)
 
   # Filter to pooled effect rows for mu and tau draws
-
   pooled_draws <- draws |> dplyr::filter(Author == "Pooled Effect")
   mu_samples <- pooled_draws$theta_study
 
@@ -220,14 +211,10 @@ overall_plot <- function(model,
     resolve_prior_density(tau_prior, model_priors$tau, "tau", model)
   }
 
-  # ========================================================================
-  # Transform function based on measure type
-  # ========================================================================
-
+  # Transform based on measure
   transform_fn <- if (is_log_scale) exp else identity
-
-  # --- MU PLOT ---
-
+  
+  # mu plot
   # Prepare mu data
   mu_transformed <- transform_fn(mu_samples)
   mu_df <- data.frame(mu = mu_transformed)
@@ -246,7 +233,6 @@ overall_plot <- function(model,
     }
   }
 
-  # Set default x breaks
   if (is.null(x_breaks)) {
     if (is_log_scale) {
       x_breaks <- sort(unique(c(mu_xlim[1], 0.5, 1, 2, mu_xlim[2])))
@@ -262,14 +248,12 @@ overall_plot <- function(model,
     }
   }
 
-  # Determine title alignment
   title_hjust <- switch(title_align,
                         "left" = 0,
                         "center" = 0.5,
                         "right" = 1,
                         0)
 
-  # Define axis line thickness
   axis_line_size <- 0.8
 
   # Base theme
@@ -282,19 +266,15 @@ overall_plot <- function(model,
       panel.border = ggplot2::element_blank(),
       panel.background = ggplot2::element_rect(fill = "white"),
       axis.line.x.bottom = ggplot2::element_line(
-        color = "black", linewidth = axis_line_size
-      ),
+        color = "black", linewidth = axis_line_size),
       axis.line.y = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_line(
-        color = "black", linewidth = axis_line_size
-      ),
+        color = "black", linewidth = axis_line_size),
       axis.ticks.length = ggplot2::unit(0.15, "cm"),
       plot.title = ggplot2::element_text(hjust = title_hjust),
       plot.subtitle = ggplot2::element_text(hjust = title_hjust),
-      plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5, "pt")
-    )
+      plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5, "pt"))
 
-  # Start building mu plot
   mu_plot <- ggplot2::ggplot(mu_df, ggplot2::aes(x = mu))
 
   # Prior line and the slab height that keeps it on the posterior's scale
@@ -318,13 +298,11 @@ overall_plot <- function(model,
         ggplot2::aes(fill = ggplot2::after_stat(x < null_value)),
         color = color_overall_posterior_outline,
         alpha = 0.8,
-        scale = mu_overlay$slab_scale
-      ) +
+        scale = mu_overlay$slab_scale) +
       ggplot2::scale_fill_manual(
         values = c("TRUE" = color_favours_intervention,
                    "FALSE" = color_favours_control),
-        guide = "none"
-      )
+        guide = "none")
   } else {
     mu_plot <- mu_plot +
       ggdist::stat_slab(fill = color_overall_posterior,
@@ -378,10 +356,10 @@ overall_plot <- function(model,
   # Add summary statistics annotation
   if (isTRUE(add_summary)) {
     # Compute summary on display scale
-    est   <- stats::median(mu_transformed, na.rm = TRUE)
-    cri   <- stats::quantile(mu_transformed, c(0.025, 0.975), na.rm = TRUE)
+    est <- stats::median(mu_transformed, na.rm = TRUE)
+    cri <- stats::quantile(mu_transformed, c(0.025, 0.975), na.rm = TRUE)
     pr_benefit <- round(mean(mu_transformed < null_value) * 100, 1)
-    pr_harm    <- round(mean(mu_transformed > null_value) * 100, 1)
+    pr_harm <- round(mean(mu_transformed > null_value) * 100, 1)
 
     # Format effect estimate and CrI
     fmt <- if (is_log_scale) "%.3f" else "%.2f"
@@ -393,24 +371,19 @@ overall_plot <- function(model,
     summary_lines <- c(
       paste0(measure, " [95% CrI]     ", est_str, "  ", cri_str),
       sprintf("Pr(Benefit)  %5.1f%%       Pr(Harm)  %5.1f%%",
-              pr_benefit, pr_harm)
-    )
+              pr_benefit, pr_harm))
 
     # Add delta-based probabilities only when null_range is provided
     if (!is.null(null_range)) {
       pr_benefit_delta <- round(
-        mean(mu_transformed < null_range[1]) * 100, 1
-      )
+        mean(mu_transformed < null_range[1]) * 100, 1)
       pr_harm_delta <- round(
-        mean(mu_transformed > null_range[2]) * 100, 1
-      )
+        mean(mu_transformed > null_range[2]) * 100, 1)
       summary_lines <- c(
         summary_lines,
         sprintf(
           "Pr(Benefit>\u03b4)  %5.1f%%    Pr(Harm>\u03b4)  %5.1f%%",
-          pr_benefit_delta, pr_harm_delta
-        )
-      )
+          pr_benefit_delta, pr_harm_delta))
     }
 
     summary_label <- paste(summary_lines, collapse = "\n")
@@ -461,34 +434,25 @@ overall_plot <- function(model,
       ggplot2::theme(text = ggplot2::element_text(family = font))
   }
 
-  # ========================================================================
-  # PREDICTION PLOT
-  # ========================================================================
-
+  # Prediction plot
   pred_plot <- NULL
 
   if (isTRUE(add_pred)) {
     if (!is_re || is.null(tau_samples)) {
       cli::cli_warn(
         c("Cannot create prediction plot.",
-          "i" = "Prediction plots require a random-effects model with tau.")
-      )
+          "i" = "Prediction plots require a random-effects model with tau."))
     } else {
       # Generate prediction draws: theta_pred = mu + N(0, tau)
       pred_draws <- add_prediction_draws(pooled_draws)
-      pred_rows  <- pred_draws |> dplyr::filter(Author == "Prediction")
-      pred_raw   <- pred_rows$theta_study
+      pred_rows <- pred_draws |> dplyr::filter(Author == "Prediction")
+      pred_raw <- pred_rows$theta_study
 
       pred_transformed <- transform_fn(pred_raw)
       pred_df <- data.frame(pred = pred_transformed)
-
-      # Set default prediction x limits
       pred_xlim <- pred_xlim %||% mu_xlim
-
-      # Set default prediction breaks
       if (is.null(pred_breaks)) pred_breaks <- x_breaks
-
-      # Build prediction plot
+      
       pred_plot <- ggplot2::ggplot(pred_df, ggplot2::aes(x = pred))
 
       # Add null range shading if requested
@@ -506,13 +470,11 @@ overall_plot <- function(model,
           ggdist::stat_slab(
             ggplot2::aes(fill = ggplot2::after_stat(x < null_value)),
             color = color_pred_posterior_outline,
-            alpha = 0.8
-          ) +
+            alpha = 0.8) +
           ggplot2::scale_fill_manual(
             values = c("TRUE" = color_favours_intervention,
                        "FALSE" = color_favours_control),
-            guide = "none"
-          )
+            guide = "none")
       } else {
         pred_plot <- pred_plot +
           ggdist::stat_slab(fill = color_pred_posterior,
@@ -520,24 +482,20 @@ overall_plot <- function(model,
                             alpha = 0.8)
       }
 
-      # Add point interval
       pred_plot <- pred_plot +
         ggdist::stat_pointinterval(.width = c(.66, .80, .95),
                                    color = "black",
-                                   point_size = 2)
-
-      # Add null reference line
-      pred_plot <- pred_plot +
+                                   point_size = 2) +
         ggplot2::geom_vline(xintercept = null_value, linetype = "solid",
                             color = "black", linewidth = 0.8)
 
       # Add direction labels
       if (is_log_scale) {
-        pred_left_x  <- pred_xlim[1] * 1.4
+        pred_left_x <- pred_xlim[1] * 1.4
         pred_right_x <- pred_xlim[2] * 0.65
       } else {
         pred_range_width <- diff(pred_xlim)
-        pred_left_x  <- pred_xlim[1] + pred_range_width * 0.12
+        pred_left_x <- pred_xlim[1] + pred_range_width * 0.12
         pred_right_x <- pred_xlim[2] - pred_range_width * 0.12
       }
 
@@ -587,27 +545,21 @@ overall_plot <- function(model,
     }
   }
 
-  # ========================================================================
-  # TAU PLOT
-  # ========================================================================
-
+  # Tau plot
   tau_plot <- NULL
 
   if (add_tau) {
     if (is.null(tau_samples)) {
       cli::cli_warn(
         c("No heterogeneity parameter found.",
-          "i" = "Tau plot requires a random-effects model.")
-      )
+          "i" = "Tau plot requires a random-effects model."))
     } else {
       tau_df <- data.frame(tau = tau_samples)
 
       # Define heterogeneity cutpoints
-      tau_cuts   <- c(0, 0.1, 0.5, 1, Inf)
+      tau_cuts <- c(0, 0.1, 0.5, 1, Inf)
       tau_labels_vec <- c("Low", "Reasonable", "Fairly high",
                           "Fairly extreme")
-
-      # Categorize tau samples and calculate percentages
       tau_df$category <- cut(tau_df$tau,
                              breaks = tau_cuts,
                              labels = tau_labels_vec,
@@ -621,21 +573,16 @@ overall_plot <- function(model,
         dplyr::mutate(pct = round(n / sum(n) * 100, 1)) |>
         tidyr::complete(
           category = factor(tau_labels_vec, levels = tau_labels_vec),
-          fill = list(n = 0, pct = 0)
-        )
+          fill = list(n = 0, pct = 0))
 
-      pct_low         <- tau_percentages$pct[
-        tau_percentages$category == "Low"
-      ]
+      pct_low <- tau_percentages$pct[
+        tau_percentages$category == "Low"]
       pct_reasonable  <- tau_percentages$pct[
-        tau_percentages$category == "Reasonable"
-      ]
+        tau_percentages$category == "Reasonable"]
       pct_fairly_high <- tau_percentages$pct[
-        tau_percentages$category == "Fairly high"
-      ]
-      pct_extreme     <- tau_percentages$pct[
-        tau_percentages$category == "Fairly extreme"
-      ]
+        tau_percentages$category == "Fairly high"]
+      pct_extreme <- tau_percentages$pct[
+        tau_percentages$category == "Fairly extreme"]
 
       # Set default tau x limits with rounding
       tau_xlim <- if (!is.null(tau_xlim)) {
@@ -669,30 +616,16 @@ overall_plot <- function(model,
                                    lims = c(max(tau_xlim[1], 1e-6), tau_xlim[2]),
                                    back = identity, base_scale = tau_slab_scale)
 
-      # Build tau plot with scaled slab height
-      tau_plot <- ggplot2::ggplot(tau_df, ggplot2::aes(x = tau))
-
-      tau_plot <- tau_plot +
+      tau_plot <- ggplot2::ggplot(tau_df, ggplot2::aes(x = tau)) +
         ggdist::stat_slab(
           ggplot2::aes(
             fill_ramp = ggplot2::after_stat(
-              cut(x,
-                  breaks = c(-Inf, 0.1, 0.5, 1, Inf),
-                  labels = c("Low", "Reasonable",
-                             "Fairly high", "Fairly extreme"))
-            )),
-          fill = tau_posterior_color,
-          color = tau_posterior_outline,
-          linewidth = 0.8,
-          scale = tau_overlay$slab_scale
-        ) +
-        ggdist::scale_fill_ramp_discrete(
-          range = c(0.8, 0.2),
-          guide = "none"
-        ) +
-        ggdist::stat_pointinterval(.width = c(.66, .80, .95),
-                                   color = "black",
-                                   point_size = 2)
+              cut(x, breaks = c(-Inf, 0.1, 0.5, 1, Inf),
+                  labels = c("Low", "Reasonable", "Fairly high", "Fairly extreme")))),
+          fill = tau_posterior_color, color = tau_posterior_outline,
+          linewidth = 0.8, scale = tau_overlay$slab_scale) +
+        ggdist::scale_fill_ramp_discrete(range = c(0.8, 0.2), guide = "none") +
+        ggdist::stat_pointinterval(.width = c(.66, .80, .95), color = "black", point_size = 2)
 
       if (!is.null(tau_overlay$prior_df)) {
         tau_plot <- tau_plot +
@@ -700,7 +633,7 @@ overall_plot <- function(model,
           ggplot2::labs(caption = "Dashed line: prior")
       }
 
-      # Add heterogeneity category reference lines (dashed, grey)
+      # Add heterogeneity lines
       tau_plot <- tau_plot +
         ggplot2::geom_vline(xintercept = 0.1, linetype = "dashed",
                             color = "grey40", linewidth = 0.5) +
@@ -748,10 +681,7 @@ overall_plot <- function(model,
         ggplot2::annotate("segment",
                           x = tau_xlim[1], xend = tau_xlim[2],
                           y = Inf, yend = Inf,
-                          linewidth = axis_line_size, color = "grey60")
-
-      # Scale and theme for tau plot
-      tau_plot <- tau_plot +
+                          linewidth = axis_line_size, color = "grey60") +
         ggplot2::scale_x_continuous(breaks = tau_breaks,
                                     limits = tau_xlim,
                                     labels = function(x) sprintf("%.2g", x),
@@ -760,11 +690,8 @@ overall_plot <- function(model,
                                  clip = "off") +
         ggdist::scale_thickness_shared() +
         base_theme +
-        ggplot2::labs(
-          x = tau_x_label,
-          y = NULL,
-          title = expression(paste("Heterogeneity (", tau, ")"))
-        )
+        ggplot2::labs( x = tau_x_label, y = NULL,
+          title = expression(paste("Heterogeneity (", tau, ")")))
 
       # Apply custom font if specified
       if (!is.null(font)) {
@@ -774,11 +701,7 @@ overall_plot <- function(model,
     }
   }
 
-  # ========================================================================
-  # Combine plots
-  # ========================================================================
-
-  # Collect all plots that exist
+  # Combine
   plot_list <- list(mu_plot)
   if (isTRUE(add_pred) && !is.null(pred_plot)) {
     plot_list <- c(plot_list, list(pred_plot))
@@ -792,11 +715,8 @@ overall_plot <- function(model,
     final_plot <- mu_plot
     if (!is.null(title) || !is.null(subtitle)) {
       final_plot <- final_plot +
-        ggplot2::labs(
-          title = if (!is.null(title)) title
-          else expression(paste("Overall Effect (", mu, ")")),
-          subtitle = subtitle
-        )
+        ggplot2::labs(title = if (!is.null(title)) title
+          else expression(paste("Overall Effect (", mu, ")")), subtitle = subtitle)
     }
     return(final_plot)
   }
@@ -809,7 +729,7 @@ overall_plot <- function(model,
                        list(patchwork::plot_spacer()),
                        list(plot_list[[i]]))
     }
-    n_plots   <- length(plot_list)
+    n_plots <- length(plot_list)
     n_spacers <- n_plots - 1
     widths <- as.list(rep(c(1, 0.05), n_plots))
     widths <- widths[seq_len(n_plots + n_spacers)]
@@ -821,45 +741,34 @@ overall_plot <- function(model,
       patchwork::plot_layout(ncol = 1)
   }
 
-  # Add title and subtitle using patchwork
+  # Add title and subtitle
   if (!is.null(title) || !is.null(subtitle)) {
     annotation_theme <- ggplot2::theme(
       plot.title = ggplot2::element_text(
-        hjust = title_hjust, face = "bold", size = 14
-      ),
+        hjust = title_hjust, face = "bold", size = 14),
       plot.subtitle = ggplot2::element_text(
-        hjust = title_hjust, size = 11
-      )
-    )
+        hjust = title_hjust, size = 11))
 
     if (!is.null(font)) {
       annotation_theme <- annotation_theme +
         ggplot2::theme(
           text = ggplot2::element_text(family = font),
-          plot.title = ggplot2::element_text(
-            hjust = title_hjust, face = "bold", size = 14, family = font
-          ),
-          plot.subtitle = ggplot2::element_text(
-            hjust = title_hjust, size = 11, family = font
-          )
-        )
+          plot.title = ggplot2::element_text(hjust = title_hjust, face = "bold", size = 14, family = font),
+          plot.subtitle = ggplot2::element_text(hjust = title_hjust, size = 11, family = font))
     }
 
     combined_plot <- combined_plot +
       patchwork::plot_annotation(
         title    = title,
         subtitle = subtitle,
-        theme    = annotation_theme
-      )
+        theme    = annotation_theme)
   }
 
   combined_plot
 }
 
 
-# =============================================================================
-# Internal: prior overlays
-# =============================================================================
+# Internal Helpers
 
 #' Prior line data and posterior slab height
 #'
@@ -881,8 +790,7 @@ prior_overlay <- function(prior_fn, samples, lims, back, base_scale) {
   peak <- max(post_peak, prior_y, na.rm = TRUE)
   list(
     prior_df = data.frame(x = back(grid), y = prior_y / peak * base_scale),
-    slab_scale = base_scale * post_peak / peak
-  )
+    slab_scale = base_scale * post_peak / peak)
 }
 
 #' @keywords internal
@@ -906,14 +814,12 @@ resolve_prior_density <- function(user_prior, model_prior, param, model) {
       return(bf_prior_density(user_prior))
     }
     cli::cli_abort(
-      "{.arg {param}_prior} must be a {.cls bf_prior} (e.g. {.fn bf_normal}) or a density function."
-    )
+      "{.arg {param}_prior} must be a {.cls bf_prior} (e.g. {.fn bf_normal}) or a density function.")
   }
   if (!is.null(model_prior)) return(model_prior)
   cli::cli_warn(c(
     "Could not read the {param} prior from the {.cls {class(model)[1]}} model, so it is not drawn.",
-    "i" = "Supply it with {.arg {param}_prior}, e.g. {.code {param}_prior = {if (param == 'mu') 'bf_normal(0, 1)' else 'bf_half_cauchy(0, 0.5)'}}."
-  ))
+    "i" = "Supply it with {.arg {param}_prior}, e.g. {.code {param}_prior = {if (param == 'mu') 'bf_normal(0, 1)' else 'bf_half_cauchy(0, 0.5)'}}."))
   NULL
 }
 
@@ -932,9 +838,8 @@ overall_model_priors <- function(model) {
                    (pr$class == "b" & pr$coef == "Intercept"), , drop = FALSE]
     tau_row <- pr[pr$class == "sd", , drop = FALSE]
     return(list(
-      mu  = if (nrow(mu_row)) brms_prior_density(mu_row$prior[1], half = FALSE),
-      tau = if (nrow(tau_row)) brms_prior_density(tau_row$prior[1], half = TRUE)
-    ))
+      mu = if (nrow(mu_row)) brms_prior_density(mu_row$prior[1], half = FALSE),
+      tau = if (nrow(tau_row)) brms_prior_density(tau_row$prior[1], half = TRUE)))
   }
   if (inherits(model, "bayesmeta")) {
     mu_pr <- model$mu.prior
@@ -944,8 +849,7 @@ overall_model_priors <- function(model) {
       },
       tau = if (isTRUE(model$tau.prior.proper)) {
         function(x) model$dprior(tau = x)
-      }
-    ))
+      }))
   }
   list(mu = NULL, tau = NULL)
 }
@@ -962,14 +866,13 @@ brms_prior_density <- function(prior_string, half = FALSE) {
   if (anyNA(args)) return(NULL)
   f <- switch(
     m[2],
-    normal      = if (length(args) == 2) function(x) stats::dnorm(x, args[1], args[2]),
-    student_t   = if (length(args) == 3) function(x) stats::dt((x - args[2]) / args[3], args[1]) / args[3],
-    cauchy      = if (length(args) == 2) function(x) stats::dcauchy(x, args[1], args[2]),
+    normal = if (length(args) == 2) function(x) stats::dnorm(x, args[1], args[2]),
+    student_t = if (length(args) == 3) function(x) stats::dt((x - args[2]) / args[3], args[1]) / args[3],
+    cauchy = if (length(args) == 2) function(x) stats::dcauchy(x, args[1], args[2]),
     exponential = if (length(args) == 1) function(x) stats::dexp(x, args[1]),
-    lognormal   = if (length(args) == 2) function(x) stats::dlnorm(x, args[1], args[2]),
-    uniform     = if (length(args) == 2) function(x) stats::dunif(x, args[1], args[2]),
-    NULL
-  )
+    lognormal = if (length(args) == 2) function(x) stats::dlnorm(x, args[1], args[2]),
+    uniform = if (length(args) == 2) function(x) stats::dunif(x, args[1], args[2]),
+    NULL)
   if (is.null(f) || !half || m[2] %in% c("exponential", "lognormal", "uniform")) {
     return(f)
   }

@@ -59,7 +59,7 @@ prior_to_unicode <- function(prior_string) {
   script_E <- "\U2130"      # ℰ
   script_I <- "\U2110"      # ℐ
   script_G <- "\U0001D4A2"  # 𝒢
-  delta    <- "\u03B4"      # δ
+  delta <- "\u03B4"      # δ
 
   prior_string <- trimws(prior_string)
 
@@ -116,7 +116,7 @@ prior_to_unicode <- function(prior_string) {
       return(prior_string)
     }
 
-    df  <- gsub("\\s+", "", parts[1])
+    df <- gsub("\\s+", "", parts[1])
     loc <- gsub("\\s+", "", parts[2])
     scl <- gsub("\\s+", "", parts[3])
 
@@ -125,8 +125,7 @@ prior_to_unicode <- function(prior_string) {
       df <- c(
         "0" = "\u2080", "1" = "\u2081", "2" = "\u2082", "3" = "\u2083",
         "4" = "\u2084", "5" = "\u2085", "6" = "\u2086", "7" = "\u2087",
-        "8" = "\u2088", "9" = "\u2089"
-      )[df]
+        "8" = "\u2088", "9" = "\u2089")[df]
     }
 
     return(paste0(script_t, df, "(", loc, ", ", scl, ")\u2009"))
@@ -164,19 +163,18 @@ extract_mu_tau_priors <- function(priors, model) {
 
   purrr::imap_dfr(priors, function(prior_spec, prior_name) {
 
-    # --- New bf_prior format ---
+    # bf_prior format
     if (inherits(prior_spec$mu_prior, "bf_prior") ||
         inherits(prior_spec$tau_prior, "bf_prior")) {
 
-      mu_unicode  <- format_bf_prior(prior_spec$mu_prior)
+      mu_unicode <- format_bf_prior(prior_spec$mu_prior)
       tau_unicode <- format_bf_prior(prior_spec$tau_prior)
 
       return(tibble::tibble(
-        prior             = prior_name,
-        prior_label       = prior_spec$name %||% prior_name,
-        mu_prior_unicode  = mu_unicode,
-        tau_prior_unicode = tau_unicode
-      ))
+        prior = prior_name,
+        prior_label = prior_spec$name %||% prior_name,
+        mu_prior_unicode = mu_unicode,
+        tau_prior_unicode = tau_unicode))
     }
 
     # --- Legacy brms prior format ---
@@ -199,8 +197,7 @@ extract_mu_tau_priors <- function(priors, model) {
             vague = "Vague",
             weakreg = "Weakly Regularising",
             informative = "Informative",
-            .default = stringr::str_to_sentence(prior_name)
-          ),
+            .default = stringr::str_to_sentence(prior_name)),
         mu_prior_unicode =
           if (length(mu_prior) > 0) prior_to_unicode(mu_prior[[1]]) else NA_character_,
         tau_prior_unicode =
@@ -210,17 +207,15 @@ extract_mu_tau_priors <- function(priors, model) {
             prior_to_unicode(model_tau)
           } else {
             NA_character_
-          }
-      ))
+          }))
     }
 
     # --- Fallback: list with name only (no bf_prior objects) ---
     tibble::tibble(
-      prior             = prior_name,
-      prior_label       = prior_spec$name %||% prior_name,
-      mu_prior_unicode  = NA_character_,
-      tau_prior_unicode = NA_character_
-    )
+      prior = prior_name,
+      prior_label = prior_spec$name %||% prior_name,
+      mu_prior_unicode = NA_character_,
+      tau_prior_unicode = NA_character_)
   })
 }
 
@@ -241,8 +236,7 @@ extract_mu_tau_priors <- function(priors, model) {
 apply_math_font <- function(
     gt_tbl,
     columns,
-    math_font = "STIX Two Math"
-) {
+    math_font = "STIX Two Math") {
   gt_tbl |>
     gt::tab_style(
       style = gt::cell_text(font = math_font),
@@ -269,8 +263,7 @@ extract_priors_from_robma_fit <- function(robma_fit) {
     mu_strings <- robma_fit$prior_specs$mu$mu_prior_string
     mu_prior_unicode <- paste(
       purrr::map_chr(mu_strings, ~ paste0(prior_to_unicode(.x), "\u2009")),
-      collapse = " / "
-    )
+      collapse = " / ")
 
     tau_strings <- robma_fit$prior_specs$tau$tau_prior_string
     tau_prior_unicode <- paste(
@@ -278,18 +271,14 @@ extract_priors_from_robma_fit <- function(robma_fit) {
         if (x == "fixed") paste0("\u03C4 = 0", "\u2009")
         else paste0(prior_to_unicode(x), "\u2009")
       }),
-      collapse = " / "
-    )
+      collapse = " / ")
 
     return(list(
       mu_prior_unicode  = mu_prior_unicode,
-      tau_prior_unicode = tau_prior_unicode
-    ))
+      tau_prior_unicode = tau_prior_unicode))
   }
 
-  # --- Native RoBMA object (RoBMA >= 4.0 stores priors under $priors$outcome
-  # as per-parameter mixtures, each component tagged "null" or "alternative" --
-  # there is no per-model $models list to iterate) ---
+  # --- Native RoBMA object (RoBMA)
   outcome_priors <- robma_fit[["priors"]][["outcome"]]
   if (is.null(outcome_priors)) {
     return(list(mu_prior_unicode = NA_character_, tau_prior_unicode = NA_character_))
@@ -352,15 +341,14 @@ extract_priors_from_robma_fit <- function(robma_fit) {
   }
 
   # Distribution priors — extract distribution name and parameters
-  dist   <- p[["distribution"]]
+  dist <- p[["distribution"]]
   params <- p[["parameters"]]
-  trunc  <- p[["truncation"]]
+  trunc <- p[["truncation"]]
 
   if (is.null(dist) || is.null(params)) {
     return(tryCatch(
       paste0(capture.output(print(p)), collapse = ""),
-      error = function(e) "unknown"
-    ))
+      error = function(e) "unknown"))
   }
 
   # Detect half-distribution (truncated at 0 from below)

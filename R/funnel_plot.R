@@ -1,4 +1,4 @@
-#' Funnel Plot (multi-backend)
+#' Funnel Plot
 #'
 #' @description
 #' Publication-ready funnel plot for meta-analysis, displaying study-level
@@ -89,18 +89,15 @@ funnel_plot <- function(model,
 
   pooled_line <- rlang::arg_match(pooled_line)
 
-  props      <- get_measure_properties(measure)
+  props <- get_measure_properties(measure)
   x_lab <- x_label %||% props$x_label
   null_value <- null_value %||% props$null_value
 
-  study_var_q     <- rlang::enquo(study_var)
-  year_q         <- rlang::enquo(year_var)
+  study_var_q <- rlang::enquo(study_var)
+  year_q <- rlang::enquo(year_var)
   subgroup_var_q <- rlang::enquo(subgroup_var)
 
-  # ---------------------------------------------------------------------------
-  # 1. Study-level yi / sei
-  #    Either taken directly (yi_col/sei_col) or computed from arm columns.
-  # ---------------------------------------------------------------------------
+  # Study-level yi / sei
   if (!is.null(yi_col) && !is.null(sei_col)) {
     data$yi  <- data[[yi_col]]
     data$sei <- data[[sei_col]]
@@ -116,9 +113,9 @@ funnel_plot <- function(model,
         SD_Control = {{sd_ctrl}},
         SD_Intervention = {{sd_int}},
         Time_Control = {{time_ctrl}},
-        Time_Intervention = {{time_int}}
-      ) |>
+        Time_Intervention = {{time_int}}) |>
       compute_yi_vi(measure)
+    
     data$yi  <- es$yi
     data$sei <- sqrt(es$vi)
   }
@@ -131,35 +128,26 @@ funnel_plot <- function(model,
   if (isTRUE(subgroup) && !rlang::quo_is_null(subgroup_var_q))
     data$Subgroup <- as.character(rlang::eval_tidy(subgroup_var_q, data))
 
-  # ---------------------------------------------------------------------------
-  # 2. Pooled estimate (backend-agnostic)
-  # ---------------------------------------------------------------------------
+  # Pooled estimate
   pooled_estimate <- switch(
     pooled_line,
-    none      = NA_real_,
-    fixed     = stats::weighted.mean(data$yi, 1 / data$sei^2, na.rm = TRUE),
-    # funnel_pooled() returns the outcome scale; the plot works on the model
-    # (log) scale for ratio measures, like the "fixed" estimate above
+    none = NA_real_,
+    fixed = stats::weighted.mean(data$yi, 1 / data$sei^2, na.rm = TRUE),
     posterior = {
       pooled <- funnel_pooled(model, data, measure)
       if (isTRUE(props$log_scale)) log(pooled) else pooled
-    }
-  )
+    })
 
-  # ---------------------------------------------------------------------------
-  # 3. Plot (unchanged from the single-backend version)
-  # ---------------------------------------------------------------------------
+  # Plot
   plot_data <- data |>
     dplyr::mutate(
       x_val = if (isTRUE(props$log_scale)) exp(yi) else yi,
       Author_label = dplyr::if_else(
         is.na(Year),
         as.character(Author),
-        paste0(Author, " (", Year, ")")
-      )
-    )
+        paste0(Author, " (", Year, ")")))
 
-  # ---- Axis limits ----
+  # Axis limits
   if (isTRUE(props$log_scale)) {
     if (is.null(xlim)) {
       x_min <- min(exp(data$yi - 2 * data$sei), na.rm = TRUE) * 0.8
@@ -176,11 +164,11 @@ funnel_plot <- function(model,
   breaks <- if (!is.null(x_breaks)) x_breaks else ggplot2::waiver()
   se_max <- max(data$sei, na.rm = TRUE) * 1.1
 
-  # ---- Build funnel contours (centred on pooled estimate) ----
+  # Funnel contours
   contour_data <- NULL
-  z_vals    <- c(qnorm(0.995), qnorm(0.975), qnorm(0.95))  # 2.576, 1.96, 1.645
+  z_vals <- c(qnorm(0.995), qnorm(0.975), qnorm(0.95))  # 2.576, 1.96, 1.645
   ci_labels <- c("99% CI", "95% CI", "90% CI")
-  se_seq    <- seq(0, se_max, length.out = 300)
+  se_seq <- seq(0, se_max, length.out = 300)
 
   if (isTRUE(contour_lines) && !is.na(pooled_estimate)) {
     contour_data <- purrr::map(seq_along(z_vals), function(i) {
@@ -194,14 +182,13 @@ funnel_plot <- function(model,
       tibble::tibble(
         x = c(lower, rev(upper)),
         y = c(se_seq, rev(se_seq)),
-        level = ci_labels[i]
-      )
+        level = ci_labels[i])
     }) |>
       purrr::list_rbind() |>
       dplyr::mutate(level = factor(level, levels = ci_labels))
   }
 
-  # ---- Build the plot ----
+  # Plot
   p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = x_val, y = sei))
 
   if (isTRUE(contour_lines) && !is.null(contour_data)) {
@@ -216,8 +203,7 @@ funnel_plot <- function(model,
           fill = color_contour,
           alpha = alpha_steps[i],
           color = NA,
-          inherit.aes = FALSE
-        )
+          inherit.aes = FALSE)
     }
 
     border_data <- purrr::map(seq_along(z_vals), function(i) {
@@ -230,8 +216,7 @@ funnel_plot <- function(model,
       }
       dplyr::bind_rows(
         tibble::tibble(x = lower, y = se_seq, side = "lower", level = ci_labels[i]),
-        tibble::tibble(x = upper, y = se_seq, side = "upper", level = ci_labels[i])
-      )
+        tibble::tibble(x = upper, y = se_seq, side = "upper", level = ci_labels[i]))
     }) |> purrr::list_rbind()
 
     p <- p +
@@ -239,8 +224,7 @@ funnel_plot <- function(model,
         data = border_data,
         ggplot2::aes(x = x, y = y, group = interaction(level, side)),
         color = color_contour, linetype = "dashed", linewidth = 0.4,
-        inherit.aes = FALSE
-      )
+        inherit.aes = FALSE)
   }
 
   # Null line
@@ -248,8 +232,7 @@ funnel_plot <- function(model,
     p <- p +
       ggplot2::geom_vline(
         xintercept = null_value,
-        color = color_null, linewidth = 0.75
-      )
+        color = color_null, linewidth = 0.75)
   }
 
   # Pooled estimate line
@@ -258,8 +241,7 @@ funnel_plot <- function(model,
     p <- p +
       ggplot2::geom_vline(
         xintercept = pooled_x,
-        color = color_pooled, linewidth = 0.75, linetype = "solid"
-      )
+        color = color_pooled, linewidth = 0.75, linetype = "solid")
   }
 
   # Study points
@@ -268,15 +250,13 @@ funnel_plot <- function(model,
       ggplot2::geom_point(
         ggplot2::aes(fill = Subgroup),
         shape = 21, size = point_size,
-        color = color_points_outline, stroke = 0.6
-      ) +
+        color = color_points_outline, stroke = 0.6) +
       ggplot2::scale_fill_brewer(palette = "Set2", name = "Subgroup")
   } else {
     p <- p +
       ggplot2::geom_point(
         fill = color_points, color = color_points_outline,
-        shape = 21, size = point_size, stroke = 0.6
-      )
+        shape = 21, size = point_size, stroke = 0.6)
   }
 
   # Study labels
@@ -286,35 +266,30 @@ funnel_plot <- function(model,
       ggrepel::geom_text_repel(
         ggplot2::aes(label = Author_label),
         size = label_size, color = "grey30",
-        max.overlaps = 20, family = font
-      )
+        max.overlaps = 20, family = font)
   }
 
-  # ---- Reverse y-axis (SE: 0 at top, max at bottom) ----
+  # Reverse y-axis
   p <- p +
     ggplot2::scale_y_reverse(
       expand = c(0, 0),
-      limits = c(se_max, 0)
-    )
+      limits = c(se_max, 0))
 
-  # ---- X-axis scale ----
+  # Scale
   if (isTRUE(props$log_scale)) {
     p <- p +
       ggplot2::scale_x_log10(
         breaks = breaks,
         expand = c(0, 0),
-        limits = xlim
-      )
+        limits = xlim)
   } else {
     p <- p +
       ggplot2::scale_x_continuous(
         breaks = breaks,
         expand = c(0, 0),
-        limits = xlim
-      )
+        limits = xlim)
   }
 
-  # ---- Theme ----
   p <- p +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -328,14 +303,11 @@ funnel_plot <- function(model,
       plot.margin = ggplot2::margin(10, 10, 10, 10),
       legend.position = "bottom",
       legend.title = ggplot2::element_text(face = "bold", family = font),
-      legend.text = ggplot2::element_text(family = font)
-    ) +
+      legend.text = ggplot2::element_text(family = font)) +
     ggplot2::labs(
       x = x_lab,,
-      y = "Standard Error"
-    )
+      y = "Standard Error")
 
-  # ---- Title / subtitle ----
   if (!is.null(title) || !is.null(subtitle)) {
     hjust_val <- switch(title_align,
                         "left" = 0,
@@ -350,9 +322,7 @@ funnel_plot <- function(model,
           plot.title = ggplot2::element_text(
             size = 16, face = "bold", hjust = hjust_val,
             margin = ggplot2::margin(b = if (is.null(subtitle)) 10 else 5),
-            family = font
-          )
-        )
+            family = font))
     }
     if (!is.null(subtitle)) {
       p <- p + ggplot2::labs(subtitle = subtitle) +
@@ -360,22 +330,14 @@ funnel_plot <- function(model,
           plot.subtitle = ggplot2::element_text(
             size = 14, hjust = hjust_val,
             margin = ggplot2::margin(b = 10),
-            color = "gray30", family = font
-          )
-        )
+            color = "gray30", family = font))
     }
   }
 
   p
 }
 
-
-# =============================================================================
-# Backend-agnostic pooled estimate for the funnel line.
-# Mirrors bayes_forest()'s model handling: one generic, per-backend methods,
-# and a default that reuses extract_pooled_draws() (so any backend already
-# wired for bayes_forest works here for free).
-# =============================================================================
+# Internal Helpers
 
 #' @keywords internal
 #' @noRd
@@ -431,7 +393,7 @@ funnel_pooled.CmdStanMCMC <- function(model, data, measure)
 funnel_pooled.stanreg <- function(model, data, measure)
   .funnel_pooled_stan(posterior::as_draws_df(model), measure)
 
-# rjags / runjags (coda mcmc.list)
+# rjags / runjags
 #' @keywords internal
 #' @noRd
 .funnel_pooled_jags <- function(mcmc, measure,
@@ -470,8 +432,7 @@ funnel_pooled.bayesma <- function(model, data, measure) {
   if (.funnel_ratio(measure)) exp(mu) else mu
 }
 
-# Fallback: reuse the same extractor bayes_forest()/sensitivity_plot() dispatch on.
-# Any backend already supported there works here with no extra method.
+# Fallback: reuse the same extractor in bayes_forest()
 #' @export
 #' @noRd
 funnel_pooled.default <- function(model, data, measure) {

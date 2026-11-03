@@ -52,6 +52,5 @@ jitter_null_draws <- function(df, group_col, x_col, null_value,
         }
         x
       },
-      .by = dplyr::all_of(group_col)
-    )
+      .by = dplyr::all_of(group_col))
 }

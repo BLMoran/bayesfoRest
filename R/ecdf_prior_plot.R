@@ -1,12 +1,6 @@
-# =============================================================================
-# ecdf_prior_plot(): compare PRIORS within a single section.
-#
-# Shares the draws pipeline (.build_ecdf_draws) and renderer (.render_ecdf)
-# defined in ecdf_model_plot.R.  Colour = prior; the section is fixed
-# (default "All studies").
-# =============================================================================
 
-#' ECDF Plot Comparing Priors (fixed section)
+
+#' ECDF Plot Comparing Priors (with a fixed MA model)
 #'
 #' @description
 #' ECDF (+ optional density) comparing the posterior across priors for a single
@@ -49,14 +43,23 @@
 ecdf_prior_plot <- function(model, data, priors, measure,
                             section_to_plot = "Random Effects",
                             prior_order = NULL,
-                            study_var = NULL, rob_var = NULL,
+                            study_var = NULL, 
+                            rob_var = NULL,
                             prob_reference = "null",
-                            null_value = NULL, null_range = NULL,
-                            add_null_range = FALSE, color_null_range = "#77bb41",
-                            label_control = "Control", label_intervention = "Intervention",
-                            title = NULL, subtitle = NULL, x_label = NULL,
-                            xlim = NULL, x_breaks = NULL, color_palette = NULL,
-                            show_density = TRUE, font = NULL, ...) {
+                            null_value = NULL, 
+                            null_range = NULL,
+                            add_null_range = FALSE, 
+                            color_null_range = "#77bb41",
+                            label_control = "Control", 
+                            label_intervention = "Intervention",
+                            title = NULL, 
+                            subtitle = NULL, 
+                            x_label = NULL,
+                            xlim = NULL, 
+                            x_breaks = NULL, 
+                            color_palette = NULL,
+                            show_density = TRUE, 
+                            font = NULL, ...) {
 
   validate_inputs_sens_plot(model = model, data = data, measure = measure, priors = priors)
 
@@ -66,7 +69,7 @@ ecdf_prior_plot <- function(model, data, priors, measure,
   if (!prob_reference %in% c("null", "null_range"))
     stop("`prob_reference` must be one of 'null' or 'null_range'.", call. = FALSE)
 
-  rob_var   <- rlang::enquo(rob_var)
+  rob_var <- rlang::enquo(rob_var)
   study_var <- rlang::enquo(study_var)
   props <- get_measure_properties(measure)
   null_value <- null_value %||% props$null_value
@@ -77,7 +80,7 @@ ecdf_prior_plot <- function(model, data, priors, measure,
     rob_var = rob_var, study_var = study_var,
     ...)
 
-  # standardise section labels, then fix to the requested section
+  # standardise section labels
   draws <- draws |>
     dplyr::mutate(section_label = dplyr::case_when(
       grepl("^PET-PEESE", section_label) ~ "PET-PEESE",
