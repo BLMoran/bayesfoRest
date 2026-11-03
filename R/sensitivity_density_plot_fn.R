@@ -81,6 +81,14 @@ sensitivity_density_plot_fn <- function(df,
   top_line_pos <- max(level_positions) + 0.5
   calc_xlim <- if (!is.null(xlim)) xlim else range(df$x, na.rm = TRUE)
 
+  # Rows from model-averaged draws can carry a point mass at the null value
+  # (e.g. RoBMA's null-effect models) -- see jitter_null_draws() for why that
+  # needs special handling instead of a plain KDE over all draws.
+  df <- jitter_null_draws(
+    df, group_col = "plot_row", x_col = "x",
+    null_value = null_value, log_scale = props$log_scale
+  )
+
   p <- ggplot2::ggplot(df, ggplot2::aes(y = plot_row)) +
     {if (isTRUE(add_null_range)) {
       ggplot2::annotate("rect",
@@ -92,7 +100,7 @@ sensitivity_density_plot_fn <- function(df,
     {if (isTRUE(split_color_by_null)) {
       ggdist::stat_slab(
         ggplot2::aes(x = x, fill = ggplot2::after_stat(x > null_value)),
-        normalize = "panels",
+        normalize = "groups",
         height = 0.9,
         colour = color_overall_posterior_outline,
         linewidth = 0.5,
@@ -102,7 +110,7 @@ sensitivity_density_plot_fn <- function(df,
     } else {
       ggdist::stat_slab(
         ggplot2::aes(x = x),
-        normalize = "panels",
+        normalize = "groups",
         height = 0.9,
         fill = color_overall_posterior,
         colour = color_overall_posterior_outline,
@@ -136,7 +144,7 @@ sensitivity_density_plot_fn <- function(df,
     ggplot2::geom_hline(yintercept = top_line_pos, color = "grey60", linewidth = 0.5) +
     ggplot2::geom_hline(yintercept = 0.5, color = "grey60", linewidth = 0.5) +
 
-    ggplot2::scale_y_discrete(expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(expand = c(0, 0), limits = all_levels) +
 
     # Favours labels
     ggplot2::annotation_custom(

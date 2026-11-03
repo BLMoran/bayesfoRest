@@ -287,29 +287,23 @@ extract_priors_from_robma_fit <- function(robma_fit) {
     ))
   }
 
-  # --- Native RoBMA object ---
-  # Extract unique mu and tau priors from the ensemble's models
-  models <- robma_fit[["models"]]
-  if (is.null(models)) {
+  # --- Native RoBMA object (RoBMA >= 4.0 stores priors under $priors$outcome
+  # as per-parameter mixtures, each component tagged "null" or "alternative" --
+  # there is no per-model $models list to iterate) ---
+  outcome_priors <- robma_fit[["priors"]][["outcome"]]
+  if (is.null(outcome_priors)) {
     return(list(mu_prior_unicode = NA_character_, tau_prior_unicode = NA_character_))
   }
 
-  mu_strings  <- character()
-  tau_strings <- character()
-
-  for (m in models) {
-    prior_names <- names(m[["priors"]])
-    for (nm in prior_names) {
-      p <- m[["priors"]][[nm]]
-      prior_str <- .robma_prior_to_string(p)
-
-      if (nm == "mu" && !prior_str %in% mu_strings) {
-        mu_strings <- c(mu_strings, prior_str)
-      } else if (nm == "tau" && !prior_str %in% tau_strings) {
-        tau_strings <- c(tau_strings, prior_str)
-      }
-    }
+  alternative_prior_strings <- function(prior_mixture) {
+    strings <- purrr::map_chr(prior_mixture, function(p) {
+      if (identical(attr(p, "component"), "null")) NA_character_ else .robma_prior_to_string(p)
+    })
+    unique(stats::na.omit(strings))
   }
+
+  mu_strings  <- alternative_prior_strings(outcome_priors[["mu"]])
+  tau_strings <- alternative_prior_strings(outcome_priors[["tau"]])
 
   mu_prior_unicode <- if (length(mu_strings) > 0) {
     paste(purrr::map_chr(mu_strings, ~ prior_to_unicode(.x)), collapse = " / ")

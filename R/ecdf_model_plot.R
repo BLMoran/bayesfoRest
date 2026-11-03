@@ -27,6 +27,7 @@
                               incl_pet_peese = FALSE,
                               incl_selection_weight = FALSE,
                               incl_robma = FALSE,
+                              incl_robma_bma = FALSE,
                               robma_fit = NULL,
                               pet_peese_direction = "negative",
                               pet_peese_threshold = 0.10) {
@@ -52,8 +53,8 @@
     cli::cli_abort("`exclude_high_rob = TRUE` requires `rob_var`.")
   if (isTRUE(incl_pet_peese) && rlang::quo_is_null(study_var))
     cli::cli_abort("`study_var` must be supplied when `incl_pet_peese = TRUE`.")
-  if ((isTRUE(incl_robma) || isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)) &&
-      is.null(robma_fit))
+  if ((isTRUE(incl_robma) || isTRUE(incl_robma_bma) || isTRUE(incl_pet_peese) ||
+       isTRUE(incl_selection_weight)) && is.null(robma_fit))
     cli::cli_abort("`robma_fit` must be supplied when any RoBMA option is TRUE.")
 
   draws_ma <- sens_specs |>
@@ -64,11 +65,20 @@
     vapply(names(priors), function(nm) priors[[nm]]$name %||% nm, character(1)),
     names(priors))
 
-  draws_ma <- draws_ma |>
-    dplyr::mutate(prior_label = unname(prior_labels[as.character(prior)]))
+  # Guarded on nrow(): purrr::map_dfr() over zero included sections returns a
+  # columnless tibble(), and referencing the (then-nonexistent) prior column
+  # bare inside mutate() would fall back to the enclosing environment instead
+  # of erroring -- .data$prior avoids that, but skipping entirely when there
+  # is nothing to label is clearer still.
+  if (nrow(draws_ma) > 0) {
+    draws_ma <- draws_ma |>
+      dplyr::mutate(prior_label = unname(prior_labels[as.character(.data$prior)]))
+  }
 
-  # RoBMA-family sections (selection / PET-PEESE / model-averaged), as in sensitivity_plot
-  needs_robma <- isTRUE(incl_robma) || isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)
+  # RoBMA-family sections (selection / PET-PEESE / conditional / model-averaged),
+  # as in sensitivity_plot
+  needs_robma <- isTRUE(incl_robma) || isTRUE(incl_robma_bma) ||
+    isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)
   draws_robma <- NULL
   if (needs_robma) {
     if (is.null(robma_fit))
@@ -76,7 +86,8 @@
     robma_types <- c(
       if (isTRUE(incl_pet_peese)) "pet_peese",
       if (isTRUE(incl_selection_weight)) "selection",
-      if (isTRUE(incl_robma)) c("conditional","model_averaged")
+      if (isTRUE(incl_robma)) "conditional",
+      if (isTRUE(incl_robma_bma)) "model_averaged"
     )
     robma_fits <- if (inherits(robma_fit, "RoBMA")) list(single = robma_fit) else robma_fit
     draws_robma <- build_robma_sensitivity_draws(
@@ -107,6 +118,18 @@
   # generic grouping column
   draws_filtered$.grp <- draws_filtered[[grp_col]]
   present_levels <- unname(level_order[level_order %in% unique(draws_filtered$.grp)])
+
+  # A label present in the draws but absent from level_order would otherwise
+  # silently become NA below -- plotted in ggplot's default grey, outside the
+  # legend, indistinguishable from any other mismatched group.
+  unmatched <- setdiff(unique(draws_filtered$.grp), level_order)
+  if (length(unmatched) > 0) {
+    cli::cli_warn(c(
+      "{length(unmatched)} section label{?s} not found in the expected display order and will be dropped: {.val {unmatched}}.",
+      "i" = "This usually means an internal label list is out of sync -- please report this."
+    ))
+  }
+
   draws_filtered$.grp <- factor(draws_filtered$.grp, levels = present_levels)
 
   # colours
@@ -201,7 +224,16 @@
       plot.margin = ggplot2::margin(t = 5.5, r = 5.5, b = 2, l = 5.5, unit = "pt")
     )
 
-  density_plot <- ggplot2::ggplot(draws_filtered, ggplot2::aes(x = x, color = .grp)) +
+  # A group whose draws carry a point mass at null_value (e.g. RoBMA's
+  # model-averaged mu) needs that spike jittered before a KDE can show it --
+  # see jitter_null_draws(). The ECDF panel above keeps the unjittered draws,
+  # since stat_ecdf() already renders a point mass correctly as a jump.
+  density_draws <- jitter_null_draws(
+    draws_filtered, group_col = ".grp", x_col = "x",
+    null_value = null_value, log_scale = props$log_scale
+  )
+
+  density_plot <- ggplot2::ggplot(density_draws, ggplot2::aes(x = x, color = .grp)) +
     {if (isTRUE(add_null_range) && !is.null(null_range)) {
       ggplot2::annotate("rect", xmin = null_range[1], xmax = null_range[2],
                         ymin = -Inf, ymax = Inf,
@@ -210,7 +242,7 @@
     {if (isTRUE(add_null_range) && !is.null(null_range)) {
       ggplot2::geom_vline(xintercept = null_range, linetype = "dotted", color = "grey30")
     }} +
-    ggdist::stat_slab(fill = NA, slab_linewidth = 0.9, normalize = "all") +
+    ggdist::stat_slab(fill = NA, slab_linewidth = 0.9, normalize = "groups") +
     ggplot2::geom_vline(xintercept = null_value, linewidth = 0.8, color = "black") +
     ggplot2::scale_color_manual(values = color_palette, limits = present_levels,
                                 name = legend_title) +
@@ -259,10 +291,14 @@
       ), xmin = calc_xlim[1], xmax = calc_xlim[2] - 0.01, ymin = -Inf, ymax = Inf
     )
 
+  # ecdf_plot and density_plot each already carry their own
+  # coord_cartesian(xlim = calc_xlim, clip = "off") -- applying another one
+  # here via `&` would just replace both (dropping clip = "off", which the
+  # "Favours ..." annotation_custom() labels outside the panel need) and
+  # trigger ggplot2's "coordinate system already present" warning.
   (ecdf_plot / patchwork::plot_spacer() / density_plot) +
     patchwork::plot_layout(ncol = 1, heights = c(1, 0.0, 0.35),
-                           axes = "collect_x", axis_titles = "collect_x") &
-    ggplot2::coord_cartesian(xlim = calc_xlim)
+                           axes = "collect_x", axis_titles = "collect_x")
 }
 
 
@@ -299,15 +335,19 @@
 #'
 #' @param model A fitted \code{brmsfit} meta-analysis model.
 #' @param data Study-level data used to fit \code{model}.
-#' @param priors Named list of prior specs; each element a list with
-#'   \code{name}, \code{mu_prior}, \code{tau_prior}.
+#' @param prior A single prior spec: a list with \code{name}, \code{mu_prior},
+#'   and optionally \code{tau_prior}. To compare across multiple priors
+#'   instead of model strategies, use \code{\link{ecdf_prior_plot}}.
 #' @param measure Effect measure ("OR","RR","HR","IRR","MD","SMD").
-#' @param prior_to_plot Name (in \code{priors}) of the prior to display.
-#'   Defaults to the first prior.
 #' @param study_var,rob_var Optional unquoted column names (study id / RoB).
-#' @param exclude_high_rob,incl_common_effect,incl_random_effect,incl_pet_peese,incl_selection_weight,incl_robma
-#'   Logical section toggles.
-#' @param robma_fit A fitted RoBMA object (required if \code{incl_robma}).
+#' @param exclude_high_rob,incl_common_effect,incl_random_effect,incl_pet_peese,incl_selection_weight,incl_robma,incl_robma_bma
+#'   Logical section toggles. \code{incl_robma} adds the RoBMA conditional
+#'   row (pooled effect given an effect exists); \code{incl_robma_bma} adds
+#'   the model-averaged row (can show a point mass at the null) -- the two
+#'   are independent.
+#' @param robma_fit A single fitted RoBMA object for this prior (required if
+#'   \code{incl_robma}, \code{incl_robma_bma}, \code{incl_pet_peese}, or
+#'   \code{incl_selection_weight}).
 #' @param pet_peese_direction,pet_peese_threshold PET-PEESE options.
 #' @param prob_reference "null" or "null_range".
 #' @param null_value,null_range,add_null_range,color_null_range Null / ROPE options.
@@ -330,9 +370,8 @@
 #' @importFrom patchwork plot_spacer plot_layout
 ecdf_model_plot <- function(model,
                             data,
-                            priors,
+                            prior,
                             measure,
-                            prior_to_plot = NULL,
                             study_var = NULL,
                             rob_var = NULL,
                             exclude_high_rob = FALSE,
@@ -341,6 +380,7 @@ ecdf_model_plot <- function(model,
                             incl_pet_peese = FALSE,
                             incl_selection_weight = FALSE,
                             incl_robma = FALSE,
+                            incl_robma_bma = FALSE,
                             robma_fit = NULL,
                             pet_peese_direction = "negative",
                             pet_peese_threshold = 0.10,
@@ -360,13 +400,25 @@ ecdf_model_plot <- function(model,
                             show_density = TRUE,
                             font = NULL) {
 
+  priors <- stats::setNames(list(prior), "single")
   validate_inputs_sens_plot(model = model, data = data, measure = measure, priors = priors)
 
-  prior_to_plot <- prior_to_plot %||% names(priors)[[1]]
-  if (!prior_to_plot %in% names(priors))
-    stop("`prior_to_plot` must be one of: ", paste(names(priors), collapse = ", "), call. = FALSE)
   if (!prob_reference %in% c("null", "null_range"))
     stop("`prob_reference` must be one of 'null' or 'null_range'.", call. = FALSE)
+
+  # ecdf_model_plot() shows one prior at a time, so robma_fit is always a
+  # single fit here -- a named list (one fit per prior) is the
+  # ecdf_prior_plot()/sensitivity_plot() form, where multiple priors are
+  # compared at once.
+  needs_robma <- isTRUE(incl_robma) || isTRUE(incl_robma_bma) ||
+    isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)
+  if (needs_robma && !is.null(robma_fit) && !inherits(robma_fit, "RoBMA")) {
+    cli::cli_abort(c(
+      "{.arg robma_fit} must be a single fitted RoBMA object for {.fn ecdf_model_plot}.",
+      "i" = "Pass the fit for this prior directly, e.g. {.code robma_fit = robma_fit_weakreg}.",
+      "i" = "To compare RoBMA results across multiple priors, use {.fn ecdf_prior_plot} instead."
+    ))
+  }
 
   rob_var   <- rlang::enquo(rob_var)
   study_var <- rlang::enquo(study_var)
@@ -383,20 +435,20 @@ ecdf_model_plot <- function(model,
     incl_pet_peese,
     incl_selection_weight,
     incl_robma,
+    incl_robma_bma,
     robma_fit,
     pet_peese_direction,
     pet_peese_threshold)
 
   draws_filtered <- draws |>
-    dplyr::filter(prior == prior_to_plot) |>
     dplyr::mutate(section_label = dplyr::case_when(
       grepl("^PET-PEESE", section_label) ~ "PET-PEESE",
       grepl("^PET / PEESE", section_label) ~ "PET-PEESE",
       TRUE ~ section_label))
 
   section_order <- c("Common Effect", "Random Effects", "Excluding High RoB",
-                     "PET-PEESE", "Selection Model", "RoBMA (conditional)",
-                     "RoBMA (model-averaged)")
+                     "PET-PEESE", "Selection Model (Weight)", "RoBMA (Conditional)",
+                     "RoBMA (Model-Averaged)")
 
   .render_ecdf(
     draws_filtered, grp_col = "section_label",

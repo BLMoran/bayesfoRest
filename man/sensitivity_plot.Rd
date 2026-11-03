@@ -18,6 +18,7 @@ sensitivity_plot(
   incl_selection_weight = FALSE,
   incl_pet_peese = FALSE,
   incl_robma = FALSE,
+  incl_robma_bma = FALSE,
   robma_fit = NULL,
   seed = TRUE,
   add_probs = FALSE,
@@ -79,8 +80,14 @@ model rows. Default FALSE. Requires \code{robma_fit}.}
 \item{incl_pet_peese}{Logical. Include RoBMA PET-PEESE rows. Default FALSE.
 Requires \code{robma_fit}.}
 
-\item{incl_robma}{Logical. Include full RoBMA sensitivity rows (conditional
-and model-averaged). Default FALSE. Requires \code{robma_fit}.}
+\item{incl_robma}{Logical. Include the RoBMA conditional row (the pooled
+effect given that an effect exists). Default FALSE. Requires
+\code{robma_fit}.}
+
+\item{incl_robma_bma}{Logical. Include the RoBMA model-averaged row
+(averaged across all models, including null-effect ones -- can show a
+point mass at the null). Independent of \code{incl_robma}. Default
+FALSE. Requires \code{robma_fit}.}
 
 \item{robma_fit}{A single fitted RoBMA object (from \code{RoBMA::RoBMA()})
 or a named list of RoBMA objects (one per prior

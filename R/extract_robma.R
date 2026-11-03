@@ -101,14 +101,16 @@ extract_robma_sensitivity_draws <- function(
 #'
 #' @description
 #' Internal helper that extracts mu posterior draws from the product-space JAGS
-#' fit, conditional on a specific publication-bias component being active.
+#' fit, conditional on a specific publication-bias component being active AND
+#' on the effect itself being present (non-null) -- otherwise draws from the
+#' null-effect models are mixed in as an unrelated spike at zero, since the
+#' effect and bias component indicators are independent in RoBMA's ensemble.
 #' Uses the indicator variable approach in \code{BayesTools::as_mixed_posteriors()}.
 #'
 #' @param robma_fit A fitted RoBMA object.
-#' @param component Character. Conditioning component passed to
-#'   \code{BayesTools::as_mixed_posteriors()} via its \code{conditional}
-#'   argument. One of \code{"PETPEESE"}, \code{"PET"}, \code{"PEESE"},
-#'   \code{"omega"}.
+#' @param component Character. Bias-component conditioning value passed to
+#'   \code{BayesTools::as_mixed_posteriors()} alongside the effect parameter.
+#'   One of \code{"PETPEESE"}, \code{"PET"}, \code{"PEESE"}, \code{"omega"}.
 #'
 #' @return Numeric vector of posterior draws, or NULL if the component
 #'   is not present.
@@ -119,6 +121,12 @@ extract_robma_sensitivity_draws <- function(
 
   if (!requireNamespace("BayesTools", quietly = TRUE)) {
     rlang::abort("Package 'BayesTools' is required for component-level RoBMA extraction.")
+  }
+  # RoBMA itself (not just BayesTools) must be loaded -- BayesTools::as_mixed_posteriors()
+  # mis-reads the fit's MCMC array dimensions otherwise, failing with an opaque
+  # "length of 'dimnames' [2] not equal to array extent" error.
+  if (!requireNamespace("RoBMA", quietly = TRUE)) {
+    rlang::abort("Package 'RoBMA' is required for component-level RoBMA extraction.")
   }
 
   fit <- robma_fit[["fit"]]
@@ -133,7 +141,7 @@ extract_robma_sensitivity_draws <- function(
     mixed <- BayesTools::as_mixed_posteriors(
       model      = fit,
       parameters = mu_par,
-      conditional = component
+      conditional = c(mu_par, component)
     )
     as.numeric(mixed[[mu_par]])
   }, error = function(e) {
@@ -238,6 +246,13 @@ build_robma_sensitivity_draws <- function(
       model_averaged = "RoBMA (Model-Averaged)"
     )
 ) {
+
+  if (length(robma_fits) > 1 && (is.null(names(robma_fits)) || any(names(robma_fits) == ""))) {
+    cli::cli_abort(c(
+      "{.arg robma_fit} must be a named list when supplying multiple RoBMA fits.",
+      "i" = "Name each element to match the corresponding {.arg priors} key, e.g. {.code list(vague = fit1, weakreg = fit2)}."
+    ))
+  }
 
   prior_labels <- c(
     vague       = "Vague",

@@ -453,6 +453,30 @@ Publication-bias-adjusted models come from a RoBMA fit: pass it with
 `robma_fit = your_robma_fit` and choose the components with
 `incl_robma`, `incl_pet_peese` and `incl_selection_weight`.
 
+### Sensitivity Forest Plot
+
+``` r
+
+forest_sens_plot(
+      model = model_bin, 
+      data = binary_es, 
+      measure = "OR",
+      studyvar = Author, 
+      yearvar = Year,
+      n_ctrl = N_Control, 
+      n_int = N_Intervention,
+      event_ctrl = Event_Control, 
+      event_int = Event_Intervention,
+      priors = priors, 
+      study_output = "density", 
+      pooled_output = "diamond", 
+      pred_output = "diamond",
+      xlim = c(0.1, 3.5)
+)
+```
+
+![](reference/figures/forest_sens_plot.png)
+
 ### ECDF Plots
 
 [`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)

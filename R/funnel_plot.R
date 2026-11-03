@@ -17,8 +17,8 @@
 #'   \code{yi}/\code{sei} for \code{measure} (as in \code{bayes_forest()}).
 #' @param measure Character; effect measure. One of \code{"OR"}, \code{"RR"},
 #'   \code{"HR"}, \code{"IRR"}, \code{"MD"}, \code{"SMD"}.
-#' @param studyvar Unquoted column with study identifiers.
-#' @param yearvar Unquoted column with study year (optional, used in labels).
+#' @param study_var Unquoted column with study identifiers.
+#' @param year_var Unquoted column with study year (optional, used in labels).
 #' @param yi_col,sei_col Optional character names of pre-computed effect and SE
 #'   columns (e.g. difference-of-medians \code{yi}/\code{sei}). If supplied,
 #'   \code{yi}/\code{sei} are taken directly and no arm columns are needed.
@@ -26,7 +26,7 @@
 #'   Unquoted arm columns, used only when \code{yi_col}/\code{sei_col} are not
 #'   supplied.
 #' @param subgroup Logical; colour points by subgroup.
-#' @param subgroupvar Unquoted subgroup column (when \code{subgroup = TRUE}).
+#' @param subgroup_var Unquoted subgroup column (when \code{subgroup = TRUE}).
 #' @param contour_lines Logical; add 90/95/99% significance contour shading.
 #' @param contour_alpha Numeric; base alpha for contour shading.
 #' @param pooled_line One of \code{"posterior"} (posterior median of the pooled
@@ -50,8 +50,8 @@
 funnel_plot <- function(model,
                         data,
                         measure,
-                        studyvar = NULL,
-                        yearvar = NULL,
+                        study_var = NULL,
+                        year_var = NULL,
                         yi_col = NULL,
                         sei_col = NULL,
                         n_ctrl = NULL,
@@ -65,7 +65,7 @@ funnel_plot <- function(model,
                         time_ctrl = NULL,
                         time_int = NULL,
                         subgroup = FALSE,
-                        subgroupvar = NULL,
+                        subgroup_var = NULL,
                         contour_lines = TRUE,
                         contour_alpha = 0.15,
                         pooled_line = c("posterior", "fixed", "none"),
@@ -93,9 +93,9 @@ funnel_plot <- function(model,
   x_lab <- x_label %||% props$x_label
   null_value <- null_value %||% props$null_value
 
-  studyvar_q     <- rlang::enquo(studyvar)
-  year_q         <- rlang::enquo(yearvar)
-  subgroup_var_q <- rlang::enquo(subgroupvar)
+  study_var_q     <- rlang::enquo(study_var)
+  year_q         <- rlang::enquo(year_var)
+  subgroup_var_q <- rlang::enquo(subgroup_var)
 
   # ---------------------------------------------------------------------------
   # 1. Study-level yi / sei
@@ -124,8 +124,8 @@ funnel_plot <- function(model,
   }
 
   # study labels / year / subgroup, resolved without assuming column names
-  data$Author <- if (!rlang::quo_is_null(studyvar_q))
-    as.character(rlang::eval_tidy(studyvar_q, data)) else as.character(data$Author)
+  data$Author <- if (!rlang::quo_is_null(study_var_q))
+    as.character(rlang::eval_tidy(study_var_q, data)) else as.character(data$Author)
   data$Year <- if (!rlang::quo_is_null(year_q))
     rlang::eval_tidy(year_q, data) else if ("Year" %in% names(data)) data$Year else NA
   if (isTRUE(subgroup) && !rlang::quo_is_null(subgroup_var_q))

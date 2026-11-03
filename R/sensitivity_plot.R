@@ -31,8 +31,13 @@
 #'   model rows. Default FALSE. Requires \code{robma_fit}.
 #' @param incl_pet_peese Logical. Include RoBMA PET-PEESE rows. Default FALSE.
 #'   Requires \code{robma_fit}.
-#' @param incl_robma Logical. Include full RoBMA sensitivity rows (conditional
-#'   and model-averaged). Default FALSE. Requires \code{robma_fit}.
+#' @param incl_robma Logical. Include the RoBMA conditional row (the pooled
+#'   effect given that an effect exists). Default FALSE. Requires
+#'   \code{robma_fit}.
+#' @param incl_robma_bma Logical. Include the RoBMA model-averaged row
+#'   (averaged across all models, including null-effect ones -- can show a
+#'   point mass at the null). Independent of \code{incl_robma}. Default
+#'   FALSE. Requires \code{robma_fit}.
 #' @param robma_fit A single fitted RoBMA object (from \code{RoBMA::RoBMA()})
 #'   or a named list of RoBMA objects (one per prior
 #'   level). Required when any RoBMA option is TRUE.
@@ -107,6 +112,7 @@ sensitivity_plot <- function(model,
                              incl_selection_weight = FALSE,
                              incl_pet_peese = FALSE,
                              incl_robma = FALSE,
+                             incl_robma_bma = FALSE,
                              robma_fit = NULL,
                              seed = TRUE,
                              add_probs = FALSE,
@@ -141,11 +147,12 @@ sensitivity_plot <- function(model,
   )
 
   # Check RoBMA availability
-  needs_robma <- isTRUE(incl_robma) || isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)
+  needs_robma <- isTRUE(incl_robma) || isTRUE(incl_robma_bma) ||
+    isTRUE(incl_pet_peese) || isTRUE(incl_selection_weight)
   if (needs_robma && is.null(robma_fit)) {
     stop(
       "`robma_fit` must be supplied when any RoBMA option is TRUE ",
-      "(incl_robma, incl_pet_peese, incl_selection_weight).",
+      "(incl_robma, incl_robma_bma, incl_pet_peese, incl_selection_weight).",
       call. = FALSE
     )
   }
@@ -245,9 +252,8 @@ sensitivity_plot <- function(model,
     robma_types <- character()
     if (isTRUE(incl_pet_peese))        robma_types <- c(robma_types, "pet_peese")
     if (isTRUE(incl_selection_weight)) robma_types <- c(robma_types, "selection")
-    if (isTRUE(incl_robma)) {
-      robma_types <- c(robma_types, "conditional", "model_averaged")
-    }
+    if (isTRUE(incl_robma))            robma_types <- c(robma_types, "conditional")
+    if (isTRUE(incl_robma_bma))        robma_types <- c(robma_types, "model_averaged")
 
     section_labels <- c(
       pet_peese      = "PET-PEESE",
@@ -352,7 +358,14 @@ sensitivity_plot <- function(model,
       )
     ) |>
     dplyr::mutate(
-      tau_prior_unicode = dplyr::if_else(!is.na(re) & re, tau_prior_unicode, NA_character_)
+      # The re flag only gates MA sections (Common/Random Effects, etc.), which
+      # may or may not have a heterogeneity parameter; RoBMA's ensemble always
+      # has one, and draws_robma never carries an `re` column to check.
+      tau_prior_unicode = dplyr::if_else(
+        section_label %in% robma_sections,
+        tau_prior_unicode,
+        dplyr::if_else(!is.na(re) & re, tau_prior_unicode, NA_character_)
+      )
     )
 
   # ===========================

@@ -808,7 +808,7 @@ extract_forest_draws.bayesma <- function(model, data, ...) {
 
   if (is_re && !is.null(model$draws$study)) {
     tau_draws <- as.numeric(model$draws$tau$tau)
-    study_col <- model$meta$studyvar %||% "Author"
+    study_col <- model$meta$study_var %||% "Author"
 
     study_draws <- model$draws$study |>
       dplyr::transmute(
@@ -862,8 +862,8 @@ refit_for_subgroup.bayesma <- function(model, data, ..., re_min_k = NULL) {
     # bayes_forest() renames data columns to its own canonical names; point
     # the stored call's column arguments (tidy-eval symbols) at those names
     forest_col_map <- list(
-      studyvar   = quote(Author),
-      yearvar    = quote(Year),
+      study_var   = quote(Author),
+      year_var    = quote(Year),
       n_ctrl     = quote(N_Control),
       n_int      = quote(N_Intervention),
       mean_ctrl  = quote(Mean_Control),

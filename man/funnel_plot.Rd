@@ -8,8 +8,8 @@ funnel_plot(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   yi_col = NULL,
   sei_col = NULL,
   n_ctrl = NULL,
@@ -23,7 +23,7 @@ funnel_plot(
   time_ctrl = NULL,
   time_int = NULL,
   subgroup = FALSE,
-  subgroupvar = NULL,
+  subgroup_var = NULL,
   contour_lines = TRUE,
   contour_alpha = 0.15,
   pooled_line = c("posterior", "fixed", "none"),
@@ -57,9 +57,9 @@ named by \code{yi_col}/\code{sei_col}, or the arm columns needed to compute
 \item{measure}{Character; effect measure. One of \code{"OR"}, \code{"RR"},
 \code{"HR"}, \code{"IRR"}, \code{"MD"}, \code{"SMD"}.}
 
-\item{studyvar}{Unquoted column with study identifiers.}
+\item{study_var}{Unquoted column with study identifiers.}
 
-\item{yearvar}{Unquoted column with study year (optional, used in labels).}
+\item{year_var}{Unquoted column with study year (optional, used in labels).}
 
 \item{yi_col, sei_col}{Optional character names of pre-computed effect and SE
 columns (e.g. difference-of-medians \code{yi}/\code{sei}). If supplied,
@@ -70,7 +70,7 @@ supplied.}
 
 \item{subgroup}{Logical; colour points by subgroup.}
 
-\item{subgroupvar}{Unquoted subgroup column (when \code{subgroup = TRUE}).}
+\item{subgroup_var}{Unquoted subgroup column (when \code{subgroup = TRUE}).}
 
 \item{contour_lines}{Logical; add 90/95/99\% significance contour shading.}
 

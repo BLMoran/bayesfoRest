@@ -31,10 +31,11 @@
 #' @param label_control,label_intervention Arm labels for the density panel.
 #' @param title,subtitle,x_label,xlim,x_breaks,color_palette,show_density,font Display options.
 #' @param ... Additional section toggles (e.g. \code{exclude_high_rob},
-#'   \code{incl_pet_peese}, \code{incl_selection_weight}, \code{incl_robma})
-#'   passed on to \code{.build_ecdf_draws()}. Set the one corresponding to
-#'   \code{section_to_plot} (other than "All studies") to TRUE so those draws
-#'   are built.
+#'   \code{incl_pet_peese}, \code{incl_selection_weight}, \code{incl_robma},
+#'   \code{incl_robma_bma}) passed on to \code{.build_ecdf_draws()}. Set the
+#'   one corresponding to \code{section_to_plot} (other than "All studies")
+#'   to TRUE so those draws are built. \code{incl_robma} and
+#'   \code{incl_robma_bma} are independent (conditional vs. model-averaged).
 #'
 #' @return A ggplot (or patchwork) object.
 #' @keywords internal

@@ -24,8 +24,8 @@
 #'   meta-analysis.
 #' @param measure Character string specifying the effect measure. Must be
 #'   one of: "OR", "HR", "RR", "IRR", "MD", or "SMD".
-#' @param studyvar Column name containing study identifiers/authors.
-#' @param yearvar Column name containing publication years. Default is NULL.
+#' @param study_var Column name containing study identifiers/authors.
+#' @param year_var Column name containing publication years. Default is NULL.
 #' @param n_ctrl Column name containing control group sample sizes.
 #' @param n_int Column name containing intervention group sample sizes.
 #' @param event_ctrl Column name containing control group event counts.
@@ -123,7 +123,7 @@
 #'   model         = fit,
 #'   data          = dat,
 #'   measure       = "OR",
-#'   studyvar      = Author,
+#'   study_var      = Author,
 #'   n_ctrl        = N_Control,
 #'   n_int         = N_Intervention,
 #'   event_ctrl    = Event_Control,
@@ -137,8 +137,8 @@
 forest_sens_plot <- function(model,
                              data,
                              measure,
-                             studyvar = NULL,
-                             yearvar = NULL,
+                             study_var = NULL,
+                             year_var = NULL,
                              n_ctrl = NULL,
                              n_int = NULL,
                              event_ctrl = NULL,
@@ -188,8 +188,8 @@ forest_sens_plot <- function(model,
 
   validate_inputs(
     model = model, data = data, measure = measure,
-    studyvar = {{studyvar}}, yearvar = {{yearvar}},
-    subgroup = FALSE, subgroupvar = NULL,
+    study_var = {{study_var}}, year_var = {{year_var}},
+    subgroup = FALSE, subgroup_var = NULL,
     sort_studies_by = sort_studies_by)
 
   study_output  <- rlang::arg_match(study_output)
@@ -200,14 +200,14 @@ forest_sens_plot <- function(model,
   if (measure %in% c("OR", "RR")) {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}}, Year = {{yearvar}},
+        Author = {{study_var}}, Year = {{year_var}},
         N_Control = {{n_ctrl}}, N_Intervention = {{n_int}},
         Event_Control = {{event_ctrl}}, Event_Intervention = {{event_int}})
   } else if (measure %in% c("MD", "SMD")) {
     have_effect <- all(c("yi", "vi") %in% names(data))
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}}, Year = {{yearvar}},
+        Author = {{study_var}}, Year = {{year_var}},
         N_Control = {{n_ctrl}}, N_Intervention = {{n_int}})
     if (!have_effect) {
       data <- data |>
@@ -218,12 +218,14 @@ forest_sens_plot <- function(model,
   } else if (measure == "IRR") {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}}, Year = {{yearvar}},
+        Author = {{study_var}}, Year = {{year_var}},
         Time_Control = {{time_ctrl}}, Time_Intervention = {{time_int}},
         Event_Control = {{event_ctrl}}, Event_Intervention = {{event_int}})
   }
 
-  data <- make_authors_unique(data)
+  # Disambiguate duplicate Author names (and same-Author/same-Year combos,
+  # e.g. multi-arm trials, which otherwise display as identical rows)
+  data <- make_authors_unique(data, year = "Year")
   data <- compute_yi_vi(data, measure)
 
   if (is.null(color_shrinkage_fill)) color_shrinkage_fill <- NA

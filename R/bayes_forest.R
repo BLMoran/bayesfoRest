@@ -14,8 +14,8 @@
 #' @param measure Character string specifying the effect measure. Must be one of:
 #'   "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
 #'   "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).
-#' @param studyvar Column name containing study identifiers/authors.
-#' @param yearvar Column name containing publication years. Default is NULL.
+#' @param study_var Column name containing study identifiers/authors.
+#' @param year_var Column name containing publication years. Default is NULL.
 #' @param n_ctrl Column name containing control group sample sizes.
 #' @param n_int Column name containing intervention group sample sizes.
 #' @param event_ctrl Column name containing control group event counts.
@@ -40,7 +40,7 @@
 #'   common-effect yourself. Default is NULL (no minimum). An alternative is to
 #'   keep `re_min_k = NULL` and fit the model with an informative prior on tau.
 #' @param subgroup Logical indicating whether to create subgroup analysis. Default is FALSE.
-#' @param subgroupvar Column name in `data` to use for subgroup analysis.
+#' @param subgroup_var Column name in `data` to use for subgroup analysis.
 #' @param sort_subgroup_by Character string or vector specifying subgroup ordering.
 #' @param label_outcome Character string for outcome label. Default is "Outcome".
 #' @param label_control Character string for control group label. Default is "Control".
@@ -114,8 +114,8 @@
 bayes_forest <- function(model,
                          data,
                          measure,
-                         studyvar = NULL,
-                         yearvar = NULL,
+                         study_var = NULL,
+                         year_var = NULL,
                          n_ctrl = NULL,
                          n_int = NULL,
                          event_ctrl = NULL,
@@ -130,7 +130,7 @@ bayes_forest <- function(model,
                          model_type = c("random_effect", "common_effect"),
                          re_min_k = NULL,
                          subgroup = FALSE,
-                         subgroupvar = NULL,
+                         subgroup_var = NULL,
                          sort_subgroup_by = "alphabetical",
                          label_outcome = "Outcome",
                          label_control = "Control",
@@ -181,10 +181,10 @@ bayes_forest <- function(model,
     model = model,
     data = data,
     measure = measure,
-    studyvar = {{studyvar}},
-    yearvar = {{yearvar}},
+    study_var = {{study_var}},
+    year_var = {{year_var}},
     subgroup = subgroup,
-    subgroupvar = {{subgroupvar}},
+    subgroup_var = {{subgroup_var}},
     sort_studies_by = sort_studies_by
   )
 
@@ -219,8 +219,8 @@ bayes_forest <- function(model,
   if (measure %in% c("OR", "RR")) {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{yearvar}},
+        Author = {{study_var}},
+        Year = {{year_var}},
         N_Control = {{n_ctrl}},
         N_Intervention = {{n_int}},
         Event_Control = {{event_ctrl}},
@@ -231,8 +231,8 @@ bayes_forest <- function(model,
     have_effect <- all(c("yi", "vi") %in% names(data))
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{yearvar}},
+        Author = {{study_var}},
+        Year = {{year_var}},
         N_Control = {{n_ctrl}},
         N_Intervention = {{n_int}})
     if (!have_effect) {
@@ -247,8 +247,8 @@ bayes_forest <- function(model,
   } else if (measure == "IRR") {
     data <- data |>
       dplyr::rename(
-        Author = {{studyvar}},
-        Year = {{yearvar}},
+        Author = {{study_var}},
+        Year = {{year_var}},
         Time_Control = {{time_ctrl}},
         Time_Intervention = {{time_int}},
         Event_Control = {{event_ctrl}},
@@ -258,17 +258,18 @@ bayes_forest <- function(model,
 
   # Handle subgroup variable renaming
   if (isTRUE(subgroup)) {
-    if (!rlang::quo_is_null(rlang::enquo(subgroupvar))) {
-      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroupvar))
+    if (!rlang::quo_is_null(rlang::enquo(subgroup_var))) {
+      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroup_var))
       if (subgroup_var_name != "Subgroup") {
         data <- data |>
-          dplyr::rename(Subgroup = {{subgroupvar}})
+          dplyr::rename(Subgroup = {{subgroup_var}})
       }
     }
   }
 
-  # Disambiguate duplicate Author names
-  data <- make_authors_unique(data)
+  # Disambiguate duplicate Author names (and same-Author/same-Year combos,
+  # e.g. multi-arm trials, which otherwise display as identical rows)
+  data <- make_authors_unique(data, year = "Year")
 
   # Compute yi/vi if not present (needed for one-stage models)
   data <- compute_yi_vi(data, measure)

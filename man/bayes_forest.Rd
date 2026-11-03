@@ -8,8 +8,8 @@ bayes_forest(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   n_ctrl = NULL,
   n_int = NULL,
   event_ctrl = NULL,
@@ -24,7 +24,7 @@ bayes_forest(
   model_type = c("random_effect", "common_effect"),
   re_min_k = NULL,
   subgroup = FALSE,
-  subgroupvar = NULL,
+  subgroup_var = NULL,
   sort_subgroup_by = "alphabetical",
   label_outcome = "Outcome",
   label_control = "Control",
@@ -83,9 +83,9 @@ bayes_forest(
 "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
 "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).}
 
-\item{studyvar}{Column name containing study identifiers/authors.}
+\item{study_var}{Column name containing study identifiers/authors.}
 
-\item{yearvar}{Column name containing publication years. Default is NULL.}
+\item{year_var}{Column name containing publication years. Default is NULL.}
 
 \item{n_ctrl}{Column name containing control group sample sizes.}
 
@@ -125,7 +125,7 @@ keep \code{re_min_k = NULL} and fit the model with an informative prior on tau.}
 
 \item{subgroup}{Logical indicating whether to create subgroup analysis. Default is FALSE.}
 
-\item{subgroupvar}{Column name in \code{data} to use for subgroup analysis.}
+\item{subgroup_var}{Column name in \code{data} to use for subgroup analysis.}
 
 \item{sort_subgroup_by}{Character string or vector specifying subgroup ordering.}
 

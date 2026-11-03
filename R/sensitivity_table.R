@@ -132,10 +132,15 @@ sensitivity_table_right <- function(
       table.border.bottom.color         = "grey60",
       table.border.bottom.width         = gt::px(2)
     ) |>
-    gt::fmt_percent(
+    gt::fmt(
       columns = dplyr::all_of(pr_cols),
-      decimals = 1,
-      scale_values = FALSE
+      fns = function(x) {
+        dplyr::case_when(
+          is.na(x) ~ NA_character_,
+          x >= 100 ~ ">99%",
+          TRUE     ~ paste0(sprintf("%.1f", x), "%")
+        )
+      }
     ) |>
     gt::tab_style(
       style = gt::cell_borders(

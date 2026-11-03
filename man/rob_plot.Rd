@@ -6,9 +6,9 @@
 \usage{
 rob_plot(
   data,
-  studyvar = Author,
-  yearvar = Year,
-  subgroupvar = Subgroup,
+  study_var = Author,
+  year_var = Year,
+  subgroup_var = Subgroup,
   effect = yi,
   rob_tool = "rob2",
   sort_studies_by = c("author", "year", "effect"),
@@ -30,10 +30,10 @@ chosen \code{rob_tool} (see Details). Judgements are standardised (e.g.
 "low risk" -> "Low"); \code{NA} -> "Not applicable". Judgements not recognised
 by the tool are shown as blank cells, with a warning.}
 
-\item{studyvar, yearvar}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Study
+\item{study_var, year_var}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Study
 label and year columns.}
 
-\item{subgroupvar}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Subgroup
+\item{subgroup_var}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Subgroup
 column, used when \code{subgroup = TRUE}.}
 
 \item{effect}{<\code{\link[dplyr:dplyr_data_masking]{data-masking}}> Effect size

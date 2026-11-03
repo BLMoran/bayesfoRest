@@ -5,10 +5,10 @@ validate_inputs <- function(
     model,
     data,
     measure,
-    studyvar,
-    yearvar,
+    study_var,
+    year_var,
     subgroup,
-    subgroupvar,
+    subgroup_var,
     sort_studies_by
 ) {
   # Accept any supported model class (not just brmsfit)
@@ -27,17 +27,17 @@ validate_inputs <- function(
   rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD"))
   rlang::arg_match(sort_studies_by, c("author", "year", "effect"))
 
-  if (rlang::quo_is_null(rlang::enquo(studyvar))) {
-    rlang::abort("`studyvar` must be provided (bare column name).")
+  if (rlang::quo_is_null(rlang::enquo(study_var))) {
+    rlang::abort("`study_var` must be provided (bare column name).")
   }
 
-  studyvar_name <- rlang::as_name(rlang::ensym(studyvar))
-  if (!studyvar_name %in% names(data)) {
-    rlang::abort(paste0("Can't find column `", studyvar_name, "` in `data`."))
+  study_var_name <- rlang::as_name(rlang::ensym(study_var))
+  if (!study_var_name %in% names(data)) {
+    rlang::abort(paste0("Can't find column `", study_var_name, "` in `data`."))
   }
 
-  if (!rlang::quo_is_null(rlang::enquo(yearvar))) {
-    year_name <- rlang::as_name(rlang::ensym(yearvar))
+  if (!rlang::quo_is_null(rlang::enquo(year_var))) {
+    year_name <- rlang::as_name(rlang::ensym(year_var))
     if (!year_name %in% names(data)) {
       rlang::abort(paste0("Can't find column `", year_name, "` in `data`."))
     }
@@ -45,14 +45,14 @@ validate_inputs <- function(
 
   # Validate subgroup variable if subgroup = TRUE
   if (isTRUE(subgroup)) {
-    if (rlang::quo_is_null(rlang::enquo(subgroupvar))) {
+    if (rlang::quo_is_null(rlang::enquo(subgroup_var))) {
       # Default to "Subgroup" column
       if (!"Subgroup" %in% names(data)) {
-        rlang::abort("`subgroup = TRUE` but no `subgroupvar` specified and no 'Subgroup' column found in data.")
+        rlang::abort("`subgroup = TRUE` but no `subgroup_var` specified and no 'Subgroup' column found in data.")
       }
     } else {
-      # Check if specified subgroupvar exists
-      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroupvar))
+      # Check if specified subgroup_var exists
+      subgroup_var_name <- rlang::as_name(rlang::ensym(subgroup_var))
       if (!subgroup_var_name %in% names(data)) {
         rlang::abort(paste0("Can't find subgroup column `", subgroup_var_name, "` in `data`."))
       }

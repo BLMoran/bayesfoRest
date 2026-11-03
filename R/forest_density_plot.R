@@ -263,11 +263,13 @@ study.density.plot_fn  <- function(df,
         ggdist::stat_slab(
           ggplot2::aes(xdist = xdist, fill = ggplot2::after_stat(x > null_value)),
           slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+          normalize = "groups",
           data = study.effects, colour = color_study_posterior_outline))
     } else {
       ggdist::stat_slab(
         ggplot2::aes(xdist = xdist),
         slab_linewidth = 0.5, alpha = 0.7, limits = calc_xlim, height = 0.9,
+        normalize = "groups",
         data = study.effects, colour = color_study_posterior_outline,
         fill = color_study_posterior)
     }} +

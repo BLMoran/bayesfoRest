@@ -8,8 +8,8 @@ forest_sens_plot(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   n_ctrl = NULL,
   n_int = NULL,
   event_ctrl = NULL,
@@ -76,9 +76,9 @@ meta-analysis.}
 \item{measure}{Character string specifying the effect measure. Must be
 one of: "OR", "HR", "RR", "IRR", "MD", or "SMD".}
 
-\item{studyvar}{Column name containing study identifiers/authors.}
+\item{study_var}{Column name containing study identifiers/authors.}
 
-\item{yearvar}{Column name containing publication years. Default is NULL.}
+\item{year_var}{Column name containing publication years. Default is NULL.}
 
 \item{n_ctrl}{Column name containing control group sample sizes.}
 
@@ -233,7 +233,7 @@ forest_sens_plot(
   model         = fit,
   data          = dat,
   measure       = "OR",
-  studyvar      = Author,
+  study_var      = Author,
   n_ctrl        = N_Control,
   n_int         = N_Intervention,
   event_ctrl    = Event_Control,

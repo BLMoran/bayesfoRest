@@ -65,8 +65,8 @@ bayes_forest(
   model = model_bayesmeta,
   data = cont_outcome,
   measure = "MD",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   mean_ctrl = Mean_Control,
   mean_int = Mean_Intervention,
   sd_ctrl = SD_Control,
@@ -84,7 +84,7 @@ bayes_forest(
 ## Subgroup analysis, overall plot, and prior sensitivity
 
 Subgroup refits work the same way as brms: `subgroup = TRUE,
-subgroupvar = Subgroup` refits bayesmeta per subgroup automatically.
+subgroup_var = Subgroup` refits bayesmeta per subgroup automatically.
 
 `overall_plot(incl_mu_prior = TRUE, incl_tau_prior = TRUE)` reads the
 priors directly from the model (via `model$mu.prior`/`model$tau.prior`)

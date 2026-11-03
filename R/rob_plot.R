@@ -8,9 +8,9 @@
 #'   chosen `rob_tool` (see Details). Judgements are standardised (e.g.
 #'   "low risk" -> "Low"); `NA` -> "Not applicable". Judgements not recognised
 #'   by the tool are shown as blank cells, with a warning.
-#' @param studyvar,yearvar <[`data-masking`][dplyr::dplyr_data_masking]> Study
+#' @param study_var,year_var <[`data-masking`][dplyr::dplyr_data_masking]> Study
 #'   label and year columns.
-#' @param subgroupvar <[`data-masking`][dplyr::dplyr_data_masking]> Subgroup
+#' @param subgroup_var <[`data-masking`][dplyr::dplyr_data_masking]> Subgroup
 #'   column, used when `subgroup = TRUE`.
 #' @param effect <[`data-masking`][dplyr::dplyr_data_masking]> Effect size
 #'   column, used when sorting by `"effect"`.
@@ -66,9 +66,9 @@
 #'
 #' @export
 rob_plot <- function(data,
-                     studyvar = Author,
-                     yearvar = Year,
-                     subgroupvar = Subgroup,
+                     study_var = Author,
+                     year_var = Year,
+                     subgroup_var = Subgroup,
                      effect = yi,
                      rob_tool = "rob2",
                      sort_studies_by = c("author", "year", "effect"),
@@ -86,8 +86,8 @@ rob_plot <- function(data,
   title_align <- rlang::arg_match(title_align)
   spec <- as_rob_spec(rob_tool)
   uses_effect <- sort_studies_by == "effect" || identical(sort_subgroup_by, "effect")
-  data <- dplyr::rename(data, Author = {{ studyvar }}, Year = {{ yearvar }})
-  if (isTRUE(subgroup)) data <- dplyr::rename(data, Subgroup = {{ subgroupvar }})
+  data <- dplyr::rename(data, Author = {{ study_var }}, Year = {{ year_var }})
+  if (isTRUE(subgroup)) data <- dplyr::rename(data, Subgroup = {{ subgroup_var }})
   if (uses_effect) data <- dplyr::rename(data, yi = {{ effect }})
   data <- prepare_rob_data(data, spec, derive_overall = derive_overall)
   rob_cols <- rob_columns(data, spec)
