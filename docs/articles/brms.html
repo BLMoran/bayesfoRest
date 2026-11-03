@@ -45,8 +45,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
+<li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="../articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="../articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="../articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -133,14 +139,14 @@
 <span>  model <span class="op">=</span> <span class="va">model_re</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -166,8 +172,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_re</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  yi_col <span class="op">=</span> <span class="st">"yi"</span>,</span>
 <span>  sei_col <span class="op">=</span> <span class="st">"sei"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -229,7 +235,7 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<p>See <code><a href="../articles/sensitivity-analysis.html">vignette("sensitivity-analysis")</a></code> for publication-bias-adjusted sensitivity sections built from a RoBMA fit (<code>incl_robma</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>).</p>
+<p>See <code><a href="../articles/sensitivity-analysis.html">vignette("sensitivity-analysis")</a></code> for publication-bias-adjusted sensitivity sections built from a RoBMA fit (<code>incl_robma</code>, <code>incl_robma_bma</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>).</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

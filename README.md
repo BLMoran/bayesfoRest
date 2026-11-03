@@ -57,6 +57,8 @@ You can install the development version of bayesfoRest from GitHub:
 remotes::install_github("BLMoran/bayesfoRest")
 ```
 
+<br/>
+
 ## Basic Usage
 
 The examples below use the `binary_outcome` dataset that comes with the
@@ -86,6 +88,8 @@ model_bin <- brm(
   control = list(adapt_delta = 0.99))
 ```
 
+<br/>
+
 ### Binary Outcome Forest Plot (Odds Ratio)
 
 Assign the model object, data frame, and measure, then the study-level
@@ -96,8 +100,8 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
@@ -105,6 +109,8 @@ bayes_forest(
   xlim = c(0.1, 3.5)
 )
 ```
+
+<br/>
 
 <p align="center">
 
@@ -115,6 +121,8 @@ bayes_forest(
 For continuous outcomes, use `mean_ctrl`, `mean_int`, `sd_ctrl` and
 `sd_int` instead of the event columns. For time-to-event and rate
 outcomes, use `time_ctrl` and `time_int`.
+
+<br/>
 
 ### Common-Effect Meta-Analysis
 
@@ -138,8 +146,8 @@ bayes_forest(
   model_type = "common_effect",
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
@@ -147,6 +155,8 @@ bayes_forest(
   xlim = c(0.1, 3.5)
 )
 ```
+
+<br/>
 
 <p align="center">
 
@@ -154,61 +164,7 @@ bayes_forest(
 
 </p>
 
-### Boxplot Output
-
-`study_output = "boxplot"` draws each study as a horizontal boxplot.
-Shrinkage estimates are shown as point intervals.
-
-``` r
-bayes_forest(
-  model = model_bin,
-  data = binary_es,
-  measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
-  n_ctrl = N_Control,
-  n_int = N_Intervention,
-  event_ctrl = Event_Control,
-  event_int = Event_Intervention,
-  study_output = "boxplot",
-  xlim = c(0.1, 3.5)
-)
-```
-
-<p align="center">
-
-<img src="man/figures/forest_plot_boxplot.png"/>
-
-</p>
-
-### Classic Forest Plot
-
-`study_output` and `pooled_output` are independent, so per-study and
-pooled rows can use different glyphs. `study_output = "sq_whisker"`
-pairs with `pooled_output = "diamond"` by default, giving the classic
-square-study / diamond-pooled forest-plot look.
-
-``` r
-bayes_forest(
-  model = model_bin,
-  data = binary_es,
-  measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
-  n_ctrl = N_Control,
-  n_int = N_Intervention,
-  event_ctrl = Event_Control,
-  event_int = Event_Intervention,
-  study_output = "sq_whisker",
-  xlim = c(0.1, 3.5)
-)
-```
-
-<p align="center">
-
-<img src="man/figures/forest_plot_classic.png"/>
-
-</p>
+<br/>
 
 ### Add Subgroups
 
@@ -217,23 +173,27 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
   subgroup = TRUE,
-  subgroupvar = Subgroup,
+  subgroup_var = Subgroup,
   xlim = c(0.1, 3.5)
 )
 ```
+
+<br/>
 
 <p align="center">
 
 <img src="man/figures/forest_plot_subgroup.png"/>
 
 </p>
+
+<br/>
 
 ### Add Risk of Bias Columns
 
@@ -242,24 +202,28 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
   subgroup = TRUE,
-  subgroupvar = Subgroup,
+  subgroup_var = Subgroup,
   add_rob = TRUE,
   xlim = c(0.1, 3.5)
 )
 ```
+
+<br/>
 
 <p align="center">
 
 <img src="man/figures/forest_plot_rob.png"/>
 
 </p>
+
+<br/>
 
 ### Add Risk of Bias Legend
 
@@ -268,14 +232,14 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
   subgroup = TRUE,
-  subgroupvar = Subgroup,
+  subgroup_var = Subgroup,
   add_rob = TRUE,
   add_rob_legend = TRUE,
   rob_tool = "rob2",
@@ -283,11 +247,15 @@ bayes_forest(
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/forest_plot_rob_legend.png"/>
 
 </p>
+
+<br/>
 
 ### Exclude Studies with High Risk of Bias
 
@@ -296,14 +264,14 @@ bayes_forest(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
   subgroup = TRUE,
-  subgroupvar = Subgroup,
+  subgroup_var = Subgroup,
   add_rob = TRUE,
   add_rob_legend = TRUE,
   rob_tool = "rob2",
@@ -312,23 +280,29 @@ bayes_forest(
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/forest_excl_high_rob.png"/>
 
 </p>
 
+<br/>
+
 ### Standalone Risk of Bias Plot
 
 ``` r
 rob_plot(
   data = binary_outcome,
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   rob_tool = "rob2",
   add_rob_legend = TRUE
 )
 ```
+
+<br/>
 
 <p align="center">
 
@@ -339,6 +313,8 @@ rob_plot(
 If your data has domain judgements but no overall column,
 `bayes_forest()` and `rob_plot()` derive one automatically using the
 tool’s rules.
+
+<br/>
 
 ### Risk of Bias Summary Plot
 
@@ -359,6 +335,8 @@ rob_summary(
 
 </p>
 
+<br/>
+
 ### Overall Plot
 
 ``` r
@@ -377,9 +355,11 @@ overall_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
-<img src="man/figures/overall_plot.png" width="608"/>
+<img src="man/figures/overall_plot.png" width="760"/>
 
 </p>
 
@@ -390,6 +370,8 @@ backends, pass them with `mu_prior` and `tau_prior` (e.g.
 region defaults to an odds ratio of 0.9 to 1.1; set your own with
 `null_range`.
 
+<br/>
+
 ### Funnel Plot
 
 ``` r
@@ -397,19 +379,23 @@ funnel_plot(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   yi_col = "yi",
   sei_col = "sei",
   label_studies = TRUE
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/funnel_plot.png" width="405"/>
 
 </p>
+
+<br/>
 
 ### Sensitivity Plot
 
@@ -454,11 +440,15 @@ sensitivity_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/sens_plot_no_prob.png"/>
 
 </p>
+
+<br/>
 
 ### Sensitivity Plot with Probabilities
 
@@ -477,6 +467,8 @@ sensitivity_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/sens_plot_prob.png"/>
@@ -487,6 +479,8 @@ Publication-bias-adjusted models come from a RoBMA fit: pass it with
 `robma_fit = your_robma_fit` and choose the components with
 `incl_robma`, `incl_pet_peese` and `incl_selection_weight`.
 
+<br/>
+
 ### Sensitivity Forest Plot
 
 ``` r
@@ -494,8 +488,8 @@ forest_sens_plot(
       model = model_bin, 
       data = binary_es, 
       measure = "OR",
-      studyvar = Author, 
-      yearvar = Year,
+      study_var = Author, 
+      year_var = Year,
       n_ctrl = N_Control, 
       n_int = N_Intervention,
       event_ctrl = Event_Control, 
@@ -508,11 +502,15 @@ forest_sens_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
 <img src="man/figures/forest_sens_plot.png"/>
 
 </p>
+
+<br/>
 
 ### ECDF Plots
 
@@ -533,11 +531,15 @@ ecdf_model_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
-<img src="man/figures/ecdf_plot.png" width="600"/>
+<img src="man/figures/ecdf_plot_no_robma.png"/>
 
 </p>
+
+<br/>
 
 `ecdf_prior_plot()` compares it across prior sets for one model:
 
@@ -552,11 +554,15 @@ ecdf_prior_plot(
 )
 ```
 
+<br/>
+
 <p align="center">
 
-<img src="man/figures/ecdf_prior_plot.png" width="600"/>
+<img src="man/figures/ecdf_prior_plot.png" width="680"/>
 
 </p>
+
+<br/>
 
 ## Citation
 

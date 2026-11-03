@@ -23,8 +23,14 @@ prior. Colour represents the model strategy/section."><meta property="og:image" 
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="../articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="../articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="../articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -54,9 +60,8 @@ prior. Colour represents the model strategy/section.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ecdf_model_plot</span><span class="op">(</span></span>
 <span>  <span class="va">model</span>,</span>
 <span>  <span class="va">data</span>,</span>
-<span>  <span class="va">priors</span>,</span>
+<span>  <span class="va">prior</span>,</span>
 <span>  <span class="va">measure</span>,</span>
-<span>  prior_to_plot <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  study_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rob_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exclude_high_rob <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -65,6 +70,7 @@ prior. Colour represents the model strategy/section.</p>
 <span>  incl_pet_peese <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  incl_selection_weight <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  incl_robma <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  incl_robma_bma <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  robma_fit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pet_peese_direction <span class="op">=</span> <span class="st">"negative"</span>,</span>
 <span>  pet_peese_threshold <span class="op">=</span> <span class="fl">0.1</span>,</span>
@@ -98,30 +104,31 @@ prior. Colour represents the model strategy/section.</p>
 <dd><p>Study-level data used to fit <code>model</code>.</p></dd>
 
 
-<dt id="arg-priors">priors<a class="anchor" aria-label="anchor" href="#arg-priors"></a></dt>
-<dd><p>Named list of prior specs; each element a list with
-<code>name</code>, <code>mu_prior</code>, <code>tau_prior</code>.</p></dd>
+<dt id="arg-prior">prior<a class="anchor" aria-label="anchor" href="#arg-prior"></a></dt>
+<dd><p>A single prior spec: a list with <code>name</code>, <code>mu_prior</code>,
+and optionally <code>tau_prior</code>. To compare across multiple priors
+instead of model strategies, use <code><a href="ecdf_prior_plot.html">ecdf_prior_plot</a></code>.</p></dd>
 
 
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
 <dd><p>Effect measure ("OR","RR","HR","IRR","MD","SMD").</p></dd>
 
 
-<dt id="arg-prior-to-plot">prior_to_plot<a class="anchor" aria-label="anchor" href="#arg-prior-to-plot"></a></dt>
-<dd><p>Name (in <code>priors</code>) of the prior to display.
-Defaults to the first prior.</p></dd>
-
-
 <dt id="arg-study-var-rob-var">study_var, rob_var<a class="anchor" aria-label="anchor" href="#arg-study-var-rob-var"></a></dt>
 <dd><p>Optional unquoted column names (study id / RoB).</p></dd>
 
 
-<dt id="arg-exclude-high-rob-incl-common-effect-incl-random-effect-incl-pet-peese-incl-selection-weight-incl-robma">exclude_high_rob, incl_common_effect, incl_random_effect, incl_pet_peese, incl_selection_weight, incl_robma<a class="anchor" aria-label="anchor" href="#arg-exclude-high-rob-incl-common-effect-incl-random-effect-incl-pet-peese-incl-selection-weight-incl-robma"></a></dt>
-<dd><p>Logical section toggles.</p></dd>
+<dt id="arg-exclude-high-rob-incl-common-effect-incl-random-effect-incl-pet-peese-incl-selection-weight-incl-robma-incl-robma-bma">exclude_high_rob, incl_common_effect, incl_random_effect, incl_pet_peese, incl_selection_weight, incl_robma, incl_robma_bma<a class="anchor" aria-label="anchor" href="#arg-exclude-high-rob-incl-common-effect-incl-random-effect-incl-pet-peese-incl-selection-weight-incl-robma-incl-robma-bma"></a></dt>
+<dd><p>Logical section toggles. <code>incl_robma</code> adds the RoBMA conditional
+row (pooled effect given an effect exists); <code>incl_robma_bma</code> adds
+the model-averaged row (can show a point mass at the null) – the two
+are independent.</p></dd>
 
 
 <dt id="arg-robma-fit">robma_fit<a class="anchor" aria-label="anchor" href="#arg-robma-fit"></a></dt>
-<dd><p>A fitted RoBMA object (required if <code>incl_robma</code>).</p></dd>
+<dd><p>A single fitted RoBMA object for this prior (required if
+<code>incl_robma</code>, <code>incl_robma_bma</code>, <code>incl_pet_peese</code>, or
+<code>incl_selection_weight</code>).</p></dd>
 
 
 <dt id="arg-pet-peese-direction-pet-peese-threshold">pet_peese_direction, pet_peese_threshold<a class="anchor" aria-label="anchor" href="#arg-pet-peese-direction-pet-peese-threshold"></a></dt>

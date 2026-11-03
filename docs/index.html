@@ -45,8 +45,14 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
+<li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -118,6 +124,7 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"BLMoran/bayesfoRest"</span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 </div>
 <div class="section level2">
 <h2 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
@@ -144,6 +151,7 @@
 <span>          <span class="fu"><a href="https://paulbuerkner.com/brms/reference/set_prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="fu">cauchy</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>, class <span class="op">=</span> <span class="va">sd</span><span class="op">)</span>,</span>
 <span>  iter <span class="op">=</span> <span class="fl">4000</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>adapt_delta <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <div class="section level3">
 <h3 id="binary-outcome-forest-plot-odds-ratio">Binary Outcome Forest Plot (Odds Ratio)<a class="anchor" aria-label="anchor" href="#binary-outcome-forest-plot-odds-ratio"></a>
 </h3>
@@ -153,19 +161,21 @@
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/forest_plot_binary.png"></p>
 
 <p>For continuous outcomes, use <code>mean_ctrl</code>, <code>mean_int</code>, <code>sd_ctrl</code> and <code>sd_int</code> instead of the event columns. For time-to-event and rate outcomes, use <code>time_ctrl</code> and <code>time_int</code>.</p>
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="common-effect-meta-analysis">Common-Effect Meta-Analysis<a class="anchor" aria-label="anchor" href="#common-effect-meta-analysis"></a>
@@ -185,187 +195,153 @@
 <span>  model_type <span class="op">=</span> <span class="st">"common_effect"</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/forest_plot_common_effect.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
-<h3 id="boxplot-output">Boxplot Output<a class="anchor" aria-label="anchor" href="#boxplot-output"></a>
+<h3 id="add-subgroups">Add Subgroups<a class="anchor" aria-label="anchor" href="#add-subgroups"></a>
 </h3>
-<p><code>study_output = "boxplot"</code> draws each study as a horizontal boxplot. Shrinkage estimates are shown as point intervals.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  study_output <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
+<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/forest_plot_boxplot.png"></p>
+<p><img src="reference/figures/forest_plot_subgroup.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
-<h3 id="classic-forest-plot">Classic Forest Plot<a class="anchor" aria-label="anchor" href="#classic-forest-plot"></a>
+<h3 id="add-risk-of-bias-columns">Add Risk of Bias Columns<a class="anchor" aria-label="anchor" href="#add-risk-of-bias-columns"></a>
 </h3>
-<p><code>study_output</code> and <code>pooled_output</code> are independent, so per-study and pooled rows can use different glyphs. <code>study_output = "sq_whisker"</code> pairs with <code>pooled_output = "diamond"</code> by default, giving the classic square-study / diamond-pooled forest-plot look.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  study_output <span class="op">=</span> <span class="st">"sq_whisker"</span>,</span>
+<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/forest_plot_classic.png"></p>
+<p><img src="reference/figures/forest_plot_rob.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
-<h3 id="add-subgroups">Add Subgroups<a class="anchor" aria-label="anchor" href="#add-subgroups"></a>
+<h3 id="add-risk-of-bias-legend">Add Risk of Bias Legend<a class="anchor" aria-label="anchor" href="#add-risk-of-bias-legend"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/forest_plot_subgroup.png"></p>
+<p><img src="reference/figures/forest_plot_rob_legend.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
-<h3 id="add-risk-of-bias-columns">Add Risk of Bias Columns<a class="anchor" aria-label="anchor" href="#add-risk-of-bias-columns"></a>
+<h3 id="exclude-studies-with-high-risk-of-bias">Exclude Studies with High Risk of Bias<a class="anchor" aria-label="anchor" href="#exclude-studies-with-high-risk-of-bias"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
 <span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
-<span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p align="center">
-</p>
-<p><img src="reference/figures/forest_plot_rob.png"></p>
-
-</div>
-<div class="section level3">
-<h3 id="add-risk-of-bias-legend">Add Risk of Bias Legend<a class="anchor" aria-label="anchor" href="#add-risk-of-bias-legend"></a>
-</h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
-<span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
-<span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
-<span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
-<span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
-<span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
-<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p align="center">
-</p>
-<p><img src="reference/figures/forest_plot_rob_legend.png"></p>
-
-</div>
-<div class="section level3">
-<h3 id="exclude-studies-with-high-risk-of-bias">Exclude Studies with High Risk of Bias<a class="anchor" aria-label="anchor" href="#exclude-studies-with-high-risk-of-bias"></a>
-</h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/bayes_forest.html">bayes_forest</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
-<span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
-<span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
-<span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
-<span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
-<span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroupvar <span class="op">=</span> <span class="va">Subgroup</span>,</span>
+<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
 <span>  exclude_high_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/forest_excl_high_rob.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="standalone-risk-of-bias-plot">Standalone Risk of Bias Plot<a class="anchor" aria-label="anchor" href="#standalone-risk-of-bias-plot"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rob_plot.html">rob_plot</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/rob_viz.png" width="469"></p>
 
 <p>If your data has domain judgements but no overall column, <code><a href="reference/bayes_forest.html">bayes_forest()</a></code> and <code><a href="reference/rob_plot.html">rob_plot()</a></code> derive one automatically using the tool’s rules.</p>
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="risk-of-bias-summary-plot">Risk of Bias Summary Plot<a class="anchor" aria-label="anchor" href="#risk-of-bias-summary-plot"></a>
 </h3>
 <p><code><a href="reference/rob_summary.html">rob_summary()</a></code> shows the weighted proportion of studies at each judgement, per domain, as a stacked bar chart.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rob_summary.html">rob_summary</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">binary_outcome</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
@@ -375,11 +351,12 @@
 </p>
 <p><img src="reference/figures/rob_summary.png" width="542"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="overall-plot">Overall Plot<a class="anchor" aria-label="anchor" href="#overall-plot"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/overall_plot.html">overall_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
@@ -393,36 +370,40 @@
 <span>  tau_xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  plot_arrangement <span class="op">=</span> <span class="st">"vertical"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/overall_plot.png" width="608"></p>
+<p><img src="reference/figures/overall_plot.png" width="760"></p>
 
 <p>The dashed lines are the priors, drawn on the same density scale as the posteriors. They are read from brms and bayesmeta models; for other backends, pass them with <code>mu_prior</code> and <code>tau_prior</code> (e.g. <code>mu_prior = bf_normal(0, 1)</code>). With <code>add_null_range = TRUE</code> the shaded region defaults to an odds ratio of 0.9 to 1.1; set your own with <code>null_range</code>.</p>
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="funnel-plot">Funnel Plot<a class="anchor" aria-label="anchor" href="#funnel-plot"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/funnel_plot.html">funnel_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  yi_col <span class="op">=</span> <span class="st">"yi"</span>,</span>
 <span>  sei_col <span class="op">=</span> <span class="st">"sei"</span>,</span>
 <span>  label_studies <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/funnel_plot.png" width="405"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="sensitivity-plot">Sensitivity Plot<a class="anchor" aria-label="anchor" href="#sensitivity-plot"></a>
 </h3>
 <p>Priors are written with the <code>bf_*()</code> helpers, so the same list works whichever backend the model was fitted with. For the pooled effect use <code><a href="reference/bf_priors.html">bf_normal()</a></code> or <code><a href="reference/bf_priors.html">bf_student_t()</a></code>. For the heterogeneity use <code><a href="reference/bf_priors.html">bf_half_normal()</a></code>, <code><a href="reference/bf_priors.html">bf_half_cauchy()</a></code>, <code><a href="reference/bf_priors.html">bf_half_t()</a></code>, <code><a href="reference/bf_priors.html">bf_exponential()</a></code>, <code><a href="reference/bf_priors.html">bf_lognormal()</a></code> or <code><a href="reference/bf_priors.html">bf_uniform()</a></code>, or the empirical priors <code><a href="reference/bf_turner.html">bf_turner()</a></code> (binary outcomes) and <code><a href="reference/bf_turner.html">bf_rhodes()</a></code> (continuous outcomes), which are informative and especially useful when there are few studies. If the model’s backend cannot fit a prior exactly, you get an error rather than a substitute; <code><a href="reference/bf_priors.html">?bf_priors</a></code> lists which backends support which priors.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">priors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  vague <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    name <span class="op">=</span> <span class="st">"Vague"</span>,</span>
@@ -450,15 +431,17 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/sens_plot_no_prob.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="sensitivity-plot-with-probabilities">Sensitivity Plot with Probabilities<a class="anchor" aria-label="anchor" href="#sensitivity-plot-with-probabilities"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
@@ -471,22 +454,24 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/sens_plot_prob.png"></p>
 
 <p>Publication-bias-adjusted models come from a RoBMA fit: pass it with <code>robma_fit = your_robma_fit</code> and choose the components with <code>incl_robma</code>, <code>incl_pet_peese</code> and <code>incl_selection_weight</code>.</p>
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="sensitivity-forest-plot">Sensitivity Forest Plot<a class="anchor" aria-label="anchor" href="#sensitivity-forest-plot"></a>
 </h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/forest_sens_plot.html">forest_sens_plot</a></span><span class="op">(</span></span>
 <span>      model <span class="op">=</span> <span class="va">model_bin</span>, </span>
 <span>      data <span class="op">=</span> <span class="va">binary_es</span>, </span>
 <span>      measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>      studyvar <span class="op">=</span> <span class="va">Author</span>, </span>
-<span>      yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>      study_var <span class="op">=</span> <span class="va">Author</span>, </span>
+<span>      year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>      n_ctrl <span class="op">=</span> <span class="va">N_Control</span>, </span>
 <span>      n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>      event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>, </span>
@@ -497,16 +482,18 @@
 <span>      pred_output <span class="op">=</span> <span class="st">"diamond"</span>,</span>
 <span>      xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
 <p><img src="reference/figures/forest_sens_plot.png"></p>
 
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="ecdf-plots">ECDF Plots<a class="anchor" aria-label="anchor" href="#ecdf-plots"></a>
 </h3>
 <p><code><a href="reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> compares the posterior of the pooled effect across models for one prior set:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/ecdf_model_plot.html">ecdf_model_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
@@ -518,12 +505,14 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/ecdf_plot.png" width="600"></p>
+<p><img src="reference/figures/ecdf_plot_no_robma.png"></p>
 
+<p><br></p>
 <p><code><a href="reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> compares it across prior sets for one model:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
@@ -532,23 +521,25 @@
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><br></p>
 <p align="center">
 </p>
-<p><img src="reference/figures/ecdf_prior_plot.png" width="600"></p>
+<p><img src="reference/figures/ecdf_prior_plot.png" width="680"></p>
 
+<p><br></p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use bayesfoRest in your research, please cite:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  title <span class="ot">=</span> {bayesfoRest<span class="sc">:</span> Forest Plots <span class="cf">for</span> Bayesian Meta<span class="sc">-</span>Analyses <span class="cf">in</span> R},</span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  author <span class="ot">=</span> {[Benjamin Moran and Thomas Payne]},</span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesfoRest},</span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="sc">@</span>Manual{,</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  title <span class="ot">=</span> {bayesfoRest<span class="sc">:</span> Forest Plots <span class="cf">for</span> Bayesian Meta<span class="sc">-</span>Analyses <span class="cf">in</span> R},</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>  author <span class="ot">=</span> {[Benjamin Moran and Thomas Payne]},</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>},</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  note <span class="ot">=</span> {R package version <span class="dv">0</span>.<span class="dv">0</span>.<span class="fl">0.9000</span>},</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>BLMoran<span class="sc">/</span>bayesfoRest},</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>

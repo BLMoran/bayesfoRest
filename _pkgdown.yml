@@ -43,6 +43,23 @@ navbar:
     reference:
       text: Reference
       href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+        - text: Use with Bayesian MA R Packages
+        - text: brms
+          href: articles/brms.html
+        - text: bayesmeta
+          href: articles/bayesmeta.html
+        - text: MetaStan
+          href: articles/MetaStan.html
+        - text: RoBMA
+          href: articles/RoBMA.html
+        - text: bayesma
+          href: articles/bayesma.html
+        - text: "---"
+        - text: Sensitivity Analysis
+          href: articles/sensitivity-analysis.html
     news:
       text: Changelog
       href: news/index.html
@@ -89,13 +106,8 @@ articles:
     navbar: ~
     contents:
       - bayesfoRest
-
-  - title: Sensitivity Analysis
-    desc: Prior and model-strategy sensitivity across every supported backend
-    contents:
-      - sensitivity-analysis
-
-  - title: Use with Other Meta-Analysis Tools
+      
+  - title: Use with Other Bayesiabn Meta-Analysis R Packages
     desc: One page per modelling backend
     contents:
       - brms
@@ -103,3 +115,10 @@ articles:
       - MetaStan
       - RoBMA
       - bayesma
+
+  - title: Sensitivity Analysis
+    desc: Prior and model-strategy sensitivity across every supported backend
+    contents:
+      - sensitivity-analysis
+
+  

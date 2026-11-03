@@ -18,8 +18,8 @@ forest_sens_plot(
   model,
   data,
   measure,
-  studyvar = NULL,
-  yearvar = NULL,
+  study_var = NULL,
+  year_var = NULL,
   n_ctrl = NULL,
   n_int = NULL,
   event_ctrl = NULL,
@@ -97,11 +97,11 @@ forest_sens_plot(
   Character string specifying the effect measure. Must be one of: "OR",
   "HR", "RR", "IRR", "MD", or "SMD".
 
-- studyvar:
+- study_var:
 
   Column name containing study identifiers/authors.
 
-- yearvar:
+- year_var:
 
   Column name containing publication years. Default is NULL.
 
@@ -337,7 +337,7 @@ forest_sens_plot(
   model         = fit,
   data          = dat,
   measure       = "OR",
-  studyvar      = Author,
+  study_var      = Author,
   n_ctrl        = N_Control,
   n_int         = N_Intervention,
   event_ctrl    = Event_Control,

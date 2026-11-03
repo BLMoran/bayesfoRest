@@ -60,8 +60,8 @@ bayes_forest(
   model = model_metastan,
   data = cont_outcome,
   measure = "MD",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   mean_ctrl = Mean_Control,
   mean_int = Mean_Intervention,
   sd_ctrl = SD_Control,
@@ -77,7 +77,7 @@ bayes_forest(
 ## Subgroup analysis and prior sensitivity
 
 Subgroup refits work the same way as brms:
-`subgroup = TRUE, subgroupvar = Subgroup` refits MetaStan per subgroup
+`subgroup = TRUE, subgroup_var = Subgroup` refits MetaStan per subgroup
 automatically.
 
 MetaStan also supports the full `bf_*()` prior-sensitivity workflow

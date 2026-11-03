@@ -87,18 +87,22 @@ export(sensitivity_plot)
 if (getRversion() < "4.3.0") importFrom("S7", "@")
 importFrom(RColorBrewer,brewer.pal)
 importFrom(dplyr,
+  across,
+  all_of,
   any_of,
   bind_rows,
   case_when,
   filter,
   group_by,
+  group_modify,
   if_else,
   left_join,
   mutate,
   n,
   rename,
   select,
-  summarise
+  summarise,
+  ungroup
 )
 importFrom(ggdist,
   scale_fill_ramp_discrete,
@@ -130,7 +134,6 @@ importFrom(ggplot2,
   scale_x_log10,
   scale_y_continuous,
   sec_axis,
-  stat_ecdf,
   theme,
   theme_light,
   unit,

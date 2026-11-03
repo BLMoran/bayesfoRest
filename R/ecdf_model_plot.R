@@ -99,6 +99,31 @@
 
 
 # -----------------------------------------------------------------------------
+# Internal: ECDF evaluated on a finite grid spanning xlim
+#   stat_ecdf()'s default pad = TRUE adds -Inf/Inf x-values so the curve runs
+#   flat to 0%/100% at the panel edges. Under scale_x_log10(), log10(-Inf) is
+#   NaN, and a NaN vertex breaks coord_cartesian()'s clipping -- the flat
+#   segment escapes the panel instead of stopping at its border. Evaluating
+#   stats::ecdf() directly on a finite grid within xlim sidesteps this
+#   entirely: every plotted x is already in range, so there's nothing for
+#   clip = "on" to fail on.
+# -----------------------------------------------------------------------------
+#' @keywords internal
+#' @noRd
+.ecdf_grid_draws <- function(data, group_col, x_col, xlim, log_scale, n = 1000) {
+  grid <- if (isTRUE(log_scale)) {
+    10^seq(log10(xlim[1]), log10(xlim[2]), length.out = n)
+  } else {
+    seq(xlim[1], xlim[2], length.out = n)
+  }
+  data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_col))) |>
+    dplyr::group_modify(~ data.frame(x = grid, y = stats::ecdf(.x[[x_col]])(grid))) |>
+    dplyr::ungroup()
+}
+
+
+# -----------------------------------------------------------------------------
 # Internal: render the ECDF (+ optional density panel)
 #   draws_filtered : already reduced to the fixed dimension
 #   grp_col        : "section_label" or "prior_label" (the colour aesthetic)
@@ -161,7 +186,10 @@
     y_right_label <- paste0("Probability ", measure, " > ", null_range[2])
   }
 
-  ecdf_plot <- ggplot2::ggplot(draws_filtered, ggplot2::aes(x = x, color = .grp)) +
+  ecdf_grid <- .ecdf_grid_draws(draws_filtered, group_col = ".grp", x_col = "x",
+                                xlim = calc_xlim, log_scale = props$log_scale)
+
+  ecdf_plot <- ggplot2::ggplot(ecdf_grid, ggplot2::aes(x = x, y = y, color = .grp)) +
     {if (isTRUE(add_null_range) && !is.null(null_range)) {
       ggplot2::annotate("rect", xmin = null_range[1], xmax = null_range[2],
                         ymin = -Inf, ymax = Inf,
@@ -170,7 +198,7 @@
     {if (isTRUE(add_null_range) && !is.null(null_range)) {
       ggplot2::geom_vline(xintercept = null_range, linetype = "dotted", color = "grey30")
     }} +
-    ggplot2::stat_ecdf(geom = "step", linewidth = 0.9) +
+    ggplot2::geom_line(linewidth = 0.9) +
     ggplot2::geom_vline(xintercept = null_value, linewidth = 0.8, color = "black") +
     ggplot2::scale_y_continuous(
       name = y_left_label, limits = c(0, 1), breaks = seq(0, 1, 0.1),
@@ -204,12 +232,12 @@
   if (isTRUE(props$log_scale)) {
     ecdf_plot <- ecdf_plot +
       ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0)) +
-      ggplot2::coord_cartesian(xlim = calc_xlim, clip = "off") +
+      ggplot2::coord_cartesian(xlim = calc_xlim) +
       ggplot2::labs(x = x_lab)
   } else {
     ecdf_plot <- ecdf_plot +
       ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0)) +
-      ggplot2::coord_cartesian(xlim = calc_xlim, clip = "off") +
+      ggplot2::coord_cartesian(xlim = calc_xlim) +
       ggplot2::labs(x = x_lab)
   }
 
@@ -227,7 +255,7 @@
   # A group whose draws carry a point mass at null_value (e.g. RoBMA's
   # model-averaged mu) needs that spike jittered before a KDE can show it --
   # see jitter_null_draws(). The ECDF panel above keeps the unjittered draws,
-  # since stat_ecdf() already renders a point mass correctly as a jump.
+  # since .ecdf_grid_draws() already renders a point mass correctly as a jump.
   density_draws <- jitter_null_draws(
     draws_filtered, group_col = ".grp", x_col = "x",
     null_value = null_value, log_scale = props$log_scale
@@ -266,11 +294,11 @@
   if (isTRUE(props$log_scale)) {
     density_plot <- density_plot +
       ggplot2::scale_x_log10(breaks = breaks, expand = c(0, 0)) +
-      ggplot2::coord_cartesian(xlim = calc_xlim, clip = "off")
+      ggplot2::coord_cartesian(xlim = calc_xlim)
   } else {
     density_plot <- density_plot +
       ggplot2::scale_x_continuous(breaks = breaks, expand = c(0, 0)) +
-      ggplot2::coord_cartesian(xlim = calc_xlim, clip = "off")
+      ggplot2::coord_cartesian(xlim = calc_xlim)
   }
 
   density_plot <- density_plot +
@@ -292,10 +320,9 @@
     )
 
   # ecdf_plot and density_plot each already carry their own
-  # coord_cartesian(xlim = calc_xlim, clip = "off") -- applying another one
-  # here via `&` would just replace both (dropping clip = "off", which the
-  # "Favours ..." annotation_custom() labels outside the panel need) and
-  # trigger ggplot2's "coordinate system already present" warning.
+  # coord_cartesian(xlim = calc_xlim) -- applying another one here via `&`
+  # would just replace both and trigger ggplot2's "coordinate system already
+  # present" warning.
   (ecdf_plot / patchwork::plot_spacer() / density_plot) +
     patchwork::plot_layout(ncol = 1, heights = c(1, 0.0, 0.35),
                            axes = "collect_x", axis_titles = "collect_x")
@@ -359,9 +386,9 @@
 #' @export
 #'
 #' @importFrom rlang enquo quo_is_null %||%
-#' @importFrom dplyr filter mutate bind_rows case_when select any_of left_join
+#' @importFrom dplyr filter mutate bind_rows case_when select any_of left_join group_by group_modify ungroup across all_of
 #' @importFrom purrr keep map_dfr imap_dfr
-#' @importFrom ggplot2 ggplot aes annotate geom_vline stat_ecdf scale_y_continuous sec_axis scale_color_manual theme_light theme element_rect element_text element_blank element_line unit margin labs guides guide_legend scale_x_log10 scale_x_continuous coord_cartesian expansion waiver annotation_custom
+#' @importFrom ggplot2 ggplot aes annotate geom_vline geom_line scale_y_continuous sec_axis scale_color_manual theme_light theme element_rect element_text element_blank element_line unit margin labs guides guide_legend scale_x_log10 scale_x_continuous coord_cartesian expansion waiver annotation_custom
 #' @importFrom ggdist stat_slab
 #' @importFrom scales alpha percent_format
 #' @importFrom RColorBrewer brewer.pal

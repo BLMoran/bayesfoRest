@@ -45,8 +45,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
+<li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="../articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="../articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="../articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -147,8 +153,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
@@ -162,7 +168,9 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p align="center">
-<img src="../reference/figures/forest_sens_plot.png"></p>
+</p>
+<p><img src="../reference/figures/forest_sens_plot.png"></p>
+<p></p>
 <p><code>study_output</code>/<code>pooled_output</code>/<code>pred_output</code> work the same way as in <code><a href="../reference/bayes_forest.html">bayes_forest()</a></code>: each one independently chooses <code>"density"</code>, <code>"boxplot"</code>, <code>"sq_whisker"</code>, or (for <code>pooled_output</code>/<code>pred_output</code>) <code>"diamond"</code>.</p>
 </section><section class="level2"><h2 id="sensitivity_plot-compare-priors-and-model-strategies-together">
 <code>sensitivity_plot()</code>: compare priors and model strategies together<a class="anchor" aria-label="anchor" href="#sensitivity_plot-compare-priors-and-model-strategies-together"></a>
@@ -184,7 +192,9 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p align="center">
-<img src="../reference/figures/sens_plot_no_prob.png"></p>
+</p>
+<p><img src="../reference/figures/sens_plot_no_prob.png"></p>
+<p></p>
 <p><code>add_probs = TRUE</code> adds columns for the posterior probability of benefit and no-benefit relative to <code>null_value</code> (and to <code>null_range</code>, if an <code>add_null_range</code>/ROPE is set):</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
@@ -202,46 +212,102 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p align="center">
-<img src="../reference/figures/sens_plot_prob.png"></p>
+</p>
+<p><img src="../reference/figures/sens_plot_prob.png"></p>
+<p></p>
 <section class="level3"><h3 id="adding-publication-bias-adjustment-from-robma">Adding publication-bias adjustment from RoBMA<a class="anchor" aria-label="anchor" href="#adding-publication-bias-adjustment-from-robma"></a>
 </h3>
-<p><code>incl_robma</code>, <code>incl_pet_peese</code>, and <code>incl_selection_weight</code> add extra sections built from a separately fitted RoBMA object, passed in as <code>robma_fit</code> (a single fit, or a named list with one fit per prior level):</p>
+<p><code>incl_robma</code>, <code>incl_robma_bma</code>, <code>incl_pet_peese</code>, and <code>incl_selection_weight</code> add extra sections built from a separately fitted RoBMA object, passed in as <code>robma_fit</code> (a single fit, or a named list with one fit per prior level – here, one <code><a href="https://fbartos.github.io/RoBMA/reference/RoBMA.html" class="external-link">RoBMA::RoBMA()</a></code> ensemble per entry in <code>priors</code>, using the same / specifications translated into <code><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">RoBMA::prior()</a></code> objects). <code>incl_robma</code> and <code>incl_robma_bma</code> are independent – see <a href="#what-the-robma-sections-show">What the RoBMA sections show</a> below for why you might want one without the other:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">model_robma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  vague <span class="op">=</span> <span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/RoBMA.html" class="external-link">RoBMA</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">binary_es</span>, measure <span class="op">=</span> <span class="st">"OR"</span>, yi <span class="op">=</span> <span class="va">yi</span>, sei <span class="op">=</span> <span class="va">sei</span>,</span>
+<span>    prior_effect <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"normal"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    prior_heterogeneity <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"cauchy"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>location <span class="op">=</span> <span class="fl">0</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                                       truncation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0</span>, upper <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    model_type <span class="op">=</span> <span class="st">"PSMA"</span>, seed <span class="op">=</span> <span class="fl">1404</span><span class="op">)</span>,</span>
+<span>  weakreg <span class="op">=</span> <span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/RoBMA.html" class="external-link">RoBMA</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">binary_es</span>, measure <span class="op">=</span> <span class="st">"OR"</span>, yi <span class="op">=</span> <span class="va">yi</span>, sei <span class="op">=</span> <span class="va">sei</span>,</span>
+<span>    prior_effect <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"normal"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    prior_heterogeneity <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"cauchy"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>location <span class="op">=</span> <span class="fl">0</span>, scale <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>                                       truncation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0</span>, upper <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    model_type <span class="op">=</span> <span class="st">"PSMA"</span>, seed <span class="op">=</span> <span class="fl">1404</span><span class="op">)</span>,</span>
+<span>  informative <span class="op">=</span> <span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/RoBMA.html" class="external-link">RoBMA</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">binary_es</span>, measure <span class="op">=</span> <span class="st">"OR"</span>, yi <span class="op">=</span> <span class="va">yi</span>, sei <span class="op">=</span> <span class="va">sei</span>,</span>
+<span>    prior_effect <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"normal"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    prior_heterogeneity <span class="op">=</span> <span class="fu">RoBMA</span><span class="fu">::</span><span class="fu"><a href="https://fbartos.github.io/RoBMA/reference/prior.html" class="external-link">prior</a></span><span class="op">(</span><span class="st">"cauchy"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>location <span class="op">=</span> <span class="fl">0</span>, scale <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>,</span>
+<span>                                       truncation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lower <span class="op">=</span> <span class="fl">0</span>, upper <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    model_type <span class="op">=</span> <span class="st">"PSMA"</span>, seed <span class="op">=</span> <span class="fl">1404</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/sensitivity_plot.html">sensitivity_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  priors <span class="op">=</span> <span class="va">priors</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  rob_var <span class="op">=</span> <span class="va">Overall</span>,</span>
+<span>  exclude_high_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_common_effect <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  robma_fit <span class="op">=</span> <span class="va">model_robma</span>,</span>
 <span>  incl_robma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_robma_bma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  incl_pet_peese <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  incl_selection_weight <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  incl_selection_weight <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  add_probs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span>,</span>
+<span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
+<p align="center">
+</p>
+<p><img src="../reference/figures/sens_plot_robma.png"></p>
+<p></p>
 <p>This is separate from using a <code>brma</code> fit directly as the base <code>model</code> – both are valid ways to bring RoBMA into a sensitivity analysis, and they answer different questions. Passing <code>robma_fit</code> adds bias-adjusted <em>sections</em> alongside your primary model’s own prior sensitivity. Passing a <code>brma</code> fit as <code>model</code> instead refits <em>that</em> model under each prior, the same way brms/bayesmeta/MetaStan do – useful when RoBMA’s single-model fit (rather than its full model-averaged ensemble) is your primary analysis. See <code><a href="../articles/RoBMA.html">vignette("RoBMA")</a></code> for fitting details.</p>
+</section><section class="level3"><h3 id="what-the-robma-sections-show">What the RoBMA sections show<a class="anchor" aria-label="anchor" href="#what-the-robma-sections-show"></a>
+</h3>
+<p><code>incl_pet_peese</code> and <code>incl_selection_weight</code> each add one bias-adjusted estimate per prior: the pooled effect conditional on that correction method being the right one <em>and</em> on a real effect being present. These are continuous, ordinary-looking posteriors, directly comparable to the Common/Random Effects rows above them.</p>
+<p><code>incl_robma</code> and <code>incl_robma_bma</code> each add one further row per prior, and they answer different questions – which is why they’re independent toggles rather than a single on/off switch:</p>
+<ul>
+<li>
+<strong>RoBMA (Conditional)</strong>, <code>incl_robma</code> – the pooled effect given that an effect exists. Like PET-PEESE/Selection Model above, this is continuous.</li>
+<li>
+<strong>RoBMA (Model-Averaged)</strong>, <code>incl_robma_bma</code> – RoBMA’s full posterior, averaged across <em>all</em> models in its ensemble, including the ones with no effect at all. If the data don’t rule out “no effect”, some of that posterior mass sits exactly on the null value (OR/RR/HR/IRR = 1, MD/SMD =
+<ol start="0" type="1">
+<li>rather than being spread continuously – a genuine feature of the result, not something to explain away.</li>
+</ol>
+</li>
+</ul>
+<p>A point mass like that can’t be drawn with an ordinary density estimate (it has zero width), so the Model-Averaged row’s null-valued draws are jittered by a small, deterministic amount before the usual density estimate runs – the same KDE as every other row, just fed slightly perturbed input. The jitter width is set from that row’s own continuous draws, so the resulting spike is sized like a feature of that row’s own posterior rather than an arbitrary constant, and the displayed spike-to-slab proportion falls straight out of the true draw counts, with no separate scaling applied. <code>Pr(Benefit)</code>/<code>Pr(Harm)</code> (and their <code>null_range</code> counterparts, shown when <code>add_probs = TRUE</code>) are computed directly from the (unjittered) draws, so they remain the most direct read on exactly how much posterior mass sits on each side of the null – <code>&gt;99%</code> rather than <code>100.0%</code>, since a continuous posterior probability is never exactly one.</p>
+<p>If a model-averaged row’s spike makes the rest of that row hard to read – or, on the ECDF plots below, makes the whole curve hard to read once the spike’s jump dominates it – that’s a good reason to leave <code>incl_robma_bma</code> off and rely on <code>incl_robma</code> (RoBMA Conditional) alone; it’s always continuous.</p>
 </section></section><section class="level2"><h2 id="ecdf_model_plot-and-ecdf_prior_plot-cumulative-distribution-comparisons">
 <code>ecdf_model_plot()</code> and <code>ecdf_prior_plot()</code>: cumulative-distribution comparisons<a class="anchor" aria-label="anchor" href="#ecdf_model_plot-and-ecdf_prior_plot-cumulative-distribution-comparisons"></a>
 </h2>
 <p>Where <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code> shows every prior-by-strategy combination at once, the ECDF functions fix one dimension and compare across the other, which reads more easily when you only care about one axis of sensitivity at a time.</p>
-<p><code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> fixes a single prior (<code>prior_to_plot</code>, or the first entry in <code>priors</code> by default) and compares model strategies, coloured by section:</p>
+<p><code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> fixes a single prior (<code>prior</code>, one entry’s worth of spec – not the whole <code>priors</code> list) and compares model strategies, coloured by section. Because it only ever shows one prior, <code>robma_fit</code> here is a single fitted RoBMA object rather than a named list:</p>
+<p>This example includes both RoBMA sections (<code>incl_robma</code>, the continuous conditional estimate, and <code>incl_robma_bma</code>, the model-averaged one that can carry a point mass at the null) alongside Common/Random Effects and Excluding High RoB, so you can see all of them on one plot:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ecdf_model_plot.html">ecdf_model_plot</a></span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
-<span>  priors <span class="op">=</span> <span class="va">priors</span><span class="op">[</span><span class="st">"weakreg"</span><span class="op">]</span>,</span>
+<span>  prior <span class="op">=</span> <span class="va">priors</span><span class="op">$</span><span class="va">weakreg</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
 <span>  rob_var <span class="op">=</span> <span class="va">Overall</span>,</span>
 <span>  exclude_high_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  incl_common_effect <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  robma_fit <span class="op">=</span> <span class="va">model_robma</span><span class="op">$</span><span class="va">weakreg</span>,</span>
+<span>  incl_robma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  incl_robma_bma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p align="center">
-<img src="../reference/figures/ecdf_plot.png" width="600"></p>
-<p><code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> fixes a single section (<code>section_to_plot</code>, default <code>"All studies"</code>) and compares priors instead, coloured by prior:</p>
+</p>
+<p><img src="../reference/figures/ecdf_plot.png" width="600"></p>
+<p></p>
+<p><code><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot()</a></code> fixes a single section (<code>section_to_plot</code>, default <code>"Random Effects"</code>) and compares priors instead, coloured by prior. Setting it to <code>"RoBMA (Conditional)"</code> compares how that RoBMA estimate shifts across priors – only <code>incl_robma</code> is needed here, since <code>incl_robma_bma</code> would just build model-averaged draws that <code>section_to_plot</code> then discards:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ecdf_prior_plot.html">ecdf_prior_plot</a></span><span class="op">(</span></span>
@@ -249,13 +315,18 @@
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  priors <span class="op">=</span> <span class="va">priors</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
+<span>  section_to_plot <span class="op">=</span> <span class="st">"RoBMA (Conditional)"</span>,</span>
+<span>  robma_fit <span class="op">=</span> <span class="va">model_robma</span>,</span>
+<span>  incl_robma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  add_null_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p align="center">
-<img src="../reference/figures/ecdf_prior_plot.png" width="600"></p>
-<p>Both accept the same section toggles as <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code> (<code>exclude_high_rob</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>, <code>incl_robma</code>, <code>robma_fit</code>) – set the one matching whichever section you want included.</p>
+</p>
+<p><img src="../reference/figures/ecdf_prior_plot.png" width="600"></p>
+<p></p>
+<p>Both accept the same section toggles as <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code> (<code>exclude_high_rob</code>, <code>incl_pet_peese</code>, <code>incl_selection_weight</code>, <code>incl_robma</code>, <code>incl_robma_bma</code>, <code>robma_fit</code>) – set the one matching whichever section(s) you want included or displayed. The sections mean the same thing as in <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code> (see <a href="#what-the-robma-sections-show">What the RoBMA sections show</a> above): <code>RoBMA (Model-Averaged)</code> (<code>incl_robma_bma</code>) can carry a point mass at the null, which the ECDF panel shows correctly as a vertical jump; the optional density panel below it (<code>show_density = TRUE</code>, the default) renders that same point mass the same jittered-then-KDE way described above. If that makes either panel hard to read, leave <code>incl_robma_bma</code> off and use <code>incl_robma</code> (RoBMA Conditional) instead – it’s always continuous.</p>
 </section><section class="level2"><h2 id="which-function-should-i-use">Which function should I use?<a class="anchor" aria-label="anchor" href="#which-function-should-i-use"></a>
 </h2>
 <table class="table caption-top">

@@ -1,0 +1,70 @@
+// Match the page-width proportions used on the Quarto (.qmd) side of the
+// site (body-width/sidebar-width/margin-width/gutter-width in the Quarto
+// grid config), so the pkgdown-rendered pages (home, reference, news) feel
+// consistent with the vignette pages.
+//
+//   body-width:    1200px  -- main content column
+//   sidebar-width:  300px  -- right-hand links/TOC column
+//   margin-width:   100px  -- outer breathing room, both sides
+//   gutter-width:  0.5rem  -- gap between the two columns
+//
+// pkgdown's content templates hard-code the main/sidebar split as literal
+// Bootstrap grid classes (col-md-9/col-md-3), not a themeable Sass
+// variable, so the split is overridden directly on those classes rather
+// than via a bslib variable. Scoped to a wide-enough viewport that it
+// never fights Bootstrap's own mobile/tablet stacking behaviour.
+
+$body-width: 1200px;
+$sidebar-width: 300px;
+$margin-width: 100px;
+$gutter-width: 0.5rem;
+$gutter-width-px: 8px; // 0.5rem at the default 16px root, for width arithmetic below
+
+$total-width: $body-width + $sidebar-width + $gutter-width-px + (2 * $margin-width);
+$breakpoint: $total-width + 40px;
+
+.container {
+  @media (min-width: $breakpoint) {
+    max-width: $total-width;
+  }
+}
+
+@media (min-width: $breakpoint) {
+  // pkgdown's own rules fight a precise gutter here: `.container .row`
+  // gets `justify-content: space-evenly` at the xl breakpoint only, and
+  // `.col-md-3` gets `margin-left: 5rem` from xxl up (both in
+  // BS5/assets/pkgdown.scss) -- neutralise both so column-gap below is the
+  // only thing controlling the gap, at every width this block applies to.
+  // Centering (rather than flex-start) splits the container's leftover
+  // width evenly on both sides -- container-width was built as
+  // body + gutter + sidebar + 2*margin-width, so that leftover is exactly
+  // 2*margin-width, split into one margin-width on each side.
+  .container .row {
+    justify-content: center !important;
+  }
+
+  aside.col-md-3 {
+    margin-left: 0 !important;
+  }
+
+  .row {
+    column-gap: $gutter-width;
+    flex-wrap: nowrap;
+  }
+
+  // pkgdown itself caps .row > main at 50rem (800px) "to ensure contents
+  // never become unreadably wide" (BS5/assets/pkgdown.scss) -- override at
+  // the same `.row > main` specificity (plus our own class) so it reliably
+  // wins regardless of stylesheet order.
+  .row > main.col-md-9 {
+    width: $body-width;
+    max-width: $body-width;
+    flex: 0 0 $body-width;
+  }
+
+  aside.col-md-3 {
+    width: $sidebar-width;
+    max-width: $sidebar-width;
+    flex: 0 0 $sidebar-width;
+  }
+}

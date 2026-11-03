@@ -108,8 +108,8 @@ forest_sens_plot(
   model = model_bin,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
@@ -182,24 +182,61 @@ sensitivity_plot(
 
 ### Adding publication-bias adjustment from RoBMA
 
-`incl_robma`, `incl_pet_peese`, and `incl_selection_weight` add extra
-sections built from a separately fitted RoBMA object, passed in as
-`robma_fit` (a single fit, or a named list with one fit per prior
-level):
+`incl_robma`, `incl_robma_bma`, `incl_pet_peese`, and
+`incl_selection_weight` add extra sections built from a separately
+fitted RoBMA object, passed in as `robma_fit` (a single fit, or a named
+list with one fit per prior level – here, one
+[`RoBMA::RoBMA()`](https://fbartos.github.io/RoBMA/reference/RoBMA.html)
+ensemble per entry in `priors`, using the same / specifications
+translated into
+[`RoBMA::prior()`](https://fbartos.github.io/RoBMA/reference/prior.html)
+objects). `incl_robma` and `incl_robma_bma` are independent – see [What
+the RoBMA sections show](#what-the-robma-sections-show) below for why
+you might want one without the other:
 
 ``` r
+
+model_robma <- list(
+  vague = RoBMA(
+    data = binary_es, measure = "OR", yi = yi, sei = sei,
+    prior_effect = RoBMA::prior("normal", list(mean = 0, sd = 10)),
+    prior_heterogeneity = RoBMA::prior("cauchy", list(location = 0, scale = 1),
+                                       truncation = list(lower = 0, upper = Inf)),
+    model_type = "PSMA", seed = 1404),
+  weakreg = RoBMA(
+    data = binary_es, measure = "OR", yi = yi, sei = sei,
+    prior_effect = RoBMA::prior("normal", list(mean = 0, sd = 1)),
+    prior_heterogeneity = RoBMA::prior("cauchy", list(location = 0, scale = 0.5),
+                                       truncation = list(lower = 0, upper = Inf)),
+    model_type = "PSMA", seed = 1404),
+  informative = RoBMA(
+    data = binary_es, measure = "OR", yi = yi, sei = sei,
+    prior_effect = RoBMA::prior("normal", list(mean = 0, sd = 0.5)),
+    prior_heterogeneity = RoBMA::prior("cauchy", list(location = 0, scale = 0.3),
+                                       truncation = list(lower = 0, upper = Inf)),
+    model_type = "PSMA", seed = 1404)
+)
 
 sensitivity_plot(
   model = model_bin,
   data = binary_es,
   priors = priors,
   measure = "OR",
+  rob_var = Overall,
+  exclude_high_rob = TRUE,
+  incl_common_effect = TRUE,
   robma_fit = model_robma,
   incl_robma = TRUE,
+  incl_robma_bma = TRUE,
   incl_pet_peese = TRUE,
-  incl_selection_weight = TRUE
+  incl_selection_weight = TRUE,
+  add_probs = TRUE,
+  xlim = c(0.1, 3.5),
+  add_null_range = TRUE
 )
 ```
+
+![](../reference/figures/sens_plot_robma.png)
 
 This is separate from using a `brma` fit directly as the base `model` –
 both are valid ways to bring RoBMA into a sensitivity analysis, and they
@@ -212,6 +249,50 @@ primary analysis. See
 [`vignette("RoBMA")`](https://blmoran.github.io/bayesfoRest/articles/RoBMA.md)
 for fitting details.
 
+### What the RoBMA sections show
+
+`incl_pet_peese` and `incl_selection_weight` each add one bias-adjusted
+estimate per prior: the pooled effect conditional on that correction
+method being the right one *and* on a real effect being present. These
+are continuous, ordinary-looking posteriors, directly comparable to the
+Common/Random Effects rows above them.
+
+`incl_robma` and `incl_robma_bma` each add one further row per prior,
+and they answer different questions – which is why they’re independent
+toggles rather than a single on/off switch:
+
+- **RoBMA (Conditional)**, `incl_robma` – the pooled effect given that
+  an effect exists. Like PET-PEESE/Selection Model above, this is
+  continuous.
+- **RoBMA (Model-Averaged)**, `incl_robma_bma` – RoBMA’s full posterior,
+  averaged across *all* models in its ensemble, including the ones with
+  no effect at all. If the data don’t rule out “no effect”, some of that
+  posterior mass sits exactly on the null value (OR/RR/HR/IRR = 1,
+  MD/SMD =
+  0.  rather than being spread continuously – a genuine feature of the
+      result, not something to explain away.
+
+A point mass like that can’t be drawn with an ordinary density estimate
+(it has zero width), so the Model-Averaged row’s null-valued draws are
+jittered by a small, deterministic amount before the usual density
+estimate runs – the same KDE as every other row, just fed slightly
+perturbed input. The jitter width is set from that row’s own continuous
+draws, so the resulting spike is sized like a feature of that row’s own
+posterior rather than an arbitrary constant, and the displayed
+spike-to-slab proportion falls straight out of the true draw counts,
+with no separate scaling applied. `Pr(Benefit)`/`Pr(Harm)` (and their
+`null_range` counterparts, shown when `add_probs = TRUE`) are computed
+directly from the (unjittered) draws, so they remain the most direct
+read on exactly how much posterior mass sits on each side of the null –
+`>99%` rather than `100.0%`, since a continuous posterior probability is
+never exactly one.
+
+If a model-averaged row’s spike makes the rest of that row hard to read
+– or, on the ECDF plots below, makes the whole curve hard to read once
+the spike’s jump dominates it – that’s a good reason to leave
+`incl_robma_bma` off and rely on `incl_robma` (RoBMA Conditional) alone;
+it’s always continuous.
+
 ## `ecdf_model_plot()` and `ecdf_prior_plot()`: cumulative-distribution comparisons
 
 Where
@@ -221,19 +302,29 @@ fix one dimension and compare across the other, which reads more easily
 when you only care about one axis of sensitivity at a time.
 
 [`ecdf_model_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_model_plot.md)
-fixes a single prior (`prior_to_plot`, or the first entry in `priors` by
-default) and compares model strategies, coloured by section:
+fixes a single prior (`prior`, one entry’s worth of spec – not the whole
+`priors` list) and compares model strategies, coloured by section.
+Because it only ever shows one prior, `robma_fit` here is a single
+fitted RoBMA object rather than a named list:
+
+This example includes both RoBMA sections (`incl_robma`, the continuous
+conditional estimate, and `incl_robma_bma`, the model-averaged one that
+can carry a point mass at the null) alongside Common/Random Effects and
+Excluding High RoB, so you can see all of them on one plot:
 
 ``` r
 
 ecdf_model_plot(
   model = model_bin,
   data = binary_es,
-  priors = priors["weakreg"],
+  prior = priors$weakreg,
   measure = "OR",
   rob_var = Overall,
   exclude_high_rob = TRUE,
   incl_common_effect = TRUE,
+  robma_fit = model_robma$weakreg,
+  incl_robma = TRUE,
+  incl_robma_bma = TRUE,
   xlim = c(0.25, 1.5),
   add_null_range = TRUE
 )
@@ -242,8 +333,11 @@ ecdf_model_plot(
 ![](../reference/figures/ecdf_plot.png)
 
 [`ecdf_prior_plot()`](https://blmoran.github.io/bayesfoRest/reference/ecdf_prior_plot.md)
-fixes a single section (`section_to_plot`, default `"All studies"`) and
-compares priors instead, coloured by prior:
+fixes a single section (`section_to_plot`, default `"Random Effects"`)
+and compares priors instead, coloured by prior. Setting it to
+`"RoBMA (Conditional)"` compares how that RoBMA estimate shifts across
+priors – only `incl_robma` is needed here, since `incl_robma_bma` would
+just build model-averaged draws that `section_to_plot` then discards:
 
 ``` r
 
@@ -252,6 +346,9 @@ ecdf_prior_plot(
   data = binary_es,
   priors = priors,
   measure = "OR",
+  section_to_plot = "RoBMA (Conditional)",
+  robma_fit = model_robma,
+  incl_robma = TRUE,
   xlim = c(0.25, 1.5),
   add_null_range = TRUE
 )
@@ -262,8 +359,18 @@ ecdf_prior_plot(
 Both accept the same section toggles as
 [`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)
 (`exclude_high_rob`, `incl_pet_peese`, `incl_selection_weight`,
-`incl_robma`, `robma_fit`) – set the one matching whichever section you
-want included.
+`incl_robma`, `incl_robma_bma`, `robma_fit`) – set the one matching
+whichever section(s) you want included or displayed. The sections mean
+the same thing as in
+[`sensitivity_plot()`](https://blmoran.github.io/bayesfoRest/reference/sensitivity_plot.md)
+(see [What the RoBMA sections show](#what-the-robma-sections-show)
+above): `RoBMA (Model-Averaged)` (`incl_robma_bma`) can carry a point
+mass at the null, which the ECDF panel shows correctly as a vertical
+jump; the optional density panel below it (`show_density = TRUE`, the
+default) renders that same point mass the same jittered-then-KDE way
+described above. If that makes either panel hard to read, leave
+`incl_robma_bma` off and use `incl_robma` (RoBMA Conditional) instead –
+it’s always continuous.
 
 ## Which function should I use?
 

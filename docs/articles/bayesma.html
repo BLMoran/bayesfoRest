@@ -45,8 +45,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
+<li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="../articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="../articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="../articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -92,8 +98,8 @@
 <span>  data <span class="op">=</span> <span class="va">cont_outcome</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"MD"</span>,</span>
 <span>  model_type <span class="op">=</span> <span class="st">"random_effect"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  mean_ctrl <span class="op">=</span> <span class="va">Mean_Control</span>,</span>
 <span>  mean_int <span class="op">=</span> <span class="va">Mean_Intervention</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="va">SD_Control</span>,</span>
@@ -110,8 +116,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_bayesma</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">cont_outcome</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"MD"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  mean_ctrl <span class="op">=</span> <span class="va">Mean_Control</span>,</span>
 <span>  mean_int <span class="op">=</span> <span class="va">Mean_Intervention</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="va">SD_Control</span>,</span>
@@ -125,7 +131,7 @@
 <img src="../reference/figures/bayesma_forest.png"></p>
 </section><section class="level2"><h2 id="subgroup-analysis">Subgroup analysis<a class="anchor" aria-label="anchor" href="#subgroup-analysis"></a>
 </h2>
-<p><code>subgroup = TRUE, subgroupvar = Subgroup</code> refits bayesma per subgroup automatically, the same way it does for brms, bayesmeta, MetaStan, and RoBMA.</p>
+<p><code>subgroup = TRUE, subgroup_var = Subgroup</code> refits bayesma per subgroup automatically, the same way it does for brms, bayesmeta, MetaStan, and RoBMA.</p>
 </section><section class="level2"><h2 id="no-bf_-prior-sensitivity-refit">No <code>bf_*()</code> prior-sensitivity refit<a class="anchor" aria-label="anchor" href="#no-bf_-prior-sensitivity-refit"></a>
 </h2>
 <p>bayesma doesn’t have a <code><a href="../reference/sensitivity_plot.html">sensitivity_plot()</a></code>/<code><a href="../reference/ecdf_model_plot.html">ecdf_model_plot()</a></code> refit method – its priors are plain Stan expression strings rather than the single-distribution <code>bf_*()</code> objects those functions refit under, so passing a bayesma model as the base <code>model</code> there will error. If you want prior or model-type sensitivity for a bayesma analysis, compare fits directly: refit <code>bayesma()</code> under each prior/<code>model_type</code> you want to compare and build the comparison yourself, or fit your primary model with one of the other backends and use bayesma for its publication-bias-adjustment model types specifically.</p>

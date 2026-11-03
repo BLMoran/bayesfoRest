@@ -82,14 +82,14 @@ bayes_forest(
   model = model_re,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   n_ctrl = N_Control,
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
   subgroup = TRUE,
-  subgroupvar = Subgroup,
+  subgroup_var = Subgroup,
   xlim = c(0.1, 3.5)
 )
 ```
@@ -128,8 +128,8 @@ funnel_plot(
   model = model_re,
   data = binary_es,
   measure = "OR",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   yi_col = "yi",
   sei_col = "sei"
 )
@@ -227,4 +227,5 @@ ecdf_prior_plot(
 See
 [`vignette("sensitivity-analysis")`](https://blmoran.github.io/bayesfoRest/articles/sensitivity-analysis.md)
 for publication-bias-adjusted sensitivity sections built from a RoBMA
-fit (`incl_robma`, `incl_pet_peese`, `incl_selection_weight`).
+fit (`incl_robma`, `incl_robma_bma`, `incl_pet_peese`,
+`incl_selection_weight`).

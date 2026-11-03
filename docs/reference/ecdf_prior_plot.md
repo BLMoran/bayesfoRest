@@ -91,9 +91,11 @@ ecdf_prior_plot(
 - ...:
 
   Additional section toggles (e.g. `exclude_high_rob`, `incl_pet_peese`,
-  `incl_selection_weight`, `incl_robma`) passed on to
+  `incl_selection_weight`, `incl_robma`, `incl_robma_bma`) passed on to
   `.build_ecdf_draws()`. Set the one corresponding to `section_to_plot`
   (other than "All studies") to TRUE so those draws are built.
+  `incl_robma` and `incl_robma_bma` are independent (conditional vs.
+  model-averaged).
 
 ## Value
 

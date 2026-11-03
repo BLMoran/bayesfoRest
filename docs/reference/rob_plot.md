@@ -9,9 +9,9 @@ internals as the robbR package.
 ``` r
 rob_plot(
   data,
-  studyvar = Author,
-  yearvar = Year,
-  subgroupvar = Subgroup,
+  study_var = Author,
+  year_var = Year,
+  subgroup_var = Subgroup,
   effect = yi,
   rob_tool = "rob2",
   sort_studies_by = c("author", "year", "effect"),
@@ -37,12 +37,12 @@ rob_plot(
   -\> "Low"); `NA` -\> "Not applicable". Judgements not recognised by
   the tool are shown as blank cells, with a warning.
 
-- studyvar, yearvar:
+- study_var, year_var:
 
   \<[`data-masking`](https://dplyr.tidyverse.org/reference/dplyr_data_masking.html)\>
   Study label and year columns.
 
-- subgroupvar:
+- subgroup_var:
 
   \<[`data-masking`](https://dplyr.tidyverse.org/reference/dplyr_data_masking.html)\>
   Subgroup column, used when `subgroup = TRUE`.

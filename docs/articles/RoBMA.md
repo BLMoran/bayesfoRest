@@ -52,8 +52,8 @@ bayes_forest(
   model = model_robma,
   data = cont_outcome,
   measure = "SMD",
-  studyvar = Author,
-  yearvar = Year,
+  study_var = Author,
+  year_var = Year,
   mean_ctrl = Mean_Control,
   mean_int = Mean_Intervention,
   sd_ctrl = SD_Control,
@@ -69,7 +69,7 @@ bayes_forest(
 ## Subgroup analysis and funnel plots
 
 Subgroup refits work the same way as brms:
-`subgroup = TRUE, subgroupvar = Subgroup` refits RoBMA per subgroup
+`subgroup = TRUE, subgroup_var = Subgroup` refits RoBMA per subgroup
 automatically.
 [`funnel_plot()`](https://blmoran.github.io/bayesfoRest/reference/funnel_plot.md)
 also works directly with a RoBMA model.
@@ -120,6 +120,7 @@ sensitivity_plot(
   measure = "OR",
   robma_fit = model_robma,
   incl_robma = TRUE,
+  incl_robma_bma = TRUE,
   incl_pet_peese = TRUE,
   incl_selection_weight = TRUE
 )

@@ -45,8 +45,14 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
+<li><h6 class="dropdown-header" data-toc-skip>Use with Bayesian MA R Packages</h6></li>
+    <li><a class="dropdown-item" href="../articles/brms.html">brms</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesmeta.html">bayesmeta</a></li>
+    <li><a class="dropdown-item" href="../articles/MetaStan.html">MetaStan</a></li>
+    <li><a class="dropdown-item" href="../articles/RoBMA.html">RoBMA</a></li>
+    <li><a class="dropdown-item" href="../articles/bayesma.html">bayesma</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/sensitivity-analysis.html">Sensitivity Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -118,8 +124,8 @@
 <span>  model <span class="op">=</span> <span class="va">model_bin</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">binary_es</span>,</span>
 <span>  measure <span class="op">=</span> <span class="st">"OR"</span>,</span>
-<span>  studyvar <span class="op">=</span> <span class="va">Author</span>,</span>
-<span>  yearvar <span class="op">=</span> <span class="va">Year</span>,</span>
+<span>  study_var <span class="op">=</span> <span class="va">Author</span>,</span>
+<span>  year_var <span class="op">=</span> <span class="va">Year</span>,</span>
 <span>  n_ctrl <span class="op">=</span> <span class="va">N_Control</span>,</span>
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
@@ -141,7 +147,7 @@
 <li>
 <code>pooled_output = "diamond"</code>: a classic meta-analysis diamond for the Pooled/Overall Effect row(s), independent of <code>study_output</code>.</li>
 <li>
-<code>subgroup = TRUE, subgroupvar = Subgroup</code>: one panel per subgroup.</li>
+<code>subgroup = TRUE, subgroup_var = Subgroup</code>: one panel per subgroup.</li>
 <li>
 <code>re_min_k</code>: show a common-effect model when an analysis or subgroup has fewer than this many studies, because tau is poorly identified with so few.</li>
 <li>
