@@ -39,13 +39,23 @@ get_measure_properties <- function(measure) {
            #x_breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2),
            x_label = "Standardised Mean Difference",
            data_cols = c("Mean_Control", "SD_Control", "N_Control", "Mean_Intervention", "SD_Intervention", "N_Intervention")),
-         stop("Effect size must be one of: 'OR', 'HR', 'RR', 'IRR', 'MD', 'SMD'"))
+         "MedD" = list(
+           null_value = 0,
+           log_scale = FALSE,
+           #x_breaks = NULL,
+           x_label = "Difference in Medians",
+           data_cols = c(
+             "Median_Control", "Q1_Control", "Q3_Control", "Min_Control", "Max_Control",
+             "Mean_Control", "SD_Control", "N_Control",
+             "Median_Intervention", "Q1_Intervention", "Q3_Intervention", "Min_Intervention", "Max_Intervention",
+             "Mean_Intervention", "SD_Intervention", "N_Intervention")),
+         stop("Effect size must be one of: 'OR', 'HR', 'RR', 'IRR', 'MD', 'SMD', 'MedD'"))
 }
 
 #' Extract Intercept Draws from Model (Backend-Agnostic)
 #'
 #' @param model A fitted model object (any supported backend).
-#' @param measure Character string. Effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD").
+#' @param measure Character string. Effect measure ("OR", "RR", "HR", "IRR", "MD", "SMD", "MedD").
 #' @param data Data frame containing study data.
 #'
 #' @return Numeric vector of transformed posterior draws.

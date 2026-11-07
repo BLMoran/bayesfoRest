@@ -37,7 +37,7 @@ random-effect models."><meta property="og:image" content="https://blmoran.github
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://bsky.app/profile/benmoran.bsky.social" aria-label="Bluesky"><span class="fa fab fa-bluesky"></span></a></li>
       </ul></div>
 
@@ -74,6 +74,16 @@ random-effect models.</p>
 <span>  mean_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sd_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sd_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  median_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  median_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  q1_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  q1_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  q3_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  q3_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_ctrl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_int <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sort_studies_by <span class="op">=</span> <span class="st">"author"</span>,</span>
@@ -146,7 +156,9 @@ random-effect models.</p>
 <dt id="arg-measure">measure<a class="anchor" aria-label="anchor" href="#arg-measure"></a></dt>
 <dd><p>Character string specifying the effect measure. Must be one of:
 "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
-"IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).</p></dd>
+"IRR" (Incidence Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized
+Mean Difference), or "MedD" (Difference in Medians, e.g. a
+<code>bayesma::bayesma(measure = "MedD")</code> fit).</p></dd>
 
 
 <dt id="arg-study-var">study_var<a class="anchor" aria-label="anchor" href="#arg-study-var"></a></dt>
@@ -174,19 +186,48 @@ random-effect models.</p>
 
 
 <dt id="arg-mean-ctrl">mean_ctrl<a class="anchor" aria-label="anchor" href="#arg-mean-ctrl"></a></dt>
-<dd><p>Column name containing control group means.</p></dd>
+<dd><p>Column name containing control group means. For
+"MedD", an optional arm summary (studies may instead report quantiles).</p></dd>
 
 
 <dt id="arg-mean-int">mean_int<a class="anchor" aria-label="anchor" href="#arg-mean-int"></a></dt>
-<dd><p>Column name containing intervention group means.</p></dd>
+<dd><p>Column name containing intervention group means. For
+"MedD", an optional arm summary (studies may instead report quantiles).</p></dd>
 
 
 <dt id="arg-sd-ctrl">sd_ctrl<a class="anchor" aria-label="anchor" href="#arg-sd-ctrl"></a></dt>
-<dd><p>Column name containing control group standard deviations.</p></dd>
+<dd><p>Column name containing control group standard deviations.
+For "MedD", an optional arm summary (studies may instead report quantiles).</p></dd>
 
 
 <dt id="arg-sd-int">sd_int<a class="anchor" aria-label="anchor" href="#arg-sd-int"></a></dt>
-<dd><p>Column name containing intervention group standard deviations.</p></dd>
+<dd><p>Column name containing intervention group standard deviations.
+For "MedD", an optional arm summary (studies may instead report quantiles).</p></dd>
+
+
+<dt id="arg-median-ctrl-median-int">median_ctrl, median_int<a class="anchor" aria-label="anchor" href="#arg-median-ctrl-median-int"></a></dt>
+<dd><p>Column name containing control/intervention
+group medians. Used with "MedD".</p></dd>
+
+
+<dt id="arg-q-ctrl-q-int">q1_ctrl, q1_int<a class="anchor" aria-label="anchor" href="#arg-q-ctrl-q-int"></a></dt>
+<dd><p>Column name containing control/intervention group
+first quartiles. Used with "MedD".</p></dd>
+
+
+<dt id="arg-q-ctrl-q-int">q3_ctrl, q3_int<a class="anchor" aria-label="anchor" href="#arg-q-ctrl-q-int"></a></dt>
+<dd><p>Column name containing control/intervention group
+third quartiles. Used with "MedD".</p></dd>
+
+
+<dt id="arg-min-ctrl-min-int">min_ctrl, min_int<a class="anchor" aria-label="anchor" href="#arg-min-ctrl-min-int"></a></dt>
+<dd><p>Column name containing control/intervention group
+minimums. Used with "MedD".</p></dd>
+
+
+<dt id="arg-max-ctrl-max-int">max_ctrl, max_int<a class="anchor" aria-label="anchor" href="#arg-max-ctrl-max-int"></a></dt>
+<dd><p>Column name containing control/intervention group
+maximums. Used with "MedD".</p></dd>
 
 
 <dt id="arg-time-ctrl">time_ctrl<a class="anchor" aria-label="anchor" href="#arg-time-ctrl"></a></dt>

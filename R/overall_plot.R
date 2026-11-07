@@ -164,7 +164,7 @@ overall_plot <- function(model,
                                     add_null_range)
 
   # Set tau x-axis label
-  tau_x_label <- if (measure %in% c("MD", "SMD")) {
+  tau_x_label <- if (measure %in% c("MD", "SMD", "MedD")) {
     "Standard Deviation"
   } else {
     "Standard Deviation (Log Scale)"

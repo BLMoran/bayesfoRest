@@ -22,6 +22,16 @@ bayes_forest(
   mean_int = NULL,
   sd_ctrl = NULL,
   sd_int = NULL,
+  median_ctrl = NULL,
+  median_int = NULL,
+  q1_ctrl = NULL,
+  q1_int = NULL,
+  q3_ctrl = NULL,
+  q3_int = NULL,
+  min_ctrl = NULL,
+  min_int = NULL,
+  max_ctrl = NULL,
+  max_int = NULL,
   time_ctrl = NULL,
   time_int = NULL,
   sort_studies_by = "author",
@@ -93,8 +103,9 @@ bayes_forest(
 
   Character string specifying the effect measure. Must be one of: "OR"
   (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio), "IRR" (Incidence
-  Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean
-  Difference).
+  Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized Mean
+  Difference), or "MedD" (Difference in Medians, e.g. a
+  `bayesma::bayesma(measure = "MedD")` fit).
 
 - study_var:
 
@@ -122,19 +133,49 @@ bayes_forest(
 
 - mean_ctrl:
 
-  Column name containing control group means.
+  Column name containing control group means. For "MedD", an optional
+  arm summary (studies may instead report quantiles).
 
 - mean_int:
 
-  Column name containing intervention group means.
+  Column name containing intervention group means. For "MedD", an
+  optional arm summary (studies may instead report quantiles).
 
 - sd_ctrl:
 
-  Column name containing control group standard deviations.
+  Column name containing control group standard deviations. For "MedD",
+  an optional arm summary (studies may instead report quantiles).
 
 - sd_int:
 
-  Column name containing intervention group standard deviations.
+  Column name containing intervention group standard deviations. For
+  "MedD", an optional arm summary (studies may instead report
+  quantiles).
+
+- median_ctrl, median_int:
+
+  Column name containing control/intervention group medians. Used with
+  "MedD".
+
+- q1_ctrl, q1_int:
+
+  Column name containing control/intervention group first quartiles.
+  Used with "MedD".
+
+- q3_ctrl, q3_int:
+
+  Column name containing control/intervention group third quartiles.
+  Used with "MedD".
+
+- min_ctrl, min_int:
+
+  Column name containing control/intervention group minimums. Used with
+  "MedD".
+
+- max_ctrl, max_int:
+
+  Column name containing control/intervention group maximums. Used with
+  "MedD".
 
 - time_ctrl:
 

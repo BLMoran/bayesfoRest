@@ -391,7 +391,8 @@ fit exactly (brms fits everything; bayesmeta and MetaStan each support a
 narrower set). For `bayesma` models, which use plain Stan prior strings
 rather than `bf_*()` objects, see
 [`vignette("bayesma")`](https://blmoran.github.io/bayesfoRest/articles/bayesma.md)
-for a manual alternative: refit `bayesma()` under each
-prior/`model_type` yourself and compare the fits directly. `stanreg`,
-`stanfit`, `CmdStanMCMC`, and `rjags` models aren’t supported by any of
-the four functions in this vignette.
+for a manual alternative: refit
+[`bayesma()`](https://blmoran.github.io/bayesma/reference/bayesma.html)
+under each prior/`model_type` yourself and compare the fits directly.
+`stanreg`, `stanfit`, `CmdStanMCMC`, and `rjags` models aren’t supported
+by any of the four functions in this vignette.

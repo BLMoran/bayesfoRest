@@ -717,15 +717,38 @@ extract_forest_draws.bayesma <- function(model, data, ...) {
   if (is_re && !is.null(model$draws$study)) {
     tau_draws <- as.numeric(model$draws$tau$tau)
     study_col <- model$meta$study_var %||% "Author"
+    year_col  <- model$meta$year_var
 
-    study_draws <- model$draws$study |>
+    study_source <- model$draws$study
+
+    # bayesma's own `draws$study` restores the *original* (possibly
+    # duplicated, e.g. same first author in different years) author name,
+    # keyed jointly with year rather than alone -- recover the de-duplicated
+    # label (e.g. "Ramanan_a"/"Ramanan_b") via a lookup against bayesma's own
+    # de-duplicated `model$data`, so same-named studies aren't merged
+    if (!is.null(year_col) && year_col %in% names(study_source) &&
+        all(c("Author_original", year_col) %in% names(model$data))) {
+      lookup <- model$data |>
+        dplyr::transmute(
+          .key = paste(Author_original, .data[[year_col]]),
+          .label = .data[[study_col]]) |>
+        dplyr::distinct()
+
+      study_source <- study_source |>
+        dplyr::mutate(.key = paste(.data[[study_col]], .data[[year_col]])) |>
+        dplyr::left_join(lookup, by = ".key") |>
+        dplyr::mutate(!!study_col := dplyr::coalesce(.label, .data[[study_col]])) |>
+        dplyr::select(-.key, -.label)
+    }
+
+    study_draws <- study_source |>
       dplyr::transmute(
         .draw = .draw,
         Author = as.character(.data[[study_col]]),
         theta_study = theta,
         eta = theta - mu,
         tau = tau)
-    
+
   } else {
     tau_draws <- rep(NA_real_, n_draws)
     study_names <- as.character(data$Author)

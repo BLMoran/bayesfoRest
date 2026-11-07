@@ -61,7 +61,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://bsky.app/profile/benmoran.bsky.social" aria-label="Bluesky"><span class="fa fab fa-bluesky"></span></a></li>
       </ul>
 </div>
@@ -358,7 +358,7 @@
 </tbody>
 </table></section><section class="level2"><h2 id="backend-support">Backend support<a class="anchor" aria-label="anchor" href="#backend-support"></a>
 </h2>
-<p>Refitting under <code>priors</code> only works for <code>brmsfit</code>, <code>bayesmeta</code>, <code>meta_stan</code>, and <code>brma</code> models – see <code><a href="../reference/bf_priors.html">?bf_priors</a></code> for the table of which prior families each of those four backends can fit exactly (brms fits everything; bayesmeta and MetaStan each support a narrower set). For <code>bayesma</code> models, which use plain Stan prior strings rather than <code>bf_*()</code> objects, see <code><a href="../articles/bayesma.html">vignette("bayesma")</a></code> for a manual alternative: refit <code>bayesma()</code> under each prior/<code>model_type</code> yourself and compare the fits directly. <code>stanreg</code>, <code>stanfit</code>, <code>CmdStanMCMC</code>, and <code>rjags</code> models aren’t supported by any of the four functions in this vignette.</p>
+<p>Refitting under <code>priors</code> only works for <code>brmsfit</code>, <code>bayesmeta</code>, <code>meta_stan</code>, and <code>brma</code> models – see <code><a href="../reference/bf_priors.html">?bf_priors</a></code> for the table of which prior families each of those four backends can fit exactly (brms fits everything; bayesmeta and MetaStan each support a narrower set). For <code>bayesma</code> models, which use plain Stan prior strings rather than <code>bf_*()</code> objects, see <code><a href="../articles/bayesma.html">vignette("bayesma")</a></code> for a manual alternative: refit <code><a href="https://blmoran.github.io/bayesma/reference/bayesma.html" class="external-link">bayesma()</a></code> under each prior/<code>model_type</code> yourself and compare the fits directly. <code>stanreg</code>, <code>stanfit</code>, <code>CmdStanMCMC</code>, and <code>rjags</code> models aren’t supported by any of the four functions in this vignette.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

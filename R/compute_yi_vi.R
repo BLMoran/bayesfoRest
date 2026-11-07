@@ -11,7 +11,7 @@
 #'
 #' @param data A data frame with study-level data.
 #' @param measure Character string specifying the effect measure. One of
-#'   "OR", "RR", "HR", "IRR", "MD", or "SMD".
+#'   "OR", "RR", "HR", "IRR", "MD", "SMD", or "MedD".
 #'
 #' @return The input data frame with \code{yi} and \code{vi} columns added
 #'   (if they were missing).
@@ -29,6 +29,8 @@ compute_yi_vi <- function(data, measure = "OR") {
     data <- .compute_binary_yi_vi(data, measure)
   } else if (measure %in% c("MD", "SMD")) {
     data <- .compute_continuous_yi_vi(data, measure)
+  } else if (measure == "MedD") {
+    data <- .compute_mediandiff_yi_vi(data)
   } else {
     rlang::warn(
       c(
@@ -128,6 +130,66 @@ compute_yi_vi <- function(data, measure = "OR") {
       (data$N_Intervention * data$N_Control) +
       data$yi^2 / (2 * (data$N_Intervention + data$N_Control))
   }
+
+  data
+}
+
+
+#' Compute yi/vi for difference-in-medians (MedD) by quantile estimation
+#'
+#' @description
+#' Mirrors the method `bayesma::bayesma(measure = "MedD")` uses to build each
+#' study's effect size: quantile estimation (McGrath et al., 2020) via
+#' \code{metamedian::metamedian()}. Each arm needs \code{N} and one of:
+#' minimum, median and maximum; first quartile, median and third quartile;
+#' all five; or mean and SD. Studies can report different summaries; missing
+#' columns are passed through as \code{NA} and `metamedian` picks the
+#' estimator each row's available summaries support.
+#'
+#' @noRd
+.compute_mediandiff_yi_vi <- function(data) {
+  rlang::check_installed("metamedian", reason = "to compute yi/vi for `measure = \"MedD\"`.")
+
+  required <- c("N_Control", "N_Intervention")
+  optional_pairs <- list(
+    c("Median_Control", "Median_Intervention"),
+    c("Mean_Control", "Mean_Intervention"))
+
+  has_required <- all(required %in% names(data))
+  has_summary <- any(purrr::map_lgl(optional_pairs, ~ all(.x %in% names(data))))
+
+  if (!has_required || !has_summary) {
+    rlang::warn(
+      c(
+        "Cannot compute yi/vi: missing columns for difference in medians.",
+        "i" = "Need N_Control/N_Intervention and, per arm, one of: minimum, median and maximum; first quartile, median and third quartile; all five; or mean and SD."
+      )
+    )
+    data$yi <- NA_real_
+    data$vi <- NA_real_
+    return(data)
+  }
+
+  col_or_na <- function(name) if (name %in% names(data)) data[[name]] else NA_real_
+
+  summaries <- tibble::tibble(
+    min.g1 = col_or_na("Min_Intervention"), q1.g1 = col_or_na("Q1_Intervention"),
+    med.g1 = col_or_na("Median_Intervention"), q3.g1 = col_or_na("Q3_Intervention"),
+    max.g1 = col_or_na("Max_Intervention"), n.g1 = col_or_na("N_Intervention"),
+    mean.g1 = col_or_na("Mean_Intervention"), sd.g1 = col_or_na("SD_Intervention"),
+    min.g2 = col_or_na("Min_Control"), q1.g2 = col_or_na("Q1_Control"),
+    med.g2 = col_or_na("Median_Control"), q3.g2 = col_or_na("Q3_Control"),
+    max.g2 = col_or_na("Max_Control"), n.g2 = col_or_na("N_Control"),
+    mean.g2 = col_or_na("Mean_Control"), sd.g2 = col_or_na("SD_Control"))
+
+  fits <- purrr::map(seq_len(nrow(summaries)), \(i) {
+    tryCatch(
+      metamedian::metamedian(as.data.frame(summaries[i, ]), median_method = "qe", pool_studies = FALSE),
+      error = \(e) list(yi = NA_real_, sei = NA_real_))
+  })
+
+  data$yi <- purrr::map_dbl(fits, "yi")
+  data$vi <- purrr::map_dbl(fits, "sei")^2
 
   data
 }

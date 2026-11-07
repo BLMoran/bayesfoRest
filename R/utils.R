@@ -1,3 +1,33 @@
+#' Format an arm's continuous summary for the left-hand forest table
+#'
+#' Used for "MedD", where a study reports median \[Q1-Q3\] when available,
+#' falling back to mean (SD) for studies that instead reported those.
+#'
+#' @noRd
+format_continuous_summary <- function(median, q1, q3, mean, sd) {
+  dplyr::case_when(
+    !is.na(median) & !is.na(q1) & !is.na(q3) ~
+      paste0(sprintf("%.2f", median), " [", sprintf("%.2f", q1), "-", sprintf("%.2f", q3), "]"),
+    !is.na(median) ~ sprintf("%.2f", median),
+    !is.na(mean) & !is.na(sd) ~ paste0(sprintf("%.2f", mean), " (", sprintf("%.2f", sd), ")"),
+    TRUE ~ NA_character_)
+}
+
+#' Rename only the columns whose tidy-eval argument was actually supplied
+#'
+#' Like `dplyr::rename()`, but entries whose embraced argument is `NULL`
+#' (never supplied by the caller) are dropped instead of erroring. Used for
+#' measures (e.g. "MedD") where studies report different combinations of
+#' optional arm summaries.
+#'
+#' @noRd
+rename_optional <- function(.data, ...) {
+  args <- rlang::enquos(...)
+  args <- purrr::keep(args, \(q) !rlang::quo_is_null(q))
+  if (length(args) == 0) return(.data)
+  dplyr::rename(.data, !!!args)
+}
+
 #' Internal function to sort studies
 #'
 #' @noRd

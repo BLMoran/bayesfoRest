@@ -66,6 +66,7 @@ navbar:
     github:
       icon: fab fa-github
       href: https://github.com/BLMoran/bayesfoRest
+      aria-label: GitHub
     bluesky:
       icon: fab fa-bluesky
       href: https://bsky.app/profile/benmoran.bsky.social

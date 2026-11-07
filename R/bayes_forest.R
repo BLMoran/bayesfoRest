@@ -13,17 +13,33 @@
 #' @param data A data frame containing the study data used for the meta-analysis.
 #' @param measure Character string specifying the effect measure. Must be one of:
 #'   "OR" (Odds Ratio), "HR" (Hazard Ratio), "RR" (Risk Ratio),
-#'   "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), or "SMD" (Standardized Mean Difference).
+#'   "IRR" (Incidence Rate Ratio), "MD" (Mean Difference), "SMD" (Standardized
+#'   Mean Difference), or "MedD" (Difference in Medians, e.g. a
+#'   \code{bayesma::bayesma(measure = "MedD")} fit).
 #' @param study_var Column name containing study identifiers/authors.
 #' @param year_var Column name containing publication years. Default is NULL.
 #' @param n_ctrl Column name containing control group sample sizes.
 #' @param n_int Column name containing intervention group sample sizes.
 #' @param event_ctrl Column name containing control group event counts.
 #' @param event_int Column name containing intervention group event counts.
-#' @param mean_ctrl Column name containing control group means.
-#' @param mean_int Column name containing intervention group means.
+#' @param mean_ctrl Column name containing control group means. For
+#'   "MedD", an optional arm summary (studies may instead report quantiles).
+#' @param mean_int Column name containing intervention group means. For
+#'   "MedD", an optional arm summary (studies may instead report quantiles).
 #' @param sd_ctrl Column name containing control group standard deviations.
+#'   For "MedD", an optional arm summary (studies may instead report quantiles).
 #' @param sd_int Column name containing intervention group standard deviations.
+#'   For "MedD", an optional arm summary (studies may instead report quantiles).
+#' @param median_ctrl,median_int Column name containing control/intervention
+#'   group medians. Used with "MedD".
+#' @param q1_ctrl,q1_int Column name containing control/intervention group
+#'   first quartiles. Used with "MedD".
+#' @param q3_ctrl,q3_int Column name containing control/intervention group
+#'   third quartiles. Used with "MedD".
+#' @param min_ctrl,min_int Column name containing control/intervention group
+#'   minimums. Used with "MedD".
+#' @param max_ctrl,max_int Column name containing control/intervention group
+#'   maximums. Used with "MedD".
 #' @param time_ctrl Column name containing control group time periods.
 #' @param time_int Column name containing intervention group time periods.
 #' @param sort_studies_by Character string specifying how to sort studies.
@@ -124,6 +140,16 @@ bayes_forest <- function(model,
                          mean_int = NULL,
                          sd_ctrl = NULL,
                          sd_int = NULL,
+                         median_ctrl = NULL,
+                         median_int = NULL,
+                         q1_ctrl = NULL,
+                         q1_int = NULL,
+                         q3_ctrl = NULL,
+                         q3_int = NULL,
+                         min_ctrl = NULL,
+                         min_int = NULL,
+                         max_ctrl = NULL,
+                         max_int = NULL,
                          time_ctrl = NULL,
                          time_int = NULL,
                          sort_studies_by = "author",
@@ -254,6 +280,27 @@ bayes_forest <- function(model,
         Event_Control = {{event_ctrl}},
         Event_Intervention = {{event_int}}
       )
+  } else if (measure == "MedD") {
+    have_effect <- all(c("yi", "vi") %in% names(data))
+    data <- data |>
+      dplyr::rename(
+        Author = {{study_var}},
+        Year = {{year_var}},
+        N_Control = {{n_ctrl}},
+        N_Intervention = {{n_int}})
+    if (!have_effect) {
+      # Only the arm summaries actually supplied are present; each study can
+      # report a different combination (quantiles, min/max, or mean/SD)
+      data <- rename_optional(
+        data,
+        Median_Control = {{median_ctrl}}, Median_Intervention = {{median_int}},
+        Q1_Control = {{q1_ctrl}}, Q1_Intervention = {{q1_int}},
+        Q3_Control = {{q3_ctrl}}, Q3_Intervention = {{q3_int}},
+        Min_Control = {{min_ctrl}}, Min_Intervention = {{min_int}},
+        Max_Control = {{max_ctrl}}, Max_Intervention = {{max_int}},
+        Mean_Control = {{mean_ctrl}}, Mean_Intervention = {{mean_int}},
+        SD_Control = {{sd_ctrl}}, SD_Intervention = {{sd_int}})
+    }
   }
 
   # Handle subgroup variable renaming
@@ -271,7 +318,7 @@ bayes_forest <- function(model,
   # e.g. multi-arm trials, which otherwise display as identical rows)
   data <- make_authors_unique(data, year = "Year")
 
-  # Compute yi/vi if not present (needed for one-stage models)
+  # Compute yi/vi if not present
   data <- compute_yi_vi(data, measure)
 
   # Risk of bias: validate and standardise judgements for the chosen tool
@@ -473,7 +520,7 @@ bayes_forest <- function(model,
       dplyr::ungroup() |>
       dplyr::select(-spread_df)
 
-    if (isTRUE(subgroup) && measure %in% c("MD", "SMD")){
+    if (isTRUE(subgroup) && measure %in% c("MD", "SMD", "MedD")){
       forest.data.summary <- forest.data.summary |>
         dplyr::mutate(
           N_int = dplyr::case_when(

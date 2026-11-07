@@ -23,7 +23,7 @@ validate_inputs <- function(
   if (!is.data.frame(data)) {
     rlang::abort("`data` must be a data frame.")
   }
-  rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD"))
+  rlang::arg_match(measure, c("OR", "HR", "RR", "IRR", "MD", "SMD", "MedD"))
   rlang::arg_match(sort_studies_by, c("author", "year", "effect"))
 
   if (rlang::quo_is_null(rlang::enquo(study_var))) {

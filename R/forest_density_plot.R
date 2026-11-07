@@ -101,8 +101,8 @@ study.density.plot_fn  <- function(df,
         rope_range <- c(0.9, 1.1)
       } else if (measure == "SMD") {
         rope_range <- c(-0.1, 0.1)
-      } else if (measure == "MD") {
-        stop("For mean differences, rope_value must be specified as it depends on the measurement scale")
+      } else if (measure %in% c("MD", "MedD")) {
+        stop("For mean/median differences, rope_value must be specified as it depends on the measurement scale")
       }
     } else {
       if (length(rope_value) == 1) {

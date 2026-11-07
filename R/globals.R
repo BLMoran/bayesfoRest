@@ -2,9 +2,9 @@
 # These are column names used in dplyr/tidybayes pipelines via NSE
 
 utils::globalVariables(c(
-  ".draw", ".grp", ".last_in_group", ".lower", ".lower_tau", ".upper", ".upper_tau",
+  ".draw", ".grp", ".key", ".label", ".last_in_group", ".lower", ".lower_tau", ".upper", ".upper_tau",
   ":=",
-  "Author", "Author_label", "Author_ordered", "Author_pooled",
+  "Author", "Author_label", "Author_ordered", "Author_original", "Author_pooled",
   "Check", "Code",
   "D1", "Description",
   "N_ctrl", "N_int",

@@ -188,10 +188,12 @@ forest_data_summary_fn <- function(spread_df,
   forest.data.summary <- forest.data.summary |>
     sort_studies_fn(sort_studies_by)
 
+  is_raw_scale <- measure %in% c("MD", "SMD", "MedD")
+
   # Add formatted effect estimates
   forest.data.summary <- forest.data.summary |>
     dplyr::mutate(
-      weighted_effect = if (measure %in% c("MD", "SMD")) {
+      weighted_effect = if (is_raw_scale) {
         paste0(sprintf("%.2f", theta_study), " [", sprintf("%.2f", .lower), ", ", sprintf("%.2f", .upper), "]")
       } else {
         paste0(sprintf("%.2f", exp(theta_study)), " [", sprintf("%.2f", exp(.lower)), ", ", sprintf("%.2f", exp(.upper)), "]")
@@ -201,7 +203,7 @@ forest_data_summary_fn <- function(spread_df,
   if (effect_type == "random_effect") {
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
-        unweighted_effect = if (measure %in% c("MD", "SMD")) {
+        unweighted_effect = if (is_raw_scale) {
           paste0(sprintf("%.2f", yi), " [", sprintf("%.2f", yi - 1.96 * sqrt(vi)), ", ", sprintf("%.2f", yi + 1.96 * sqrt(vi)), "]")
         } else {
           paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
@@ -218,7 +220,7 @@ forest_data_summary_fn <- function(spread_df,
     # Common-effects: no tau and no shrinkage
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
-        unweighted_effect = if (measure %in% c("MD", "SMD")) {
+        unweighted_effect = if (is_raw_scale) {
           paste0(sprintf("%.2f", yi), " [", sprintf("%.2f", yi - 1.96 * sqrt(vi)), ", ", sprintf("%.2f", yi + 1.96 * sqrt(vi)), "]")
         } else {
           paste0(sprintf("%.2f", exp(yi)), " [", sprintf("%.2f", exp(yi - 1.96 * sqrt(vi))), ", ", sprintf("%.2f", exp(yi + 1.96 * sqrt(vi))), "]")
@@ -230,7 +232,33 @@ forest_data_summary_fn <- function(spread_df,
   }
 
   # Add study group summary columns depending on measure type
-  if (measure %in% c("MD", "SMD")) {
+  if (is_raw_scale) {
+    col_or_na <- function(df, name) {
+      if (name %in% names(df)) df[[name]] else rep(NA_real_, nrow(df))
+    }
+
+    if (measure == "MedD") {
+      int_summary <- format_continuous_summary(
+        col_or_na(forest.data.summary, "Median_Intervention"),
+        col_or_na(forest.data.summary, "Q1_Intervention"),
+        col_or_na(forest.data.summary, "Q3_Intervention"),
+        col_or_na(forest.data.summary, "Mean_Intervention"),
+        col_or_na(forest.data.summary, "SD_Intervention"))
+      ctrl_summary <- format_continuous_summary(
+        col_or_na(forest.data.summary, "Median_Control"),
+        col_or_na(forest.data.summary, "Q1_Control"),
+        col_or_na(forest.data.summary, "Q3_Control"),
+        col_or_na(forest.data.summary, "Mean_Control"),
+        col_or_na(forest.data.summary, "SD_Control"))
+    } else {
+      int_summary <- paste0(
+        sprintf("%.2f", forest.data.summary$Mean_Intervention), " (",
+        sprintf("%.2f", forest.data.summary$SD_Intervention), ")")
+      ctrl_summary <- paste0(
+        sprintf("%.2f", forest.data.summary$Mean_Control), " (",
+        sprintf("%.2f", forest.data.summary$SD_Control), ")")
+    }
+
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(
         N_int = dplyr::case_when(
@@ -239,14 +267,14 @@ forest_data_summary_fn <- function(spread_df,
           TRUE ~ as.character(N_Intervention)),
         int_mean_sd = dplyr::case_when(
           Author %in% c("Pooled Effect", "Prediction") ~ NA_character_,
-          TRUE ~ paste0(sprintf("%.2f", Mean_Intervention), " (", sprintf("%.2f", SD_Intervention), ")")),
+          TRUE ~ int_summary),
         N_ctrl = dplyr::case_when(
           Author == "Pooled Effect" ~ as.character(sum(N_Control, na.rm = TRUE)),
           Author == "Prediction" ~ "",
           TRUE ~ as.character(N_Control)),
         ctrl_mean_sd = dplyr::case_when(
           Author %in% c("Pooled Effect", "Prediction") ~ NA_character_,
-          TRUE ~ paste0(sprintf("%.2f", Mean_Control), " (", sprintf("%.2f", SD_Control), ")")))
+          TRUE ~ ctrl_summary))
   } else {
     forest.data.summary <- forest.data.summary |>
       dplyr::mutate(

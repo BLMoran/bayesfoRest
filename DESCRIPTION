@@ -37,6 +37,7 @@ Suggests:
     ggrepel,
     knitr,
     metafor,
+    metamedian,
     MetaStan,
     quarto,
     R2jags,

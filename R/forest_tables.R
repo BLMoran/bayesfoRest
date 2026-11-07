@@ -14,12 +14,13 @@ forest_table_left_fn <- function(forest.data.summary,
 
   summary_labels <- c(pooled_labels, pred_labels)
 
-  is_continuous <- measure %in% c("MD", "SMD")
+  is_continuous <- measure %in% c("MD", "SMD", "MedD")
 
   # Define column labels based on effect type
   if (is_continuous) {
-    control_label <- paste0(label_control, "\nMean (SD)")
-    int_label <- paste0(label_intervention, "\nMean (SD)")
+    summary_type <- if (measure == "MedD") "Median [IQR]" else "Mean (SD)"
+    control_label <- paste0(label_control, "\n", summary_type)
+    int_label <- paste0(label_intervention, "\n", summary_type)
   } else {
     control_label <- paste(label_control, "\n(Events/Total)")
     int_label <- paste(label_intervention, "\n(Events/Total)")
@@ -27,15 +28,23 @@ forest_table_left_fn <- function(forest.data.summary,
 
   # Choose correct columns for data
   if (is_continuous) {
-    selected_cols <- c("Author", "Year", "N_int", "int_mean_sd", "N_ctrl", "ctrl_mean_sd")
+    selected_cols <- c("Author", "Author_original", "Year", "N_int", "int_mean_sd", "N_ctrl", "ctrl_mean_sd")
   } else {
-    selected_cols <- c("Author", "Year", "int_outcome_frac", "control_outcome_frac")
+    selected_cols <- c("Author", "Author_original", "Year", "int_outcome_frac", "control_outcome_frac")
   }
   if (isTRUE(subgroup)) {
-    selected_cols <- c("Author", "Year", "Subgroup", selected_cols[!(selected_cols %in% c("Author", "Year"))])
+    selected_cols <- c("Author", "Author_original", "Year", "Subgroup", selected_cols[!(selected_cols %in% c("Author", "Author_original", "Year"))])
   }
 
   df <- forest.data.summary |> dplyr::select(dplyr::any_of(selected_cols))
+
+  # Display the original (possibly duplicated) author name, disambiguated by
+  # Year -- `Author` itself may carry a "_a"/"_b" suffix added internally to
+  # keep same-named studies distinct for joining/grouping
+  if ("Author_original" %in% names(df)) {
+    df <- df |> dplyr::mutate(Author = dplyr::coalesce(Author_original, Author)) |>
+      dplyr::select(-Author_original)
+  }
 
   df <- df |> dplyr::mutate(
     Author = dplyr::if_else(
@@ -127,7 +136,7 @@ forest_table_left_fn <- function(forest.data.summary,
         locations = gt::cells_body(rows = Author %in% spacer_labels))
   }
 
-  data_cols <- if (measure %in% c("MD", "SMD")) {
+  data_cols <- if (measure %in% c("MD", "SMD", "MedD")) {
     c("int_mean_sd", "ctrl_mean_sd", "N_int", "N_ctrl")
   } else {
     c("int_outcome_frac", "control_outcome_frac")
