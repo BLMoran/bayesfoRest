@@ -12,7 +12,8 @@ measures, subgroup analyses, and risk of bias assessments.
 - **Bayesian Forest Plots**: Create forest plots from models fitted with
   brms, bayesma, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, RoBMA
   or R2jags
-- **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, and SMD
+- **Multiple Effect Measures**: Support for OR, HR, RR, IRR, MD, SMD,
+  and MedD (difference of medians)
 - **Flexible Glyph Styles**: Show study and pooled-effect rows as
   densities, boxplots, square-whiskers, or (for pooled rows) a classic
   diamond, mixed and matched independently
@@ -193,8 +194,6 @@ bayes_forest(
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
-  subgroup = TRUE,
-  subgroup_var = Subgroup,
   add_rob = TRUE,
   xlim = c(0.1, 3.5)
 )
@@ -220,8 +219,6 @@ bayes_forest(
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
-  subgroup = TRUE,
-  subgroup_var = Subgroup,
   add_rob = TRUE,
   add_rob_legend = TRUE,
   rob_tool = "rob2",
@@ -249,8 +246,6 @@ bayes_forest(
   n_int = N_Intervention,
   event_ctrl = Event_Control,
   event_int = Event_Intervention,
-  subgroup = TRUE,
-  subgroup_var = Subgroup,
   add_rob = TRUE,
   add_rob_legend = TRUE,
   rob_tool = "rob2",
@@ -556,6 +551,8 @@ bayesfoRest depends on several R packages:
   [bayesma](https://blmoran.github.io/bayesma/) and other Bayesian
   meta-analysis model fitting packages (suggested; install the ones you
   use)
+- [metamedian](https://github.com/stmcg/metamedian) for methods for
+  meta-analysis of medians
 - [gt](https://gt.rstudio.com) for creating tables
 - [patchwork](https://patchwork.data-imaginist.com) for combining plots
 - [ggplot2](https://ggplot2.tidyverse.org) for plotting
@@ -602,6 +599,7 @@ bayesfoRest builds upon the excellent work of the
 [MetaStan](https://cran.r-project.org/package=MetaStan),
 [RoBMA](https://fbartos.github.io/RoBMA/), [Stan](https://mc-stan.org),
 [metafor](https://wviechtb.github.io/metafor/index.html),
+[metamedian](https://github.com/stmcg/metamedian),
 [gt](https://gt.rstudio.com),
 [patchwork](https://patchwork.data-imaginist.com),
 [ggdist](https://mjskay.github.io/ggdist/),

@@ -60,7 +60,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BLMoran/bayesfoRest" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://bsky.app/profile/benmoran.bsky.social" aria-label="Bluesky"><span class="fa fab fa-bluesky"></span></a></li>
       </ul>
 </div>
@@ -89,7 +89,7 @@
 <li>
 <strong>Bayesian Forest Plots</strong>: Create forest plots from models fitted with brms, bayesma, bayesmeta, MetaStan, rstanarm, rstan, cmdstanr, RoBMA or R2jags</li>
 <li>
-<strong>Multiple Effect Measures</strong>: Support for OR, HR, RR, IRR, MD, and SMD</li>
+<strong>Multiple Effect Measures</strong>: Support for OR, HR, RR, IRR, MD, SMD, and MedD (difference of medians)</li>
 <li>
 <strong>Flexible Glyph Styles</strong>: Show study and pooled-effect rows as densities, boxplots, square-whiskers, or (for pooled rows) a classic diamond, mixed and matched independently</li>
 <li>
@@ -248,8 +248,6 @@
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">3.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -274,8 +272,6 @@
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
@@ -302,8 +298,6 @@
 <span>  n_int <span class="op">=</span> <span class="va">N_Intervention</span>,</span>
 <span>  event_ctrl <span class="op">=</span> <span class="va">Event_Control</span>,</span>
 <span>  event_int <span class="op">=</span> <span class="va">Event_Intervention</span>,</span>
-<span>  subgroup <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  subgroup_var <span class="op">=</span> <span class="va">Subgroup</span>,</span>
 <span>  add_rob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  add_rob_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  rob_tool <span class="op">=</span> <span class="st">"rob2"</span>,</span>
@@ -550,6 +544,8 @@
 <li>
 <a href="https://paulbuerkner.com/brms/" class="external-link">brms</a>, <a href="https://cran.r-project.org/package=bayesmeta" class="external-link">bayesmeta</a>, <a href="https://cran.r-project.org/package=MetaStan" class="external-link">MetaStan</a>, <a href="https://fbartos.github.io/RoBMA/" class="external-link">RoBMA</a>, <a href="https://blmoran.github.io/bayesma/" class="external-link">bayesma</a> and other Bayesian meta-analysis model fitting packages (suggested; install the ones you use)</li>
 <li>
+<a href="https://github.com/stmcg/metamedian" class="external-link">metamedian</a> for methods for meta-analysis of medians</li>
+<li>
 <a href="https://gt.rstudio.com" class="external-link">gt</a> for creating tables</li>
 <li>
 <a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a> for combining plots</li>
@@ -583,7 +579,7 @@
 <h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
 </h2>
 <p>A special thanks to Matti Vuorre, whose <a href="https://vuorre.com/posts/bayesian-meta-analysis/index.html" class="external-link">blog post</a> as well as <a href="https://doing-meta.guide/bayesian-ma" class="external-link">Doing Meta Analysis in R- Chapter 13: Bayesian Meta-Analysis</a> for being the original inspiration for bayesfoRest.</p>
-<p>bayesfoRest builds upon the excellent work of the <a href="https://paulbuerkner.com/brms/" class="external-link">brms</a>, <a href="https://cran.r-project.org/package=bayesmeta" class="external-link">bayesmeta</a>, <a href="https://cran.r-project.org/package=MetaStan" class="external-link">MetaStan</a>, <a href="https://fbartos.github.io/RoBMA/" class="external-link">RoBMA</a>, <a href="https://mc-stan.org" class="external-link">Stan</a>, <a href="https://wviechtb.github.io/metafor/index.html" class="external-link">metafor</a>, <a href="https://gt.rstudio.com" class="external-link">gt</a>, <a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a>, <a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a>, <a href="https://mjskay.github.io/tidybayes/index.html" class="external-link">tidybayes</a> and the <a href="https://www.tidyverse.org" class="external-link">tidyverse</a> suite of packages. Without the work of the R community and their contributions, bayesfoRest would not be possible.</p>
+<p>bayesfoRest builds upon the excellent work of the <a href="https://paulbuerkner.com/brms/" class="external-link">brms</a>, <a href="https://cran.r-project.org/package=bayesmeta" class="external-link">bayesmeta</a>, <a href="https://cran.r-project.org/package=MetaStan" class="external-link">MetaStan</a>, <a href="https://fbartos.github.io/RoBMA/" class="external-link">RoBMA</a>, <a href="https://mc-stan.org" class="external-link">Stan</a>, <a href="https://wviechtb.github.io/metafor/index.html" class="external-link">metafor</a>, <a href="https://github.com/stmcg/metamedian" class="external-link">metamedian</a>, <a href="https://gt.rstudio.com" class="external-link">gt</a>, <a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a>, <a href="https://mjskay.github.io/ggdist/" class="external-link">ggdist</a>, <a href="https://mjskay.github.io/tidybayes/index.html" class="external-link">tidybayes</a> and the <a href="https://www.tidyverse.org" class="external-link">tidyverse</a> suite of packages. Without the work of the R community and their contributions, bayesfoRest would not be possible.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
