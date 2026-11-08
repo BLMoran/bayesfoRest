@@ -12,6 +12,5 @@
 ^bayesfoRest_hex\.png$
 ^bayesfoRest_site\.zip$
 ^\.positai$
-^\.claude$
 ^dev$
 ^vignettes/\.quarto$
